@@ -2,16 +2,42 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Layers, Plus } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { priceLabel } from "@/lib/format";
 import { useCart } from "@/context/CartContext";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  previewSrc,
+}: {
+  product: Product;
+  /** Optional muted looping clip previewed on hover (lazy, reduced-motion safe). */
+  previewSrc?: string;
+}) {
   const reduced = useReducedMotion() ?? false;
   const { addItem, loading } = useCart();
   const variant = product.variants[0];
+
+  // Lazy hover-preview video: src is only attached after the first hover, and
+  // never under prefers-reduced-motion.
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [hovering, setHovering] = useState(false);
+  const [loadVideo, setLoadVideo] = useState(false);
+  const showPreview = !!previewSrc && !reduced;
+
+  useEffect(() => {
+    if (showPreview && hovering && !loadVideo) setLoadVideo(true);
+  }, [showPreview, hovering, loadVideo]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (showPreview && hovering) void v.play().catch(() => {});
+    else v.pause();
+  }, [showPreview, hovering, loadVideo]);
 
   async function onAdd(e: React.MouseEvent) {
     e.preventDefault();
@@ -21,6 +47,8 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <motion.article
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
       whileHover={reduced ? undefined : { y: -8 }}
       transition={{ type: "spring", stiffness: 300, damping: 24 }}
       className="group relative h-full"
@@ -46,6 +74,22 @@ export function ProductCard({ product }: { product: Product }) {
             sizes="(max-width: 768px) 100vw, 33vw"
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
           />
+          {showPreview && loadVideo && (
+            <video
+              ref={videoRef}
+              muted
+              loop
+              playsInline
+              preload="none"
+              poster={product.featuredImage.url}
+              aria-hidden
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
+                hovering ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <source src={previewSrc} type="video/mp4" />
+            </video>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/10 to-transparent" />
           {product.featured && (
             <span className="absolute left-4 top-4 rounded-full bg-grade-teal-orange px-3 py-1 text-xs font-semibold text-ink">

@@ -10,11 +10,22 @@ try {
   // keep default
 }
 
+// Hosts that serve the landing-page preview clips. Keep in sync with
+// src/lib/media.ts (VIDEO_HOSTS). Overridable so a deploy can point media-src at
+// its own video CDN. These are PLACEHOLDER sample clips — swap for real grades.
+const VIDEO_HOSTS = (
+  process.env.NEXT_PUBLIC_VIDEO_HOSTS ||
+  "https://commondatastorage.googleapis.com"
+)
+  .split(/[ ,]+/)
+  .filter(Boolean);
+
 // A reasonable Content-Security-Policy:
 // - next/font (Google) is self-hosted at build time, so no font CDN is needed.
 // - 'unsafe-inline' for styles is required by Next's runtime style injection + Framer Motion.
 // - script 'unsafe-inline'/'unsafe-eval' kept loose for Next dev/runtime; tighten with nonces in a hardened deploy.
 // - images allowed from self, data URIs, blob, and images.unsplash.com (placeholder photos).
+// - media-src allows self, blob:, and the video host(s) so the <video> previews load.
 // - connect-src allows the API origin so the storefront can call the BFF.
 const csp = [
   "default-src 'self'",
@@ -23,6 +34,7 @@ const csp = [
   "frame-ancestors 'none'",
   "object-src 'none'",
   "img-src 'self' data: blob: https://images.unsplash.com",
+  `media-src 'self' blob: ${VIDEO_HOSTS.join(" ")}`,
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",

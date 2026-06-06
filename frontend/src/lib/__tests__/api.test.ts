@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   API_URL,
+  completeCheckout,
+  createCheckout,
   getAuthToken,
   getMyDownloads,
   getProducts,
@@ -126,6 +128,51 @@ describe("auth token storage + header injection", () => {
     await getMyDownloads();
     const headers = lastFetchInit(fetchSpy).headers as Record<string, string>;
     expect(headers.Authorization).toBeUndefined();
+  });
+});
+
+describe("checkout endpoints (guest, login-free)", () => {
+  it("createCheckout POSTs {cartId} to /checkout and returns {mode,checkoutUrl}", async () => {
+    fetchSpy.mockResolvedValue(
+      jsonResponse({ mode: "mock", checkoutUrl: "/checkout?cart=c1" }),
+    );
+    const res = await createCheckout("c1");
+    expect(res).toEqual({ mode: "mock", checkoutUrl: "/checkout?cart=c1" });
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/checkout`);
+    const init = lastFetchInit(fetchSpy);
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({ cartId: "c1" });
+  });
+
+  it("createCheckout includes the email only when provided", async () => {
+    fetchSpy.mockResolvedValue(
+      jsonResponse({ mode: "shopify", checkoutUrl: "https://shop/checkout" }),
+    );
+    await createCheckout("c1", "guest@example.com");
+    expect(JSON.parse(String(lastFetchInit(fetchSpy).body))).toEqual({
+      cartId: "c1",
+      email: "guest@example.com",
+    });
+  });
+
+  it("completeCheckout POSTs {cartId,email} to /checkout/complete -> {orderId}", async () => {
+    fetchSpy.mockResolvedValue(jsonResponse({ orderId: "ord_123" }));
+    const res = await completeCheckout("c1", "guest@example.com");
+    expect(res).toEqual({ orderId: "ord_123" });
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/checkout/complete`);
+    const init = lastFetchInit(fetchSpy);
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({
+      cartId: "c1",
+      email: "guest@example.com",
+    });
+  });
+
+  it("createCheckout surfaces API errors (no mock fallback)", async () => {
+    fetchSpy.mockResolvedValue(
+      jsonResponse({ detail: "Cart is empty." }, 400),
+    );
+    await expect(createCheckout("c1")).rejects.toThrow("Cart is empty.");
   });
 });
 

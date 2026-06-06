@@ -13,6 +13,8 @@ import type {
   AuthResponse,
   Cart,
   CartLineInput,
+  CheckoutCompleteResponse,
+  CheckoutResponse,
   Collection,
   CollectionWithProducts,
   ContactInput,
@@ -350,6 +352,36 @@ export async function removeCartLine(id: string, lineId: string): Promise<Cart> 
   } catch {
     return emptyMockCart();
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Checkout (guest, login-free) — surface REAL errors (no mock fallback).     */
+/* The backend decides the mode: Shopify (real) or mock (in-app demo).        */
+/* -------------------------------------------------------------------------- */
+
+// Begin checkout for a cart. Optional guest email is forwarded to the BFF.
+// Returns {mode, checkoutUrl}: callers navigate to checkoutUrl for "shopify"
+// or route to it in-app for "mock". Errors propagate so the UI can show them.
+export async function createCheckout(
+  cartId: string,
+  email?: string,
+): Promise<CheckoutResponse> {
+  return request<CheckoutResponse>("/checkout", {
+    method: "POST",
+    body: JSON.stringify(email ? { cartId, email } : { cartId }),
+  });
+}
+
+// Complete a MOCK checkout (demo-only). Returns {orderId} for the thank-you
+// page. Errors propagate so the demo checkout can surface them.
+export async function completeCheckout(
+  cartId: string,
+  email: string,
+): Promise<CheckoutCompleteResponse> {
+  return request<CheckoutCompleteResponse>("/checkout/complete", {
+    method: "POST",
+    body: JSON.stringify({ cartId, email }),
+  });
 }
 
 /* -------------------------------------------------------------------------- */

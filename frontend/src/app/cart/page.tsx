@@ -2,24 +2,40 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowLeft, Lock, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { createCheckout } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
 import { Reveal } from "@/components/motion/Reveal";
 
 export default function CartPage() {
+  const router = useRouter();
   const { cart, updateItem, removeItem, loading } = useCart();
   const [redirecting, setRedirecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const lines = cart?.lines ?? [];
 
-  // Checkout: the API owns the authoritative checkoutUrl. We never compute
-  // prices or build the checkout on the client — we just navigate to the URL
-  // the BFF returns.
-  function checkout() {
-    if (!cart?.checkoutUrl) return;
+  // Checkout: the BFF decides the mode and owns the authoritative checkout.
+  // - "shopify": full-page redirect to the hosted Shopify checkout.
+  // - "mock":    in-app demo checkout ("/checkout?cart=...") via the router.
+  // We never compute prices or build a checkout on the client.
+  async function checkout() {
+    if (!cart?.id || redirecting) return;
     setRedirecting(true);
-    window.location.assign(cart.checkoutUrl);
+    setError(null);
+    try {
+      const { mode, checkoutUrl } = await createCheckout(cart.id);
+      if (mode === "shopify") {
+        window.location.assign(checkoutUrl);
+      } else {
+        router.push(checkoutUrl);
+      }
+    } catch {
+      setError("We couldn't start checkout just now. Please try again.");
+      setRedirecting(false);
+    }
   }
 
   return (
@@ -152,30 +168,16 @@ export default function CartPage() {
                 className="btn-grade mt-6 w-full disabled:opacity-60"
               >
                 <Lock className="h-4 w-4" />
-                {redirecting ? "Redirecting…" : "Proceed to checkout"}
+                {redirecting ? "Starting checkout…" : "Proceed to checkout"}
               </button>
+              {error && (
+                <p className="mt-3 text-center text-sm text-red-300/90" role="alert">
+                  {error}
+                </p>
+              )}
               <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-white/35">
                 <Lock className="h-3 w-3" />
-                Secure checkout. Prices confirmed server-side.
-              </p>
-
-              {/*
-                DEMO-ONLY funnel. In production, the real checkout completes on
-                Shopify and Shopify redirects back to a configured thank-you URL
-                (return_to). Since mock mode has no real Shopify checkout, this
-                link drives the same /thank-you confirmation flow using the cart
-                id so the whole purchase funnel is demoable end to end.
-              */}
-              {cart && (
-                <Link
-                  href={`/thank-you?cart=${encodeURIComponent(cart.id)}`}
-                  className="btn-ghost mt-3 w-full"
-                >
-                  Complete demo purchase
-                </Link>
-              )}
-              <p className="mt-2 text-center text-[11px] text-white/30">
-                Demo path — skips real payment.
+                Secure checkout. Prices confirmed server-side. No account needed.
               </p>
             </div>
           </div>

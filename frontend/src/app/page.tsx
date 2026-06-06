@@ -9,7 +9,9 @@ import { CategoryCard } from "@/components/CategoryCard";
 import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
 import { BundleCard } from "@/components/BundleCard";
 import { HowItWorks } from "@/components/HowItWorks";
+import { LooksInMotion } from "@/components/LooksInMotion";
 import { FAQ } from "@/components/FAQ";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
@@ -56,13 +58,37 @@ export default async function HomePage() {
       <Hero />
       <LogoMarquee />
 
+      {/* Looks in motion — video bento grid */}
+      <section className="container-xl py-24" id="looks-in-motion">
+        <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
+          <SectionHeading
+            eyebrow="Watch the grade"
+            title={
+              <>
+                Looks in <span className="text-grade-teal">motion.</span>
+              </>
+            }
+            subtitle="Hover any clip to watch a look come alive. Real cinematic grades, applied to motion — not just stills."
+          />
+          <Reveal direction="left">
+            <Link
+              href="/collections/cinematic"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white"
+            >
+              Explore the looks <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Reveal>
+        </div>
+        <LooksInMotion />
+      </section>
+
       {/* Featured LUTs */}
       <section className="container-xl py-24" id="featured">
         <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
           <SectionHeading
             eyebrow="Signature looks"
             title="Featured LUT packs"
-            subtitle="Hand-built grades our community reaches for again and again."
+            subtitle="Hand-built grades our community reaches for again and again. Hover a card to preview the look in motion."
           />
           <Reveal direction="left">
             <Link
@@ -73,7 +99,7 @@ export default async function HomePage() {
             </Link>
           </Reveal>
         </div>
-        <ProductGrid products={featured} />
+        <ProductGrid products={featured} withVideoPreview />
       </section>
 
       {/* Categories */}
@@ -141,7 +167,7 @@ export default async function HomePage() {
       </section>
 
       {/* FAQ */}
-      <section className="container-xl py-12 pb-28" id="faq">
+      <section className="container-xl py-12" id="faq">
         <SectionHeading
           eyebrow="Good to know"
           title="Frequently asked"
@@ -150,6 +176,35 @@ export default async function HomePage() {
         <div className="mt-12">
           <FAQ />
         </div>
+      </section>
+
+      {/* Newsletter */}
+      <section className="container-xl py-12 pb-28" id="newsletter">
+        <Reveal className="relative overflow-hidden rounded-4xl border border-white/10 bg-white/[0.02] p-8 text-center sm:p-14">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -inset-24 opacity-50 blur-3xl"
+            style={{
+              background:
+                "radial-gradient(420px circle at 30% 20%, rgba(22,216,198,0.18), transparent 60%), radial-gradient(420px circle at 80% 80%, rgba(255,138,61,0.16), transparent 60%)",
+            }}
+          />
+          <div className="relative mx-auto max-w-xl">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-grade-teal">
+              Stay in the loop
+            </p>
+            <h2 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              New looks, in your inbox
+            </h2>
+            <div className="mt-6 flex justify-center text-left">
+              <NewsletterSignup
+                className="w-full max-w-md text-center [&>h4]:sr-only [&>p]:mx-auto [&>p]:text-center"
+                heading="Join the color list"
+                subtext="New LUT drops, grading tips and subscriber-only deals. No spam — unsubscribe anytime."
+              />
+            </div>
+          </div>
+        </Reveal>
       </section>
     </>
   );

@@ -206,3 +206,22 @@ export interface ContactInput {
   email: string;
   message: string;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Checkout (guest, login-free)                                               */
+/* -------------------------------------------------------------------------- */
+
+// Response from POST /api/checkout.
+// - mode "shopify": `checkoutUrl` is an absolute Shopify URL — navigate the
+//   browser to it (full page redirect).
+// - mode "mock":    `checkoutUrl` is the in-app demo path "/checkout?cart=..."
+//   — handle it with the client router.
+export interface CheckoutResponse {
+  mode: "shopify" | "mock";
+  checkoutUrl: string;
+}
+
+// Response from POST /api/checkout/complete (mock-only demo completion).
+export interface CheckoutCompleteResponse {
+  orderId: string;
+}

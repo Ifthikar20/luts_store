@@ -85,13 +85,15 @@ function ThankYouContent() {
             Thank you!
           </h1>
           <p className="mt-3 text-white/55">
-            Your order is confirmed. Download your looks below — they&apos;re
-            also saved to your library.
+            Your order is confirmed.{" "}
+            <span className="text-white/80">
+              No account needed — download your looks right now.
+            </span>
           </p>
           {confirmation.email && (
             <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-white/45">
-              <Mail className="h-4 w-4 text-grade-teal" />A copy has been emailed
-              to {confirmation.email}.
+              <Mail className="h-4 w-4 text-grade-teal" />A copy has also been
+              emailed to {confirmation.email}.
             </p>
           )}
           <p className="mt-1 text-xs text-white/35">
@@ -159,10 +161,10 @@ function ThankYouContent() {
         <div className="mt-10 flex flex-col items-center gap-3 text-center">
           <p className="inline-flex items-center gap-2 text-sm text-white/45">
             <CheckCircle2 className="h-4 w-4 text-grade-teal" />
-            Saved to your library — sign in any time to re-download.
+            These links work without logging in — a copy was also emailed to you.
           </p>
           <Link href="/account" className="btn-ghost">
-            <Library className="h-4 w-4" /> Go to my library
+            <Library className="h-4 w-4" /> Have an account? View your library
           </Link>
         </div>
       </Reveal>
