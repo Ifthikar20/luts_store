@@ -9,13 +9,17 @@ return it unchanged so webhook retries are safe.
 """
 from __future__ import annotations
 
+import logging
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 
 from .models import Order, Purchase
+
+logger = logging.getLogger(__name__)
 
 
 class OrderNotFound(Exception):
@@ -101,7 +105,50 @@ def ingest_paid_order(payload: dict[str, Any]) -> tuple[Order, bool]:
             product_handle=handle,
         )
 
+    # Send the confirmation email AFTER grants exist. Idempotent + best-effort:
+    # a mail failure must never break webhook ingestion (Shopify would retry and
+    # we'd duplicate work). We commit the grant/order work first via
+    # ``on_commit`` so the email reflects committed state and a send failure
+    # doesn't roll back the order.
+    transaction.on_commit(lambda: send_confirmation_email(order.id))
+
     return order, True
+
+
+def send_confirmation_email(order_id: int, *, force: bool = False) -> bool:
+    """Send the order-confirmation email for an order, idempotently.
+
+    Idempotency: only sends if ``confirmation_email_sent_at`` is unset (unless
+    ``force`` is given, e.g. the resend endpoint). Sets the timestamp after a
+    successful send. Wrapped in try/except so a mail-backend failure is logged
+    and swallowed — it must never break the calling flow (webhook ingest).
+
+    Returns ``True`` if an email was sent, ``False`` otherwise.
+    """
+    from delivery.emails import send_order_confirmation
+
+    order = Order.objects.filter(id=order_id).first()
+    if order is None:  # pragma: no cover - defensive
+        return False
+    if not force and order.confirmation_email_sent_at is not None:
+        return False
+    if not order.email:
+        return False
+
+    try:
+        send_order_confirmation(order)
+    except Exception:  # noqa: BLE001 - never let mail break the caller
+        logger.exception(
+            "Failed to send confirmation email for order %s", order.shopify_order_id
+        )
+        return False
+
+    # Record the send so we never duplicate it. Use update() to avoid
+    # re-triggering any save-time side effects and to be cheap.
+    Order.objects.filter(id=order.id).update(
+        confirmation_email_sent_at=timezone.now()
+    )
+    return True
 
 
 # ---------------------------------------------------------------------------
@@ -211,3 +258,26 @@ def confirm_order(id_or_token: str) -> dict[str, Any]:
         return _confirm_from_mock_cart(str(id_or_token))
 
     raise OrderNotFound(str(id_or_token))
+
+
+def resend_downloads(email: str) -> bool:
+    """Re-send the confirmation/download email for the most recent order.
+
+    NON-ENUMERATING: callers MUST return the same generic response regardless of
+    the return value here. Returns ``True`` if an email was actually queued for
+    a known email, ``False`` otherwise (unknown email / no orders / send error).
+    """
+    normalized = (email or "").strip().lower()
+    if not normalized:
+        return False
+
+    order = (
+        Order.objects.filter(email__iexact=normalized)
+        .order_by("-created_at")
+        .first()
+    )
+    if order is None:
+        return False
+
+    # ``force`` so a resend works even if the original confirmation was sent.
+    return send_confirmation_email(order.id, force=True)

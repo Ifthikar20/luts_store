@@ -62,6 +62,44 @@ DOWNLOAD_S3_BASE_URL = config(
 )
 
 # ---------------------------------------------------------------------------
+# Frontend / public site URL (used to build links inside emails)
+# ---------------------------------------------------------------------------
+# FRONTEND_URL is where customer-facing links (library, support) point. It
+# defaults to the local Next.js dev origin. SITE_URL is accepted as an alias.
+FRONTEND_URL = config(
+    "FRONTEND_URL",
+    default=config("SITE_URL", default="http://localhost:3000"),
+)
+SITE_URL = FRONTEND_URL
+
+# Public origin of THIS backend API (e.g. https://api.thelookslab.com). Used to
+# turn the relative ``/api/download/<token>`` paths into absolute, clickable
+# links inside emails. Defaults to the local dev API origin.
+API_BASE_URL = config("API_BASE_URL", default="http://localhost:8000")
+
+# ---------------------------------------------------------------------------
+# Email delivery
+# ---------------------------------------------------------------------------
+# In development the console backend prints emails to stdout (no SMTP needed).
+# Set EMAIL_BACKEND to django.core.mail.backends.smtp.EmailBackend in any real
+# environment and supply the EMAIL_HOST/PORT/HOST_USER/HOST_PASSWORD/USE_TLS
+# vars below. Tests override this to the locmem backend (see tests/conftest.py).
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend",
+)
+EMAIL_HOST = config("EMAIL_HOST", default="localhost")
+EMAIL_PORT = config("EMAIL_PORT", default=25, cast=int)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=False, cast=bool)
+DEFAULT_FROM_EMAIL = config(
+    "DEFAULT_FROM_EMAIL", default="The Looks Lab <hello@thelookslab.com>"
+)
+# Support address surfaced in customer emails.
+SUPPORT_EMAIL = config("SUPPORT_EMAIL", default="support@thelookslab.com")
+
+# ---------------------------------------------------------------------------
 # Applications
 # ---------------------------------------------------------------------------
 INSTALLED_APPS = [
@@ -101,7 +139,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -207,6 +245,9 @@ REST_FRAMEWORK = {
         # Dedicated, stricter bucket for credential endpoints (login/register)
         # to blunt brute-force / enumeration attempts.
         "auth": "10/min",
+        # Stricter bucket for sensitive, email-triggering endpoints (resend
+        # downloads) to blunt enumeration / mail-bombing attempts.
+        "sensitive": "5/min",
     },
     # TokenAuthentication lets the SPA authenticate with `Authorization: Token
     # <token>`. Tokens are returned over the API for this demo; PRODUCTION

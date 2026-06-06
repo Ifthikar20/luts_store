@@ -23,11 +23,33 @@ from rest_framework.decorators import (
     throttle_classes,
 )
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.throttling import (
+    AnonRateThrottle,
+    SimpleRateThrottle,
+    UserRateThrottle,
+)
 
 from common.security import verify_shopify_webhook
 
 from . import services
+
+
+class SensitiveScopedThrottle(SimpleRateThrottle):
+    """Dedicated throttle pinned to the ``sensitive`` rate (5/min by default).
+
+    Mirrors ``accounts.views.AuthScopedThrottle`` but for email-triggering
+    endpoints (resend downloads). Hard-coding the scope means it always applies
+    on function-based views (unlike ``ScopedRateThrottle``). Keyed per client
+    IP to blunt enumeration / mail-bombing attempts.
+    """
+
+    scope = "sensitive"
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {
+            "scope": self.scope,
+            "ident": self.get_ident(request),
+        }
 
 
 @csrf_exempt
@@ -93,3 +115,29 @@ def order_confirm(request, id_or_token: str | None = None):
         return Response({"detail": "Order not found."}, status=404)
 
     return Response(confirmation)
+
+
+# Single generic response for the resend endpoint -> no user enumeration.
+_RESEND_GENERIC = {
+    "status": "ok",
+    "detail": "If that email has purchases, we've resent your download links.",
+}
+
+
+@api_view(["POST"])
+@authentication_classes([])
+@permission_classes([])
+@throttle_classes([AnonRateThrottle, SensitiveScopedThrottle])
+def resend_downloads(request):
+    """Re-send download links to a purchaser's email.
+
+    NON-ENUMERATING: ALWAYS returns the same generic 200 regardless of whether
+    the email has any orders. If it does, the most recent order's confirmation
+    email is re-sent (best-effort). Throttled by a dedicated ``sensitive`` scope
+    (5/min) to blunt enumeration / mail-bombing.
+    """
+    data = request.data if isinstance(request.data, dict) else {}
+    email = data.get("email") or ""
+    # Best-effort; the return value never changes the response (no enumeration).
+    services.resend_downloads(str(email))
+    return Response(_RESEND_GENERIC, status=200)

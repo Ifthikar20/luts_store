@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Looks Lab — Your order</title>
+</head>
+<body style="margin:0;padding:0;background:#0b0b0f;color:#e9e9ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0b0f;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#141419;border:1px solid #26262e;border-radius:20px;overflow:hidden;">
+          <!-- Header / brand -->
+          <tr>
+            <td style="padding:32px 32px 8px 32px;">
+              <div style="display:inline-block;background:linear-gradient(90deg,#2dd4bf,#fb923c);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#0b0b0f;">
+                The Looks Lab
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 32px 0 32px;">
+              <h1 style="margin:16px 0 6px 0;font-size:26px;line-height:1.2;color:#ffffff;font-weight:800;">
+                Your looks are ready 🎬
+              </h1>
+              <p style="margin:0;color:#a1a1aa;font-size:15px;line-height:1.6;">
+                Thanks for your order{% if order_id %} (#{{ order_id }}){% endif %}! Your color grades are good to go — download them below.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Downloads -->
+          {% if downloads %}
+          <tr>
+            <td style="padding:28px 32px 0 32px;">
+              <h2 style="margin:0 0 14px 0;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#71717a;font-weight:700;">
+                Your downloads
+              </h2>
+              {% for dl in downloads %}
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;background:#1c1c23;border:1px solid #2a2a33;border-radius:14px;">
+                <tr>
+                  <td style="padding:14px 16px;color:#ffffff;font-size:15px;font-weight:600;">
+                    {{ dl.title }}
+                  </td>
+                  <td align="right" style="padding:14px 16px;">
+                    <a href="{{ dl.downloadUrl }}" style="display:inline-block;background:linear-gradient(90deg,#2dd4bf,#fb923c);color:#0b0b0f;text-decoration:none;font-weight:700;font-size:14px;padding:9px 18px;border-radius:10px;">
+                      Download
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              {% endfor %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td style="padding:28px 32px 0 32px;">
+              <p style="margin:0;color:#a1a1aa;font-size:14px;">
+                No downloadable items were found on this order. If that looks wrong, contact us at
+                <a href="mailto:{{ support_email }}" style="color:#2dd4bf;">{{ support_email }}</a>.
+              </p>
+            </td>
+          </tr>
+          {% endif %}
+
+          <!-- Order summary -->
+          <tr>
+            <td style="padding:28px 32px 0 32px;">
+              <h2 style="margin:0 0 14px 0;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#71717a;font-weight:700;">
+                Order summary
+              </h2>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#d4d4d8;">
+                {% for line in lines %}
+                <tr>
+                  <td style="padding:6px 0;border-bottom:1px solid #26262e;">{{ line.title }}</td>
+                  <td align="right" style="padding:6px 0;border-bottom:1px solid #26262e;color:#a1a1aa;">×{{ line.quantity }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                  <td style="padding:12px 0 0 0;font-weight:700;color:#ffffff;">Total</td>
+                  <td align="right" style="padding:12px 0 0 0;font-weight:700;color:#ffffff;">{{ total_display }}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Library note -->
+          <tr>
+            <td style="padding:28px 32px 0 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#10241f;border:1px solid #1d4d44;border-radius:14px;">
+                <tr>
+                  <td style="padding:16px 18px;color:#bdf3e9;font-size:14px;line-height:1.6;">
+                    Your purchases are saved to your library — access them any time.
+                    <br />
+                    <a href="{{ library_url }}" style="display:inline-block;margin-top:10px;color:#2dd4bf;font-weight:700;text-decoration:none;">
+                      Open my library →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:28px 32px 32px 32px;">
+              <p style="margin:0;color:#71717a;font-size:13px;line-height:1.6;">
+                Need a hand? Email us at
+                <a href="mailto:{{ support_email }}" style="color:#2dd4bf;">{{ support_email }}</a>.
+              </p>
+              <p style="margin:14px 0 0 0;color:#52525b;font-size:12px;">
+                — The Looks Lab
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

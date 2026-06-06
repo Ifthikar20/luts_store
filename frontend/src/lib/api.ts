@@ -21,6 +21,7 @@ import type {
   Product,
   ProductQuery,
   ProductsResponse,
+  ResendDownloadsResponse,
   User,
 } from "./types";
 import {
@@ -423,4 +424,16 @@ export async function confirmOrder(
     `/orders/${encodeURIComponent(idOrToken)}`,
     { method: "GET" },
   );
+}
+
+// Resend the most recent order's download links to an email. NON-ENUMERATING:
+// the API always returns the same generic message regardless of whether the
+// email has purchases, so the UI must show that message verbatim. No auth.
+export async function resendDownloads(
+  email: string,
+): Promise<ResendDownloadsResponse> {
+  return request<ResendDownloadsResponse>("/orders/resend-downloads", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
 }

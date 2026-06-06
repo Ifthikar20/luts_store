@@ -180,3 +180,10 @@ export interface OrderConfirmation {
   total: Money;
   downloads: ConfirmationDownload[];
 }
+
+// Generic, non-enumerating response from POST /api/orders/resend-downloads.
+// The `detail` is identical whether or not the email had any purchases.
+export interface ResendDownloadsResponse {
+  status: string;
+  detail: string;
+}

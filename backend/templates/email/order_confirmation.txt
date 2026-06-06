@@ -1,0 +1,25 @@
+The Looks Lab
+=============
+
+Thanks for your order{% if order_id %} (#{{ order_id }}){% endif %}!
+
+Your looks are ready. Download them using the links below.
+
+Your downloads
+--------------
+{% for dl in downloads %}- {{ dl.title }}
+  {{ dl.downloadUrl }}
+{% endfor %}
+{% if not downloads %}(No downloadable items were found on this order.)
+{% endif %}
+Order summary
+-------------
+{% for line in lines %}- {{ line.title }} x{{ line.quantity }}
+{% endfor %}Total: {{ total_display }}
+
+Your purchases are saved to your library — sign in any time to re-download:
+{{ library_url }}
+
+Need a hand? Contact us at {{ support_email }}.
+
+— The Looks Lab

@@ -94,6 +94,12 @@ See `.env.example` for the fully-documented list. Highlights:
 | `SHOPIFY_WEBHOOK_SECRET` | Used to verify webhook HMAC signatures. |
 | `DOWNLOAD_TOKEN_MAX_AGE` | Download token lifetime (seconds, default 24h). |
 | `DOWNLOAD_S3_BASE_URL` | Base for signed download URLs. |
+| `FRONTEND_URL` / `SITE_URL` | Public site origin for links in emails (default `http://localhost:3000`). |
+| `API_BASE_URL` | Public origin of this API; makes email download links absolute (default `http://localhost:8000`). |
+| `EMAIL_BACKEND` | Defaults to console (dev). Set to the SMTP backend in prod. |
+| `EMAIL_HOST` / `EMAIL_PORT` / `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` / `EMAIL_USE_TLS` | SMTP settings (prod). |
+| `DEFAULT_FROM_EMAIL` | From address on customer emails. |
+| `SUPPORT_EMAIL` | Support address surfaced in customer emails. |
 
 ## Security measures
 
@@ -124,6 +130,44 @@ See `.env.example` for the fully-documented list. Highlights:
 8. **Idempotent webhook handling.** Orders are deduped by `shopify_order_id`
    (unique), so Shopify retries are safe no-ops.
 
+## Post-purchase email pipeline
+
+When a paid order is ingested (via the `orders/paid` webhook, or simulated —
+see below), an on-brand **order-confirmation email** is sent listing the
+purchased items, the total, and the signed download links. The links reuse the
+same signed-token machinery as the thank-you page / library, and point at the
+API download endpoint (`API_BASE_URL` makes them absolute in emails). A "saved
+to your library" note links to `FRONTEND_URL/account`.
+
+- **Templates:** `templates/email/order_confirmation.{html,txt}` (multipart).
+- **Sender:** `delivery/emails.py` (`send_order_confirmation`).
+- **Idempotency:** `Order.confirmation_email_sent_at` guards against duplicate
+  sends; webhook retries / re-ingest never send a second email. The send is
+  scheduled on `transaction.on_commit` and wrapped in try/except so a mail
+  failure never breaks webhook ingestion (it's logged).
+- **Backend:** dev defaults to the console backend (prints to stdout). Set
+  `EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend` plus
+  `EMAIL_HOST/PORT/HOST_USER/HOST_PASSWORD/USE_TLS` and `DEFAULT_FROM_EMAIL`
+  for real delivery. Tests use the in-memory (locmem) backend.
+
+### Simulating an order (no Shopify needed)
+
+Exercise the whole pipeline — grants + confirmation email — without Shopify:
+
+```bash
+python manage.py simulate_order \
+    --email buyer@example.com \
+    --handle midnight-noir \
+    --handle dji-aerial-vivid
+```
+
+Each `--handle` becomes a line item (titles/prices come from the catalog when
+available). The synthesized `orders/paid`-shaped payload is run through the same
+`ingest_paid_order` service the webhook uses, so `Order`/`Purchase`/
+`DownloadGrant` rows are created and the confirmation email is printed to the
+console backend. Pass `--order-id` to control idempotency (re-running the same
+id re-sends), and `--currency` to override the currency.
+
 ## API contract
 
 All responses are JSON in `camelCase`, base path `/api`.
@@ -140,7 +184,9 @@ All responses are JSON in `camelCase`, base path `/api`.
 | POST | `/api/cart/{id}/lines` | body `{merchandiseId,quantity}` → `Cart` |
 | PATCH | `/api/cart/{id}/lines` | body `{lineId,quantity}` → `Cart` |
 | DELETE | `/api/cart/{id}/lines` | body `{lineId}` → `Cart` |
-| POST | `/api/webhooks/shopify/orders-paid` | verifies HMAC; 200 ok, 401 bad sig |
+| POST | `/api/webhooks/shopify/orders-paid` | verifies HMAC; 200 ok, 401 bad sig. On success sends the order-confirmation email (idempotent). |
+| GET | `/api/orders/{idOrToken}` | thank-you confirmation `{orderId,email,lines,total,downloads}`; 404 if unknown |
+| POST | `/api/orders/resend-downloads` | body `{email}` → always generic 200 (no enumeration); re-sends the most recent order's links if the email exists. Throttled (`sensitive`, 5/min). |
 | GET | `/api/download/{token}` | mock: `{url,expiresAt}`; real: 302 to signed S3 URL |
 
 ### `Product` shape

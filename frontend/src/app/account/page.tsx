@@ -15,6 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getMyDownloads, resolveDownloadUrl } from "@/lib/api";
 import type { DownloadItem } from "@/lib/types";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
+import { ResendDownloads } from "@/components/account/ResendDownloads";
 
 function formatExpiry(iso: string): string {
   const d = new Date(iso);
@@ -77,6 +78,8 @@ export default function AccountPage() {
               Sign in
             </Link>
           </div>
+
+          <ResendDownloads className="mt-6" />
         </Reveal>
       </div>
     );

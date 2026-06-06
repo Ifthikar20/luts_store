@@ -9,6 +9,7 @@ import {
   Download,
   Library,
   Loader2,
+  Mail,
   PartyPopper,
 } from "lucide-react";
 import { confirmOrder, resolveDownloadUrl } from "@/lib/api";
@@ -87,6 +88,12 @@ function ThankYouContent() {
             Your order is confirmed. Download your looks below — they&apos;re
             also saved to your library.
           </p>
+          {confirmation.email && (
+            <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-white/45">
+              <Mail className="h-4 w-4 text-grade-teal" />A copy has been emailed
+              to {confirmation.email}.
+            </p>
+          )}
           <p className="mt-1 text-xs text-white/35">
             Order {confirmation.orderId}
           </p>
