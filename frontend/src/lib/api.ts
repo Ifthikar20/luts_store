@@ -15,7 +15,9 @@ import type {
   CartLineInput,
   Collection,
   CollectionWithProducts,
+  ContactInput,
   DownloadItem,
+  EngagementResponse,
   Facets,
   OrderConfirmation,
   Product,
@@ -424,6 +426,33 @@ export async function confirmOrder(
     `/orders/${encodeURIComponent(idOrToken)}`,
     { method: "GET" },
   );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Phase 5: engagement (newsletter + contact)                                 */
+/* -------------------------------------------------------------------------- */
+
+// Subscribe an email to the newsletter. NON-ENUMERATING: the API always returns
+// the same generic 200 whether or not the address already existed, so callers
+// should surface res.detail verbatim and never infer subscription state.
+export async function subscribeNewsletter(
+  email: string,
+): Promise<EngagementResponse> {
+  return request<EngagementResponse>("/newsletter", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+// Submit the contact form. Stores a message server-side and best-effort emails
+// the support inbox; returns a generic 200 on success (400 on validation).
+export async function submitContact(
+  input: ContactInput,
+): Promise<EngagementResponse> {
+  return request<EngagementResponse>("/contact", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
 // Resend the most recent order's download links to an email. NON-ENUMERATING:

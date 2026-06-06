@@ -21,9 +21,17 @@ export async function generateMetadata({
   const { handle } = await params;
   const collection = await getCollection(handle);
   if (!collection) return { title: "Collection not found" };
+  // CollectionWithProducts has no image field; fall back to the first product's
+  // featured image for the social card when available.
+  const ogImage = collection.products[0]?.featuredImage.url;
   return {
     title: collection.title,
     description: collection.description,
+    openGraph: {
+      title: collection.title,
+      description: collection.description,
+      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
+    },
   };
 }
 

@@ -187,3 +187,22 @@ export interface ResendDownloadsResponse {
   status: string;
   detail: string;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Phase 5: engagement (newsletter + contact)                                 */
+/* -------------------------------------------------------------------------- */
+
+// Generic success body shared by POST /api/newsletter and POST /api/contact.
+// Both endpoints are non-enumerating: the `detail` never reveals whether an
+// address already existed.
+export interface EngagementResponse {
+  status: string;
+  detail: string;
+}
+
+// Payload for POST /api/contact.
+export interface ContactInput {
+  name: string;
+  email: string;
+  message: string;
+}

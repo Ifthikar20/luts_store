@@ -120,6 +120,7 @@ INSTALLED_APPS = [
     "orders",
     "delivery",
     "accounts",
+    "engagement",
 ]
 
 MIDDLEWARE = [

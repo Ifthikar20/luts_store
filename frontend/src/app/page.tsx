@@ -11,6 +11,32 @@ import { BundleCard } from "@/components/BundleCard";
 import { HowItWorks } from "@/components/HowItWorks";
 import { FAQ } from "@/components/FAQ";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
+import { JsonLd } from "@/components/JsonLd";
+import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: SITE_NAME,
+  url: SITE_URL,
+  description:
+    "Premium cinematic LUTs for filmmakers and editors — color grade in one drag.",
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE_NAME,
+  url: SITE_URL,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${absoluteUrl("/search")}?q={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
 
 export default async function HomePage() {
   const [featured, collections, bundleList] = await Promise.all([
@@ -25,6 +51,8 @@ export default async function HomePage() {
 
   return (
     <>
+      <JsonLd data={organizationJsonLd} />
+      <JsonLd data={websiteJsonLd} />
       <Hero />
       <LogoMarquee />
 

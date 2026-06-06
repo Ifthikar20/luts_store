@@ -4,7 +4,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
-const FAQS = [
+export interface FaqItem {
+  q: string;
+  a: string;
+}
+
+const FAQS: FaqItem[] = [
   {
     q: "What exactly do I get when I buy a pack?",
     a: "An instant download containing .cube (and where noted, .3dl) LUT files. No subscriptions, no watermarks — the files are yours forever, including free updates to that pack.",
@@ -27,11 +32,11 @@ const FAQS = [
   },
 ];
 
-export function FAQ() {
+export function FAQ({ items = FAQS }: { items?: FaqItem[] }) {
   const [open, setOpen] = useState<number | null>(0);
   return (
     <div className="mx-auto max-w-3xl divide-y divide-white/10 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02]">
-      {FAQS.map((item, i) => {
+      {items.map((item, i) => {
         const isOpen = open === i;
         return (
           <div key={item.q}>

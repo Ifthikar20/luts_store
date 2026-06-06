@@ -24,18 +24,41 @@ const body = Inter({
   display: "swap",
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+const siteDescription =
+  "Premium cinematic LUTs for filmmakers and editors. Color grade in one drag — .cube & .3dl packs for Resolve, Premiere, Final Cut and more.";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://thelookslab.example"),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "The Looks Lab — Cinematic LUTs",
-    template: "%s · The Looks Lab",
+    template: "%s | The Looks Lab",
   },
-  description:
-    "Premium cinematic LUTs for filmmakers and editors. Color grade in one drag — .cube & .3dl packs for Resolve, Premiere, Final Cut and more.",
+  description: siteDescription,
+  applicationName: "The Looks Lab",
+  keywords: [
+    "LUTs",
+    "cinematic LUTs",
+    "color grading",
+    "DaVinci Resolve",
+    "Premiere Pro",
+    "Final Cut Pro",
+    ".cube",
+    "film look",
+  ],
   openGraph: {
+    type: "website",
+    siteName: "The Looks Lab",
+    url: siteUrl,
     title: "The Looks Lab — Cinematic LUTs",
     description: "Color grade in one drag. Premium cinematic LUT packs.",
-    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Looks Lab — Cinematic LUTs",
+    description: "Color grade in one drag. Premium cinematic LUT packs.",
   },
 };
 

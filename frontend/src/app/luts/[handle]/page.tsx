@@ -4,6 +4,8 @@ import { getProduct, getProducts, getRelatedProducts } from "@/lib/api";
 import { ProductDetail } from "@/components/ProductDetail";
 import { SectionHeading } from "@/components/SectionHeading";
 import { ProductGrid } from "@/components/ProductGrid";
+import { JsonLd } from "@/components/JsonLd";
+import { SITE_NAME, absoluteUrl } from "@/lib/site";
 
 export async function generateStaticParams() {
   const products = await getProducts();
@@ -40,8 +42,29 @@ export default async function ProductPage({
 
   const related = await getRelatedProducts(product);
 
+  const anyAvailable = product.variants.some((v) => v.availableForSale);
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.description,
+    image: [product.featuredImage.url, ...product.images.map((i) => i.url)],
+    sku: product.handle,
+    brand: { "@type": "Brand", name: SITE_NAME },
+    offers: {
+      "@type": "Offer",
+      url: absoluteUrl(`/luts/${product.handle}`),
+      price: product.priceRange.min.amount,
+      priceCurrency: product.priceRange.min.currencyCode,
+      availability: anyAvailable
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    },
+  };
+
   return (
     <div className="pb-28">
+      <JsonLd data={productJsonLd} />
       <ProductDetail product={product} />
 
       {related.length > 0 && (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NewsletterSignup } from "./NewsletterSignup";
 
 const columns = [
   {
@@ -11,11 +12,20 @@ const columns = [
     ],
   },
   {
-    title: "Learn",
+    title: "Company",
     links: [
-      { href: "/#how", label: "How it works" },
-      { href: "/#faq", label: "FAQ" },
-      { href: "/#before-after", label: "Before / After" },
+      { href: "/about", label: "About" },
+      { href: "/contact", label: "Contact" },
+      { href: "/help", label: "Help Center" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { href: "/policies/privacy", label: "Privacy" },
+      { href: "/policies/terms", label: "Terms" },
+      { href: "/policies/refund", label: "Refund" },
+      { href: "/policies/license", label: "License" },
     ],
   },
 ];
@@ -24,7 +34,7 @@ export function Footer() {
   return (
     <footer className="relative z-10 border-t border-white/10 bg-ink">
       <div className="container-xl py-16">
-        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
+        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Link href="/" className="flex items-center gap-2.5">
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-grade-teal-orange text-ink">
@@ -59,7 +69,13 @@ export function Footer() {
             </div>
           ))}
         </div>
-        <div className="mt-14 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row sm:items-center">
+
+        {/* Newsletter signup */}
+        <div className="mt-14 border-t border-white/10 pt-10">
+          <NewsletterSignup />
+        </div>
+
+        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row sm:items-center">
           <p>© {new Date().getFullYear()} The Looks Lab. All rights reserved.</p>
           <p>Built with Next.js · A premium color-grading storefront.</p>
         </div>
