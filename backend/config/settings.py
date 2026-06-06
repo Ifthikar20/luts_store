@@ -21,9 +21,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ---------------------------------------------------------------------------
 # SECRET_KEY comes from the environment. The fallback below is INSECURE and is
 # intended for local development ONLY. Set SECRET_KEY in any real environment.
-SECRET_KEY = config(
-    "SECRET_KEY",
-    default="dev-insecure-key-do-not-use-in-production-change-me",
+# An empty value (e.g. a blank `SECRET_KEY=` line copied from .env.example) is
+# treated as unset so local dev still boots.
+SECRET_KEY = (
+    config("SECRET_KEY", default="").strip()
+    or "dev-insecure-key-do-not-use-in-production-change-me"
 )
 
 # DEBUG defaults to False. Only turn it on explicitly for local dev.

@@ -1,7 +1,23 @@
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import include, path
 
+
+def root(_request):
+    """Friendly landing for the API host. The storefront UI runs separately
+    (Next.js, default http://localhost:3000); this host only serves /api."""
+    return JsonResponse(
+        {
+            "service": "The Looks Lab — BFF API",
+            "health": "/api/health",
+            "docs": "see backend/README.md",
+            "storefront": "http://localhost:3000",
+        }
+    )
+
+
 urlpatterns = [
+    path("", root),
     path("admin/", admin.site.urls),
     path("api/", include("common.urls")),
     path("api/", include("catalog.urls")),
