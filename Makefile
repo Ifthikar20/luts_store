@@ -2,7 +2,7 @@
 # Backend = Django (port 8000), Frontend = Next.js (port 3000).
 
 .PHONY: help backend-install backend-run frontend-install frontend-run dev \
-        test test-frontend lint docker-up docker-down
+        test test-frontend lint verify docker-up docker-down
 
 help:
 	@echo "Targets:"
@@ -13,6 +13,7 @@ help:
 	@echo "  test              Run backend test suite (pytest)"
 	@echo "  test-frontend     Run frontend test suite (vitest, one-shot)"
 	@echo "  lint              Lint frontend (next lint) + Django system checks"
+	@echo "  verify            Verify live S3 + Shopify integrations (read-only)"
 	@echo "  docker-up         Build & start the docker-compose stack"
 	@echo "  docker-down       Stop the docker-compose stack"
 
@@ -37,6 +38,9 @@ test-frontend:
 lint:
 	cd frontend && npm run lint
 	cd backend && . .venv/bin/activate && python manage.py check
+
+verify:
+	cd backend && . .venv/bin/activate && python manage.py verify_integrations
 
 docker-up:
 	docker compose up --build

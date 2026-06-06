@@ -74,7 +74,15 @@ Secrets live only in `backend/.env` (gitignored). The frontend exposes only
 expiring tokens; payment data never touches our servers (Shopify-hosted
 checkout). Details in each tier's README and `ARCHITECTURE.md`.
 
+## Going live (AWS S3 + Shopify)
+Step-by-step setup (private bucket + least-privilege IAM, Shopify custom app,
+`orders/paid` webhook) is in **[LIVE_SETUP.md](./LIVE_SETUP.md)**. After setting
+the secrets, verify everything read-only with:
+```bash
+make verify        # python manage.py verify_integrations
+```
+
 ## Production
 Full environment-variable reference, secrets management, going live with
 Shopify, TLS/HSTS, CORS/CSRF, Postgres, email, and S3 delivery are documented in
-**[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+**[DEPLOYMENT.md](./DEPLOYMENT.md)** and **[LIVE_SETUP.md](./LIVE_SETUP.md)**.
