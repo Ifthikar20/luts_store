@@ -1,0 +1,7 @@
+from django.apps import AppConfig
+
+
+class CustomerAuthConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "customer_auth"
+    verbose_name = "Shopify Customer Accounts (OAuth)"

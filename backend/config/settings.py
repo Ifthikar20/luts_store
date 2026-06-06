@@ -56,6 +56,45 @@ SHOPIFY_WEBHOOK_SECRET = config("SHOPIFY_WEBHOOK_SECRET", default="")
 MOCK_MODE = not bool(SHOPIFY_STOREFRONT_TOKEN.strip())
 
 # ---------------------------------------------------------------------------
+# Shopify Customer Accounts (OAuth 2.0 / OpenID Connect, PKCE) — OPTIONAL login
+# ---------------------------------------------------------------------------
+# Powers the hosted-login account/library portal at account.<domain>, exactly
+# like thelookslab.com (response_type=code, scope
+# "openid email customer-account-api:full"). This is a BFF: after login we hold
+# a server-side Django SESSION (httpOnly cookie), never a JS-readable token.
+#
+# LOGIN IS OPTIONAL. Guest checkout and the login-free signed-token downloads
+# are completely unaffected by anything in this block.
+#
+# SHOP_ID is the NUMERIC shop id used in the shopify.com customer-account URLs
+# (https://shopify.com/authentication/<SHOP_ID>/oauth/authorize). CLIENT_ID is
+# the headless / customer-account API client id. CLIENT_SECRET is only needed
+# for a confidential client (public clients use PKCE alone). See LIVE_SETUP.md.
+SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID = config(
+    "SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID", default=""
+).strip()
+SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_SECRET = config(
+    "SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_SECRET", default=""
+).strip()
+SHOPIFY_CUSTOMER_ACCOUNT_SHOP_ID = config(
+    "SHOPIFY_CUSTOMER_ACCOUNT_SHOP_ID", default=""
+).strip()
+SHOPIFY_CUSTOMER_ACCOUNT_API_VERSION = config(
+    "SHOPIFY_CUSTOMER_ACCOUNT_API_VERSION", default="2024-10"
+)
+SHOPIFY_CUSTOMER_ACCOUNT_REDIRECT_URI = config(
+    "SHOPIFY_CUSTOMER_ACCOUNT_REDIRECT_URI",
+    default="http://localhost:8000/api/auth/shopify/callback",
+)
+
+# Enabled only when BOTH a client id and a numeric shop id are configured. When
+# disabled the customer-auth views serve a clearly-gated MOCK path so the portal
+# runs locally with NO Shopify credentials.
+SHOPIFY_CUSTOMER_ACCOUNTS_ENABLED = bool(
+    SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID and SHOPIFY_CUSTOMER_ACCOUNT_SHOP_ID
+)
+
+# ---------------------------------------------------------------------------
 # Download tokens
 # ---------------------------------------------------------------------------
 DOWNLOAD_TOKEN_MAX_AGE = config("DOWNLOAD_TOKEN_MAX_AGE", default=86400, cast=int)
@@ -153,6 +192,7 @@ INSTALLED_APPS = [
     "orders",
     "delivery",
     "accounts",
+    "customer_auth",
     "engagement",
 ]
 
@@ -286,11 +326,19 @@ REST_FRAMEWORK = {
         # scraping/enumeration of signed links (60 requests/min per client IP).
         "download": "60/min",
     },
-    # TokenAuthentication lets the SPA authenticate with `Authorization: Token
-    # <token>`. Tokens are returned over the API for this demo; PRODUCTION
-    # NOTE: prefer httpOnly cookies or Shopify Customer Accounts so the token is
-    # never readable by JS (mitigates XSS token theft). See accounts/README note.
+    # Two auth schemes run side by side:
+    #  * SessionAuthentication — the PREFERRED path. The Shopify Customer
+    #    Accounts portal (customer_auth) establishes a server-side Django session
+    #    (httpOnly cookie) so no token is ever readable by JS (mitigates XSS
+    #    token theft). IsAuthenticated views (e.g. /api/me/downloads) accept it.
+    #  * TokenAuthentication — LEGACY. Kept for back-compat with the existing
+    #    `Authorization: Token <token>` accounts endpoints and their tests.
+    # Session is listed first so a logged-in browser is recognized without a
+    # token header. NOTE: DRF's SessionAuthentication enforces CSRF on unsafe
+    # methods for session-authed requests; the GET endpoints here are unaffected
+    # and the sensitive POSTs are CSRF-exempt by design (see customer_auth.views).
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [

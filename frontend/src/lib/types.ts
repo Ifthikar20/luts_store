@@ -156,6 +156,35 @@ export interface AuthResponse {
   user: User;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Shopify Customer Accounts portal (session-based, OPTIONAL login)           */
+/* -------------------------------------------------------------------------- */
+
+// The logged-in customer for the account/library portal. Backed by a
+// server-side Django session (httpOnly cookie), not a JS-readable token.
+export interface Customer {
+  email: string;
+}
+
+// Response from GET /api/auth/shopify/login.
+// - mode "shopify": navigate the browser to `authorizeUrl` (hosted Shopify
+//   login). - mode "mock": the SPA shows a local demo email field instead.
+export interface ShopifyLoginResponse {
+  mode: "shopify" | "mock";
+  authorizeUrl?: string;
+}
+
+// Response from GET /api/auth/session.
+export interface CustomerSession {
+  authenticated: boolean;
+  customer: Customer | null;
+}
+
+// Response from POST /api/auth/shopify/mock-complete (MOCK-only demo login).
+export interface MockCompleteResponse {
+  customer: Customer;
+}
+
 // One purchased LUT in the customer's download library. `downloadUrl` is a
 // signed, expiring API path (GET /api/download/<token>).
 export interface DownloadItem {

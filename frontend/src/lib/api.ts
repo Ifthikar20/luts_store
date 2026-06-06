@@ -18,14 +18,17 @@ import type {
   Collection,
   CollectionWithProducts,
   ContactInput,
+  CustomerSession,
   DownloadItem,
   EngagementResponse,
   Facets,
+  MockCompleteResponse,
   OrderConfirmation,
   Product,
   ProductQuery,
   ProductsResponse,
   ResendDownloadsResponse,
+  ShopifyLoginResponse,
   User,
 } from "./types";
 import {
@@ -94,7 +97,14 @@ export function resolveDownloadUrl(url: string): string {
 
 async function request<T>(
   path: string,
-  init?: RequestInit & { timeoutMs?: number; auth?: boolean },
+  init?: RequestInit & {
+    timeoutMs?: number;
+    auth?: boolean;
+    // session: send the httpOnly session cookie (credentials:'include') so the
+    // Shopify Customer Accounts BFF recognizes the logged-in browser. Used by
+    // the portal auth calls and the download library.
+    session?: boolean;
+  },
 ): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(
@@ -114,6 +124,8 @@ async function request<T>(
       ...init,
       signal: controller.signal,
       headers,
+      // Send cookies for session-based (Shopify Customer Accounts) requests.
+      ...(init?.session ? { credentials: "include" as const } : {}),
       // Server Components: keep data fresh-ish but allow caching.
       next: { revalidate: 60 },
     });
@@ -439,13 +451,66 @@ export async function getMe(): Promise<User | null> {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Shopify Customer Accounts portal (session-based, OPTIONAL login)           */
+/* -------------------------------------------------------------------------- */
+// These power the account/library portal via a server-side Django SESSION
+// (httpOnly cookie) — NOT a localStorage token. Every call sends the cookie
+// with credentials:'include'. Guest checkout + login-free downloads are
+// unaffected by any of this. The backend decides "shopify" (real OAuth) vs
+// "mock" (local demo) based on whether Shopify credentials are configured.
+
+// Begin login. mode "shopify": navigate the browser to `authorizeUrl` (hosted
+// Shopify login). mode "mock": the SPA shows a demo email field that calls
+// mockCompleteLogin. `returnTo` is where the callback sends the user afterward.
+export async function shopifyLogin(
+  returnTo = "/account",
+): Promise<ShopifyLoginResponse> {
+  return request<ShopifyLoginResponse>(
+    `/auth/shopify/login?returnTo=${encodeURIComponent(returnTo)}`,
+    { method: "GET", session: true },
+  );
+}
+
+// Current session: who (if anyone) is logged in. Used to hydrate AuthContext.
+export async function getSession(): Promise<CustomerSession> {
+  return request<CustomerSession>("/auth/session", {
+    method: "GET",
+    session: true,
+  });
+}
+
+// MOCK ONLY: simulate the Shopify OAuth result locally (404s in real mode).
+// Establishes the session for the given email and returns the customer.
+export async function mockCompleteLogin(
+  email: string,
+): Promise<MockCompleteResponse> {
+  return request<MockCompleteResponse>("/auth/shopify/mock-complete", {
+    method: "POST",
+    session: true,
+    body: JSON.stringify({ email }),
+  });
+}
+
+// Clear the server-side session.
+export async function shopifyLogout(): Promise<void> {
+  await request<{ ok: boolean }>("/auth/shopify/logout", {
+    method: "POST",
+    session: true,
+  });
+}
+
+/* -------------------------------------------------------------------------- */
 /* Download library + order confirmation                                      */
 /* -------------------------------------------------------------------------- */
 
+// The download library now relies on the Shopify Customer Accounts SESSION
+// cookie (credentials:'include'). `auth:true` is also passed so a legacy token,
+// if present, still works — the backend accepts either (Session OR Token).
 export async function getMyDownloads(): Promise<DownloadItem[]> {
   return request<DownloadItem[]>("/me/downloads", {
     method: "GET",
     auth: true,
+    session: true,
   });
 }
 

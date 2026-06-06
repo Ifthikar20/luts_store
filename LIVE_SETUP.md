@@ -127,6 +127,76 @@ lands back on our login-free download page.
 
 ---
 
+## B2. Shopify Customer Accounts (login) — OPTIONAL
+
+This adds **hosted Shopify login** for the account/library portal at
+`account.<domain>`, exactly like thelookslab.com — OAuth 2.0 / OpenID Connect
+with PKCE, `response_type=code`, scope `openid email customer-account-api:full`.
+We run it as a BFF: after login the browser holds a **server-side Django
+session** (httpOnly cookie), never a JS-readable token.
+
+> **Login is OPTIONAL.** Guest checkout and the login-free signed-token
+> downloads are completely unaffected. With no credentials set, the portal uses
+> a clearly-gated **MOCK** path (a demo email field) so it runs locally with no
+> Shopify connection.
+
+### 1. Enable the new customer accounts + Customer Account API
+In the Shopify admin: **Settings → Customer accounts** → choose **New customer
+accounts**. Then enable the **Customer Account API** for a headless / custom
+client (Settings → Apps and sales channels → Develop apps → your app →
+**Customer Account API**, or the Headless channel).
+
+### 2. Create the customer-account client and collect its ids
+From the Customer Account API / Headless channel configuration, copy:
+- **Client ID** (the customer-account API client id).
+- **Shop ID** — the **numeric** id that appears in the customer-account URLs
+  `https://shopify.com/authentication/<SHOP_ID>/oauth/authorize`.
+- (Only if you configured a **confidential** client) the **Client secret**.
+  Public clients use PKCE alone and need no secret.
+
+### 3. Set the allowed redirect + JavaScript origins
+In the client config, add the **callback/redirect URI** EXACTLY as the backend
+will send it:
+```
+https://api.yourdomain.com/api/auth/shopify/callback     # production
+http://localhost:8000/api/auth/shopify/callback          # local
+```
+Add your storefront origin (e.g. `https://yourdomain.com`) to the allowed
+JavaScript/redirect origins as required by the channel.
+
+### 4. Set env vars
+```
+SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID=...          # enabling REAL mode needs this + SHOP_ID
+SHOPIFY_CUSTOMER_ACCOUNT_SHOP_ID=123456789      # the NUMERIC shop id
+SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_SECRET=         # confidential clients only; else blank
+SHOPIFY_CUSTOMER_ACCOUNT_API_VERSION=2024-10
+SHOPIFY_CUSTOMER_ACCOUNT_REDIRECT_URI=https://api.yourdomain.com/api/auth/shopify/callback
+```
+`SHOPIFY_CUSTOMER_ACCOUNTS_ENABLED` flips on automatically once **both**
+`CLIENT_ID` and `SHOP_ID` are present; otherwise the MOCK login path is used.
+
+### 5. Cookies / CORS across origins
+The session rides an httpOnly cookie. With the storefront and API on the **same
+site** (e.g. `yourdomain.com` + `api.yourdomain.com`), `SameSite=Lax` works and
+is the default. For a **truly cross-site** split, set the session cookie to
+`SameSite=None; Secure` (HTTPS only) and ensure `CORS_ALLOW_CREDENTIALS=True`
+with the storefront in `CORS_ALLOWED_ORIGINS` / `CSRF_TRUSTED_ORIGINS` (already
+wired). Locally `localhost:3000` ↔ `localhost:8000` is same-site, so Lax is fine.
+
+### 6. Login flow (for reference)
+`GET /api/auth/shopify/login?returnTo=/account` → `{mode, authorizeUrl}`; the
+SPA navigates to `authorizeUrl`. Shopify redirects back to
+`/api/auth/shopify/callback?code=&state=`; the BFF verifies `state` + the
+id_token (`nonce` + `exp`), `get_or_create`s the user (attaching any download
+grants by email), logs in the session, and 302s to `FRONTEND_URL + returnTo`.
+
+> **Security caveat:** id_token **signature** verification against Shopify's
+> JWKS is a documented production TODO (`customer_auth/oauth.py`). The flow
+> verifies `nonce` + `exp` (the minimum); add JWKS-based RS256 verification
+> (PyJWT + `PyJWKClient`) before going live for full assurance.
+
+---
+
 ## C. Verify
 
 ```bash

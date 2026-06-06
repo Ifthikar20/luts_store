@@ -27,12 +27,12 @@ function formatExpiry(iso: string): string {
 }
 
 export default function AccountPage() {
-  const { user, loading: authLoading, logout } = useAuth();
+  const { customer, authenticated, loading: authLoading, logout } = useAuth();
   const [items, setItems] = useState<DownloadItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!authenticated) return;
     let active = true;
     setError(null);
     (async () => {
@@ -46,7 +46,7 @@ export default function AccountPage() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [authenticated]);
 
   // While hydrating the session, show a quiet placeholder.
   if (authLoading) {
@@ -57,8 +57,8 @@ export default function AccountPage() {
     );
   }
 
-  // Not signed in -> prompt to log in.
-  if (!user) {
+  // Not signed in -> prompt to log in (login is OPTIONAL).
+  if (!authenticated) {
     return (
       <div className="container-xl pt-36 pb-28 sm:pt-44">
         <Reveal className="mx-auto max-w-md">
@@ -71,11 +71,12 @@ export default function AccountPage() {
                 Your download library
               </h1>
               <p className="mt-2 text-sm text-slate2">
-                Sign in to access every LUT you&apos;ve purchased.
+                Sign in with your Shopify account to access every LUT
+                you&apos;ve purchased. Signing in is optional.
               </p>
             </div>
             <Link href="/account/login?next=/account" className="btn-grade">
-              Sign in
+              Continue with Shopify
             </Link>
           </div>
 
@@ -95,7 +96,7 @@ export default function AccountPage() {
             </h1>
             <p className="mt-2 inline-flex items-center gap-2 text-sm text-slate2">
               <UserCircle2 className="h-4 w-4" />
-              {user.email}
+              {customer?.email}
             </p>
           </div>
           <button

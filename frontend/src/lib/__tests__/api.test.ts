@@ -6,9 +6,13 @@ import {
   getAuthToken,
   getMyDownloads,
   getProducts,
+  getSession,
   login,
+  mockCompleteLogin,
   resendDownloads,
   setAuthToken,
+  shopifyLogin,
+  shopifyLogout,
   subscribeNewsletter,
 } from "@/lib/api";
 
@@ -173,6 +177,62 @@ describe("checkout endpoints (guest, login-free)", () => {
       jsonResponse({ detail: "Cart is empty." }, 400),
     );
     await expect(createCheckout("c1")).rejects.toThrow("Cart is empty.");
+  });
+});
+
+describe("Shopify Customer Accounts portal (session-based, credentials:include)", () => {
+  it("shopifyLogin GETs /auth/shopify/login with returnTo and sends cookies", async () => {
+    fetchSpy.mockResolvedValue(
+      jsonResponse({ mode: "shopify", authorizeUrl: "https://shopify.com/x" }),
+    );
+    const res = await shopifyLogin("/account");
+    expect(res).toEqual({
+      mode: "shopify",
+      authorizeUrl: "https://shopify.com/x",
+    });
+    const url = new URL(lastFetchUrl(fetchSpy));
+    expect(url.pathname).toBe("/api/auth/shopify/login");
+    expect(url.searchParams.get("returnTo")).toBe("/account");
+    expect(lastFetchInit(fetchSpy).credentials).toBe("include");
+  });
+
+  it("getSession GETs /auth/session with credentials include", async () => {
+    fetchSpy.mockResolvedValue(
+      jsonResponse({ authenticated: true, customer: { email: "a@b.com" } }),
+    );
+    const res = await getSession();
+    expect(res.authenticated).toBe(true);
+    expect(res.customer).toEqual({ email: "a@b.com" });
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/auth/session`);
+    expect(lastFetchInit(fetchSpy).credentials).toBe("include");
+  });
+
+  it("mockCompleteLogin POSTs the email to /auth/shopify/mock-complete with cookies", async () => {
+    fetchSpy.mockResolvedValue(
+      jsonResponse({ customer: { email: "demo@example.com" } }),
+    );
+    const res = await mockCompleteLogin("demo@example.com");
+    expect(res.customer.email).toBe("demo@example.com");
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/auth/shopify/mock-complete`);
+    const init = lastFetchInit(fetchSpy);
+    expect(init.method).toBe("POST");
+    expect(init.credentials).toBe("include");
+    expect(JSON.parse(String(init.body))).toEqual({ email: "demo@example.com" });
+  });
+
+  it("shopifyLogout POSTs /auth/shopify/logout with credentials include", async () => {
+    fetchSpy.mockResolvedValue(jsonResponse({ ok: true }));
+    await shopifyLogout();
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/auth/shopify/logout`);
+    const init = lastFetchInit(fetchSpy);
+    expect(init.method).toBe("POST");
+    expect(init.credentials).toBe("include");
+  });
+
+  it("getMyDownloads sends the session cookie (credentials include)", async () => {
+    fetchSpy.mockResolvedValue(jsonResponse([]));
+    await getMyDownloads();
+    expect(lastFetchInit(fetchSpy).credentials).toBe("include");
   });
 });
 

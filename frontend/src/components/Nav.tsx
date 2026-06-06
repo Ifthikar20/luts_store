@@ -25,7 +25,7 @@ export function Nav() {
   const [searchValue, setSearchValue] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { count, openCart } = useCart();
-  const { user } = useAuth();
+  const { authenticated } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -132,10 +132,10 @@ export function Nav() {
           <Link
             href="/account"
             className="hidden items-center gap-2 rounded-full border border-hairline bg-white px-4 py-2 text-sm font-medium text-graphite transition-colors hover:bg-cloud sm:inline-flex"
-            aria-label={user ? "Your account" : "Sign in"}
+            aria-label={authenticated ? "Your account" : "Sign in"}
           >
             <User className="h-[18px] w-[18px]" />
-            {user ? "Account" : "Sign in"}
+            {authenticated ? "Account" : "Sign in"}
           </Link>
           <button
             type="button"
@@ -198,7 +198,7 @@ export function Nav() {
               className="flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium text-graphite hover:bg-cloud"
             >
               <User className="h-[18px] w-[18px]" />
-              {user ? "Account" : "Sign in"}
+              {authenticated ? "Account" : "Sign in"}
             </Link>
           </div>
         </motion.div>

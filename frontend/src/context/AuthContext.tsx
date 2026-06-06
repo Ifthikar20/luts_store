@@ -10,63 +10,100 @@ import {
   type ReactNode,
 } from "react";
 import {
-  getMe,
-  login as apiLogin,
-  logout as apiLogout,
-  register as apiRegister,
+  getSession,
+  mockCompleteLogin,
+  shopifyLogin,
+  shopifyLogout,
 } from "@/lib/api";
-import type { User } from "@/lib/types";
+import type { Customer, ShopifyLoginResponse } from "@/lib/types";
 
+// Session-based auth for the OPTIONAL Shopify Customer Accounts portal.
+//
+// This context holds NO token. The logged-in state lives in a server-side
+// Django session (httpOnly cookie); we hydrate it on mount via /api/auth/session
+// and mutate it through the BFF endpoints. Guest checkout and the login-free
+// downloads do not depend on any of this.
 interface AuthContextValue {
-  user: User | null;
-  // True while we hydrate /auth/me from a persisted token on first load.
+  customer: Customer | null;
+  authenticated: boolean;
+  // True while we hydrate the session from the cookie on first load.
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  // Begin login. REAL mode redirects the browser to hosted Shopify login;
+  // MOCK mode returns {mode:"mock"} so the caller can show the demo email step.
+  login: (returnTo?: string) => Promise<ShopifyLoginResponse>;
+  // MOCK-only: complete the demo sign-in for an email and refresh the session.
+  completeMockLogin: (email: string) => Promise<void>;
   logout: () => Promise<void>;
+  // Re-read /api/auth/session (e.g. after returning from the OAuth redirect).
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Hydrate the session from a persisted token on mount. The token lives in
-  // localStorage (see lib/api); we exchange it for the current user via
-  // /auth/me and clear it if it is no longer valid.
+  const refresh = useCallback(async () => {
+    try {
+      const session = await getSession();
+      setCustomer(session.authenticated ? session.customer : null);
+    } catch {
+      // Network/backend hiccup -> treat as logged out (non-fatal).
+      setCustomer(null);
+    }
+  }, []);
+
+  // Hydrate the session from the httpOnly cookie on mount.
   useEffect(() => {
     let active = true;
     (async () => {
-      const me = await getMe();
-      if (active) {
-        setUser(me);
-        setLoading(false);
-      }
+      await refresh();
+      if (active) setLoading(false);
     })();
     return () => {
       active = false;
     };
-  }, []);
+  }, [refresh]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await apiLogin(email, password);
-    setUser(res.user);
-  }, []);
+  // Start the login flow. In REAL (shopify) mode we hand off the browser to the
+  // hosted Shopify login page; in MOCK mode we return the response so the caller
+  // can show the demo email step. The returned value lets the login page branch.
+  const login = useCallback(
+    async (returnTo = "/account"): Promise<ShopifyLoginResponse> => {
+      const res = await shopifyLogin(returnTo);
+      if (res.mode === "shopify" && res.authorizeUrl) {
+        window.location.assign(res.authorizeUrl);
+      }
+      return res;
+    },
+    [],
+  );
 
-  const register = useCallback(async (email: string, password: string) => {
-    const res = await apiRegister(email, password);
-    setUser(res.user);
-  }, []);
+  const completeMockLogin = useCallback(
+    async (email: string) => {
+      const res = await mockCompleteLogin(email);
+      setCustomer(res.customer);
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
-    await apiLogout();
-    setUser(null);
+    await shopifyLogout();
+    setCustomer(null);
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, login, register, logout }),
-    [user, loading, login, register, logout],
+    () => ({
+      customer,
+      authenticated: customer !== null,
+      loading,
+      login,
+      completeMockLogin,
+      logout,
+      refresh,
+    }),
+    [customer, loading, login, completeMockLogin, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

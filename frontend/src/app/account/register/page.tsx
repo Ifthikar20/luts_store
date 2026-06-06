@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 
-// The auth form lives on /account/login with a "Sign up" tab. /account/register
-// is kept as a friendly URL that lands directly on that tab.
+// Account creation now happens through Shopify Customer Accounts (hosted login),
+// so there is no separate register form. Keep this URL as a friendly redirect to
+// the unified sign-in page.
 export default function RegisterPage() {
-  redirect("/account/login?mode=register");
+  redirect("/account/login");
 }
