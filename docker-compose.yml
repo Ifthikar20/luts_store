@@ -1,0 +1,67 @@
+# ---------------------------------------------------------------------------
+# Prod-like local stack for the LUTs store: Postgres + Django BFF + Next.js.
+#
+#   docker compose up --build
+#       frontend -> http://localhost:3000
+#       backend  -> http://localhost:8000/api
+#
+# Mock mode still works here: leave the SHOPIFY_* vars in backend/.env blank and
+# the BFF serves the in-repo fixture catalog without contacting Shopify.
+#
+# Required env: copy the root .env.example to .env (Postgres creds + SECRET_KEY)
+# and copy backend/.env.example to backend/.env (app config). See DEPLOYMENT.md.
+# ---------------------------------------------------------------------------
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-luts}
+      POSTGRES_USER: ${POSTGRES_USER:-luts}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-luts}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-luts} -d ${POSTGRES_DB:-luts}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Not published by default; the backend reaches it over the compose network.
+    expose:
+      - "5432"
+
+  backend:
+    build: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      # Override DATABASE_URL to point at the compose Postgres service. This
+      # takes precedence over any value in backend/.env.
+      DATABASE_URL: postgres://${POSTGRES_USER:-luts}:${POSTGRES_PASSWORD:-luts}@db:5432/${POSTGRES_DB:-luts}
+      # The frontend container talks to the backend over the compose network.
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+    depends_on:
+      db:
+        condition: service_healthy
+    # Apply migrations, then start gunicorn (defined in backend/Dockerfile CMD).
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --access-logfile - --error-logfile -"
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # NEXT_PUBLIC_* are baked at build time and are public by design. This
+        # points the browser at the host-published backend port.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

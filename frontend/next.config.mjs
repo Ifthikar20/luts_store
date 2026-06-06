@@ -42,6 +42,9 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // Emit a self-contained server bundle (.next/standalone) so the Docker
+  // runner stage can ship a minimal image (see frontend/Dockerfile).
+  output: "standalone",
   images: {
     // Only allow Unsplash placeholder photos through next/image.
     remotePatterns: [

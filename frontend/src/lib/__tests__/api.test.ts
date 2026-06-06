@@ -1,0 +1,152 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  API_URL,
+  getAuthToken,
+  getMyDownloads,
+  getProducts,
+  login,
+  resendDownloads,
+  setAuthToken,
+  subscribeNewsletter,
+} from "@/lib/api";
+
+// A minimal ok-Response stub. fetch is mocked so no network is ever touched.
+function jsonResponse(body: unknown, status = 200): Response {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    json: async () => body,
+  } as unknown as Response;
+}
+
+// Pull the URL string out of the most recent fetch call.
+function lastFetchUrl(spy: ReturnType<typeof vi.fn>): string {
+  const call = spy.mock.calls.at(-1);
+  return String(call?.[0]);
+}
+
+function lastFetchInit(spy: ReturnType<typeof vi.fn>): RequestInit {
+  const call = spy.mock.calls.at(-1);
+  return (call?.[1] ?? {}) as RequestInit;
+}
+
+let fetchSpy: ReturnType<typeof vi.fn>;
+
+beforeEach(() => {
+  // Reset the in-memory auth token between tests.
+  setAuthToken(null);
+  fetchSpy = vi.fn();
+  vi.stubGlobal("fetch", fetchSpy);
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("getProducts querystring construction", () => {
+  it("omits empty/default params for a clean URL", async () => {
+    fetchSpy.mockResolvedValue(jsonResponse({ products: [] }));
+    await getProducts();
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/products`);
+  });
+
+  it("serializes every supported filter and joins tags with commas", async () => {
+    fetchSpy.mockResolvedValue(jsonResponse({ products: [] }));
+    await getProducts({
+      collection: "cinematic",
+      featured: true,
+      search: "teal",
+      sort: "price-asc",
+      minPrice: 10,
+      maxPrice: 99,
+      tags: ["warm", "moody"],
+    });
+    const url = new URL(lastFetchUrl(fetchSpy));
+    expect(url.pathname).toBe("/api/products");
+    expect(url.searchParams.get("collection")).toBe("cinematic");
+    expect(url.searchParams.get("featured")).toBe("true");
+    expect(url.searchParams.get("search")).toBe("teal");
+    expect(url.searchParams.get("sort")).toBe("price-asc");
+    expect(url.searchParams.get("minPrice")).toBe("10");
+    expect(url.searchParams.get("maxPrice")).toBe("99");
+    expect(url.searchParams.get("tags")).toBe("warm,moody");
+  });
+
+  it("omits the default 'featured' sort key", async () => {
+    fetchSpy.mockResolvedValue(jsonResponse({ products: [] }));
+    await getProducts({ sort: "featured" });
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/products`);
+  });
+
+  it("returns the products array from the response envelope", async () => {
+    const products = [{ id: "gid://1", title: "Teal & Orange" }];
+    fetchSpy.mockResolvedValue(jsonResponse({ products }));
+    await expect(getProducts()).resolves.toEqual(products);
+  });
+});
+
+describe("auth token storage + header injection", () => {
+  it("persists the token to localStorage and reads it back", () => {
+    setAuthToken("abc123");
+    expect(getAuthToken()).toBe("abc123");
+    expect(window.localStorage.getItem("looks-lab:authToken")).toBe("abc123");
+
+    setAuthToken(null);
+    expect(getAuthToken()).toBeNull();
+    expect(window.localStorage.getItem("looks-lab:authToken")).toBeNull();
+  });
+
+  it("login stores the returned token", async () => {
+    fetchSpy.mockResolvedValue(
+      jsonResponse({ token: "tok-xyz", user: { id: 1, email: "a@b.com" } }),
+    );
+    const res = await login("a@b.com", "pw");
+    expect(res.token).toBe("tok-xyz");
+    expect(getAuthToken()).toBe("tok-xyz");
+
+    const init = lastFetchInit(fetchSpy);
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({
+      email: "a@b.com",
+      password: "pw",
+    });
+  });
+
+  it("injects the Authorization header on authed requests", async () => {
+    setAuthToken("tok-secret");
+    fetchSpy.mockResolvedValue(jsonResponse([]));
+    await getMyDownloads();
+    const headers = lastFetchInit(fetchSpy).headers as Record<string, string>;
+    expect(headers.Authorization).toBe("Token tok-secret");
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/me/downloads`);
+  });
+
+  it("omits the Authorization header when there is no token", async () => {
+    fetchSpy.mockResolvedValue(jsonResponse([]));
+    await getMyDownloads();
+    const headers = lastFetchInit(fetchSpy).headers as Record<string, string>;
+    expect(headers.Authorization).toBeUndefined();
+  });
+});
+
+describe("engagement endpoints hit the right paths", () => {
+  it("subscribeNewsletter POSTs to /newsletter with the email", async () => {
+    fetchSpy.mockResolvedValue(jsonResponse({ status: "ok", detail: "Thanks" }));
+    await subscribeNewsletter("fan@example.com");
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/newsletter`);
+    const init = lastFetchInit(fetchSpy);
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({ email: "fan@example.com" });
+  });
+
+  it("resendDownloads POSTs to /orders/resend-downloads with the email", async () => {
+    fetchSpy.mockResolvedValue(jsonResponse({ status: "ok", detail: "Sent" }));
+    await resendDownloads("buyer@example.com");
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/orders/resend-downloads`);
+    const init = lastFetchInit(fetchSpy);
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({
+      email: "buyer@example.com",
+    });
+  });
+});

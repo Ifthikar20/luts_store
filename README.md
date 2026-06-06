@@ -41,8 +41,40 @@ mode to real Shopify calls once `SHOPIFY_STOREFRONT_TOKEN` is set. Configure a
 Shopify webhook for `orders/paid` pointing at
 `/api/webhooks/shopify/orders-paid`. See `backend/README.md`.
 
+## Testing
+```bash
+# Backend — Django + pytest (67 tests, runs in mock mode, SQLite)
+cd backend && source .venv/bin/activate && python -m pytest
+
+# Frontend — Vitest + React Testing Library (lib + component tests)
+cd frontend && npm run test          # watch mode
+cd frontend && npm run test -- --run # one-shot (CI)
+```
+
+## CI
+`.github/workflows/ci.yml` runs on every push and pull request with two jobs:
+- **backend** — Python 3.11: `manage.py check`, `makemigrations --check
+  --dry-run`, and `pytest` (mock mode, SQLite — no Shopify env).
+- **frontend** — Node 22: `npm ci`, `lint`, `tsc --noEmit`, `vitest --run`, and
+  `next build`. Both jobs cache dependencies.
+
+## Docker
+A prod-like local stack (Postgres + Django + Next.js):
+```bash
+cp .env.example .env                  # Postgres creds + NEXT_PUBLIC_* (public)
+cp backend/.env.example backend/.env  # app config (blank SHOPIFY_* = mock mode)
+docker compose up --build             # frontend :3000, backend :8000
+```
+Both images run as non-root; the backend runs migrations then gunicorn; the
+frontend serves Next's `standalone` output. See **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+
 ## Security
 Secrets live only in `backend/.env` (gitignored). The frontend exposes only
 `NEXT_PUBLIC_*` values. Webhooks are HMAC-verified; downloads use signed,
 expiring tokens; payment data never touches our servers (Shopify-hosted
 checkout). Details in each tier's README and `ARCHITECTURE.md`.
+
+## Production
+Full environment-variable reference, secrets management, going live with
+Shopify, TLS/HSTS, CORS/CSRF, Postgres, email, and S3 delivery are documented in
+**[DEPLOYMENT.md](./DEPLOYMENT.md)**.

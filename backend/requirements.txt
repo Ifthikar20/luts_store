@@ -5,6 +5,9 @@ requests>=2.32
 python-decouple>=3.8
 dj-database-url>=2.2
 gunicorn>=22.0
+# Postgres driver — only used when DATABASE_URL points at Postgres (e.g. the
+# docker-compose `db` service). SQLite remains the zero-config local default.
+psycopg[binary]>=3.2
 
 # Test dependencies
 pytest>=8.0
