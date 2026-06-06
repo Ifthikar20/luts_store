@@ -12,16 +12,18 @@ import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/format";
 
 /**
- * A card that shows a poster image and lazily plays a short, muted, looping
- * clip (before/after grade feel) on hover and while in view.
+ * Apple-style media showcase card. Shows a poster image and AUTOPLAYS a short,
+ * muted, looping clip while the card is in view (the way Apple autoplays its
+ * product clips), with a gentle hover lift.
  *
  * Performance + a11y:
  *  - The <video> starts with NO `src` and `preload="none"`. The real source is
- *    only attached once the card is hovered or scrolled into view, so we never
- *    download video the user can't see.
+ *    only attached once the card is scrolled into view (or hovered), so we never
+ *    download video the user can't see. This lazy-load contract is what the
+ *    VideoCard test asserts (no eager <video>/src on the initial render).
  *  - An IntersectionObserver plays/pauses the clip as it enters/leaves the
- *    viewport (and hover forces play on pointer devices).
- *  - Under prefers-reduced-motion we render the static poster only and never
+ *    viewport; offscreen cards are paused to save battery/CPU.
+ *  - Under prefers-reduced-motion we render the static poster ONLY and never
  *    attach a video source or autoplay.
  */
 export function VideoCard({
@@ -29,13 +31,15 @@ export function VideoCard({
   poster,
   alt,
   className,
-  rounded = "rounded-3xl",
+  rounded = "rounded-[28px]",
   children,
   /** Disable hover-to-play (e.g. touch-first contexts). In-view still plays. */
   playOnHover = true,
   /** When false, only hover triggers playback (used for hover-preview cards). */
   playInView = true,
   priorityPoster = false,
+  /** Render a subtle bottom scrim so overlaid text stays legible. */
+  overlay = true,
 }: {
   src: string;
   poster: string;
@@ -46,6 +50,7 @@ export function VideoCard({
   playOnHover?: boolean;
   playInView?: boolean;
   priorityPoster?: boolean;
+  overlay?: boolean;
 }) {
   const reduced = useReducedMotion() ?? false;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -98,10 +103,10 @@ export function VideoCard({
       onMouseLeave={onLeave}
       onFocus={onEnter}
       onBlur={onLeave}
-      whileHover={reduced ? undefined : { y: -6 }}
-      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+      whileHover={reduced ? undefined : { scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 260, damping: 26 }}
       className={cn(
-        "group relative h-full overflow-hidden border border-white/10 bg-ink-100",
+        "group relative h-full overflow-hidden bg-cloud shadow-soft transition-shadow duration-500 hover:shadow-lift",
         rounded,
         className,
       )}
@@ -114,7 +119,7 @@ export function VideoCard({
         fill
         sizes="(max-width: 768px) 100vw, 50vw"
         priority={priorityPoster}
-        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
       />
 
       {/* Video overlays the poster once loaded; fades in when actually playing. */}
@@ -136,17 +141,10 @@ export function VideoCard({
         </video>
       )}
 
-      {/* Cinematic scrim so any overlaid text stays legible. */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-transparent" />
-      {/* Hover glow ring. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-        style={{
-          boxShadow:
-            "inset 0 0 0 1px rgba(255,255,255,0.18), inset 0 -60px 80px -40px rgba(22,216,198,0.25)",
-        }}
-      />
+      {/* Subtle bottom scrim so any overlaid label text stays legible. */}
+      {overlay && (
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-black/0 to-transparent" />
+      )}
 
       {children}
     </motion.div>

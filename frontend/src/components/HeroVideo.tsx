@@ -5,14 +5,15 @@ import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 
 /**
- * Full-bleed cinematic hero background.
+ * Apple-style hero media showcase: a large rounded-corner card that autoplays a
+ * muted, looping clip while in view.
  *
  * Behaviour:
  *  - Renders the poster image immediately (also the LCP-friendly fallback).
  *  - Under prefers-reduced-motion: poster ONLY, no <video>, no autoplay.
  *  - Otherwise: a muted, looping, playsInline, autoPlay <video> fades in once it
  *    can render, and is PAUSED when scrolled out of view (IntersectionObserver)
- *    to save battery/CPU. A dark gradient scrim keeps hero copy legible.
+ *    to save battery/CPU.
  */
 export function HeroVideo({
   src,
@@ -42,14 +43,14 @@ export function HeroVideo({
   }, [reduced]);
 
   return (
-    <div aria-hidden className="absolute inset-0 overflow-hidden">
+    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[28px] bg-cloud shadow-lift sm:rounded-[40px]">
       {/* Poster — immediate paint + reduced-motion fallback. */}
       <Image
         src={poster}
         alt=""
         fill
         priority
-        sizes="100vw"
+        sizes="(max-width: 1024px) 100vw, 1100px"
         className={`object-cover transition-opacity duration-1000 ${
           ready && !reduced ? "opacity-0" : "opacity-100"
         }`}
@@ -72,11 +73,6 @@ export function HeroVideo({
           <source src={src} type="video/mp4" />
         </video>
       )}
-
-      {/* Cinematic scrims: darken bottom + sides, plus a subtle grade tint. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/40" />
-      <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-transparent to-ink/60" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-teal-grade/10 via-transparent to-orange-grade/15 mix-blend-overlay" />
     </div>
   );
 }

@@ -40,18 +40,18 @@ export function FilterPanel({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="mb-4 flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-medium text-white/80 backdrop-blur-xl lg:hidden"
+        className="mb-4 flex w-full items-center justify-between rounded-2xl border border-hairline bg-white px-4 py-3 text-sm font-medium text-graphite shadow-soft lg:hidden"
       >
         <span className="inline-flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-white/50" />
+          <SlidersHorizontal className="h-4 w-4 text-slate2" />
           Filters
           {activeCount > 0 && (
-            <span className="grid h-5 min-w-5 place-items-center rounded-full bg-grade-teal-orange px-1 text-[11px] font-bold text-ink">
+            <span className="grid h-5 min-w-5 place-items-center rounded-full bg-sky px-1 text-[11px] font-bold text-white">
               {activeCount}
             </span>
           )}
         </span>
-        <span className="text-white/40">{open ? "Hide" : "Show"}</span>
+        <span className="text-slate2">{open ? "Hide" : "Show"}</span>
       </button>
 
       {/* Mobile: animated disclosure. Desktop: always shown. */}
@@ -128,14 +128,14 @@ function FilterBody({
   return (
     <div className="glass space-y-7 rounded-3xl p-5">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-white/70">
+        <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-graphite">
           Filters
         </h2>
         {activeCount > 0 && (
           <button
             type="button"
             onClick={onClear}
-            className="inline-flex items-center gap-1 text-xs font-medium text-white/50 transition-colors hover:text-white"
+            className="inline-flex items-center gap-1 text-xs font-medium text-slate2 transition-colors hover:text-graphite"
           >
             <X className="h-3.5 w-3.5" />
             Clear all
@@ -152,7 +152,7 @@ function FilterBody({
 
       {facets?.productTypes && facets.productTypes.length > 1 && (
         <section>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/45">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate2">
             Type
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -167,8 +167,8 @@ function FilterBody({
                   className={cn(
                     "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
                     active
-                      ? "border-transparent bg-grade-teal-orange text-ink"
-                      : "border-white/12 bg-white/[0.03] text-white/70 hover:bg-white/[0.08] hover:text-white",
+                      ? "border-transparent bg-sky text-white"
+                      : "border-hairline bg-white text-slate2 hover:bg-cloud hover:text-graphite",
                   )}
                 >
                   {t.value}
@@ -182,7 +182,7 @@ function FilterBody({
 
       {facets?.tags && facets.tags.length > 0 && (
         <section>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/45">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate2">
             Tags
           </h3>
           <ul className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
@@ -190,20 +190,20 @@ function FilterBody({
               const checked = state.tags.includes(tag.value);
               return (
                 <li key={tag.value}>
-                  <label className="flex cursor-pointer items-center justify-between rounded-xl px-2.5 py-1.5 text-sm text-white/75 transition-colors hover:bg-white/[0.04]">
+                  <label className="flex cursor-pointer items-center justify-between rounded-xl px-2.5 py-1.5 text-sm text-graphite transition-colors hover:bg-cloud">
                     <span className="inline-flex items-center gap-2.5">
                       <span
                         className={cn(
                           "grid h-[18px] w-[18px] place-items-center rounded-md border transition-colors",
                           checked
-                            ? "border-transparent bg-grade-teal-orange"
-                            : "border-white/20 bg-transparent",
+                            ? "border-transparent bg-sky"
+                            : "border-hairline bg-white",
                         )}
                       >
                         {checked && (
                           <svg
                             viewBox="0 0 12 12"
-                            className="h-3 w-3 text-ink"
+                            className="h-3 w-3 text-white"
                             fill="none"
                             stroke="currentColor"
                             strokeWidth="2"
@@ -220,7 +220,7 @@ function FilterBody({
                       />
                       {tag.value}
                     </span>
-                    <span className="text-xs text-white/35">{tag.count}</span>
+                    <span className="text-xs text-slate2">{tag.count}</span>
                   </label>
                 </li>
               );
@@ -268,10 +268,10 @@ function PriceFilter({
 
   return (
     <section>
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/45">
+      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate2">
         Price
         {bounds && (
-          <span className="ml-2 font-normal normal-case tracking-normal text-white/30">
+          <span className="ml-2 font-normal normal-case tracking-normal text-slate2">
             ${Math.floor(bounds.min)}–${Math.ceil(bounds.max)}
           </span>
         )}
@@ -285,7 +285,7 @@ function PriceFilter({
             commit(v, maxInput);
           }}
         />
-        <span className="text-white/30">–</span>
+        <span className="text-slate2">–</span>
         <PriceInput
           label="Max"
           value={maxInput}
@@ -310,7 +310,7 @@ function PriceInput({
 }) {
   return (
     <div className="relative flex-1">
-      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/35">
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate2">
         $
       </span>
       <input
@@ -321,7 +321,7 @@ function PriceInput({
         value={value}
         aria-label={`${label} price`}
         onChange={(e) => onValue(e.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2 pl-6 pr-2 text-sm text-white placeholder:text-white/35 focus:border-white/25 focus:outline-none"
+        className="w-full rounded-xl border border-hairline bg-white py-2 pl-6 pr-2 text-sm text-graphite placeholder:text-slate2 focus:border-sky focus:outline-none focus:ring-2 focus:ring-sky/30"
       />
     </div>
   );

@@ -17,7 +17,7 @@ export function ProductGrid({
 }) {
   if (products.length === 0) {
     return (
-      <div className="glass rounded-3xl px-8 py-16 text-center text-white/50">
+      <div className="glass rounded-3xl px-8 py-16 text-center text-slate2">
         {emptyMessage}
       </div>
     );

@@ -28,8 +28,8 @@ export function ProductDetail({ product }: { product: Product }) {
 
   return (
     <div className="container-xl relative pt-36 sm:pt-44">
-      <nav className="mb-8 flex items-center gap-1.5 text-sm text-white/45">
-        <Link href="/" className="hover:text-white">
+      <nav className="mb-8 flex items-center gap-1.5 text-sm text-slate2">
+        <Link href="/" className="hover:text-graphite">
           Home
         </Link>
         <ChevronRight className="h-4 w-4" />
@@ -37,14 +37,14 @@ export function ProductDetail({ product }: { product: Product }) {
           <>
             <Link
               href={`/collections/${product.collections[0].handle}`}
-              className="hover:text-white"
+              className="hover:text-graphite"
             >
               {product.collections[0].title}
             </Link>
             <ChevronRight className="h-4 w-4" />
           </>
         )}
-        <span className="text-white/70">{product.title}</span>
+        <span className="text-graphite">{product.title}</span>
       </nav>
 
       <div className="grid gap-12 lg:grid-cols-2">
@@ -55,7 +55,7 @@ export function ProductDetail({ product }: { product: Product }) {
               key={active}
               initial={{ opacity: 0.4 }}
               animate={{ opacity: 1 }}
-              className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-white/10"
+              className="relative aspect-[4/3] overflow-hidden rounded-[28px] border border-hairline shadow-soft"
             >
               <Image
                 src={gallery[active].url}
@@ -75,8 +75,8 @@ export function ProductDetail({ product }: { product: Product }) {
                     onClick={() => setActive(i)}
                     className={`relative h-20 w-24 shrink-0 overflow-hidden rounded-xl border transition-all ${
                       i === active
-                        ? "border-teal-grade ring-2 ring-teal-grade/40"
-                        : "border-white/10 opacity-60 hover:opacity-100"
+                        ? "border-sky ring-2 ring-sky/40"
+                        : "border-hairline opacity-60 hover:opacity-100"
                     }`}
                     aria-label={`View image ${i + 1}`}
                   >
@@ -96,47 +96,47 @@ export function ProductDetail({ product }: { product: Product }) {
 
         {/* Info */}
         <Reveal direction="left">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-grade-teal">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky">
             {product.productType} · {product.vendor}
           </p>
-          <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">
+          <h1 className="mt-3 font-display text-4xl font-bold tracking-tightest text-graphite sm:text-5xl">
             {product.title}
           </h1>
 
-          <p className="mt-5 font-display text-3xl font-semibold text-white">
+          <p className="mt-5 font-display text-3xl font-semibold text-graphite">
             {formatMoney(product.priceRange.min)}
           </p>
 
-          <p className="mt-6 text-white/65">{product.description}</p>
+          <p className="mt-6 leading-relaxed text-slate2">{product.description}</p>
 
           {/* What's included */}
-          <div className="mt-8 grid gap-3 rounded-3xl border border-white/10 bg-white/[0.02] p-6">
-            <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-white/50">
+          <div className="mt-8 grid gap-3 rounded-[28px] border border-hairline bg-cloud p-6">
+            <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-slate2">
               What&apos;s included
             </h2>
-            <div className="flex items-center gap-3 text-white/80">
-              <Layers className="h-5 w-5 text-teal-grade" />
+            <div className="flex items-center gap-3 text-graphite">
+              <Layers className="h-5 w-5 text-sky" />
               <span>
-                <strong className="text-white">
+                <strong className="text-graphite">
                   {product.metafields.lutCount}
                 </strong>{" "}
                 LUTs in this pack
               </span>
             </div>
-            <div className="flex items-center gap-3 text-white/80">
-              <Package className="h-5 w-5 text-teal-grade" />
+            <div className="flex items-center gap-3 text-graphite">
+              <Package className="h-5 w-5 text-sky" />
               <span>
                 Formats:{" "}
-                <strong className="text-white">
+                <strong className="text-graphite">
                   {product.metafields.formats.join(", ")}
                 </strong>
               </span>
             </div>
-            <div className="flex items-start gap-3 text-white/80">
-              <MonitorPlay className="mt-0.5 h-5 w-5 shrink-0 text-teal-grade" />
+            <div className="flex items-start gap-3 text-graphite">
+              <MonitorPlay className="mt-0.5 h-5 w-5 shrink-0 text-sky" />
               <span>
                 Compatible with{" "}
-                <strong className="text-white">
+                <strong className="text-graphite">
                   {product.metafields.compatibleApps.join(", ")}
                 </strong>
               </span>
@@ -168,7 +168,7 @@ export function ProductDetail({ product }: { product: Product }) {
             </button>
           </div>
           {variant && !variant.availableForSale && (
-            <p className="mt-3 text-sm text-orange-grade">
+            <p className="mt-3 text-sm text-red-600">
               Currently unavailable.
             </p>
           )}
@@ -178,7 +178,7 @@ export function ProductDetail({ product }: { product: Product }) {
               {product.tags.map((t) => (
                 <span
                   key={t}
-                  className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/55"
+                  className="rounded-full border border-hairline bg-cloud px-3 py-1 text-xs text-slate2"
                 >
                   #{t}
                 </span>

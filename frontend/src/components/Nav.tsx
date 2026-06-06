@@ -56,17 +56,17 @@ export function Nav() {
     >
       <nav
         className={cn(
-          "container-xl mt-3 flex items-center justify-between rounded-full border transition-all duration-300",
+          "container-xl mt-3 flex items-center justify-between rounded-full transition-all duration-300",
           scrolled
-            ? "border-white/10 bg-ink/70 py-2.5 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.8)] backdrop-blur-xl"
-            : "border-transparent bg-transparent py-4",
+            ? "border border-hairline bg-white/80 py-2.5 shadow-soft backdrop-blur-xl"
+            : "border border-transparent bg-transparent py-4",
         )}
       >
         <Link href="/" className="flex items-center gap-2.5 pl-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-grade-teal-orange text-ink">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-grade-teal-orange text-white">
             <span className="font-display text-sm font-black">L</span>
           </span>
-          <span className="font-display text-base font-bold tracking-tight text-white">
+          <span className="font-display text-base font-bold tracking-tight text-graphite">
             The Looks Lab
           </span>
         </Link>
@@ -76,7 +76,7 @@ export function Nav() {
             <Link
               key={l.href}
               href={l.href}
-              className="rounded-full px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
+              className="rounded-full px-4 py-2 text-sm font-medium text-slate2 transition-colors hover:bg-cloud hover:text-graphite"
             >
               {l.label}
             </Link>
@@ -112,7 +112,7 @@ export function Nav() {
                     }}
                     placeholder="Search looks…"
                     aria-label="Search products"
-                    className="mr-1 w-40 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-white/25 focus:outline-none sm:w-52"
+                    className="mr-1 w-40 rounded-full border border-hairline bg-white px-4 py-2 text-sm text-graphite placeholder:text-slate2 focus:border-sky focus:outline-none focus:ring-2 focus:ring-sky/30 sm:w-52"
                   />
                 </motion.form>
               )}
@@ -123,7 +123,7 @@ export function Nav() {
                 if (searchOpen) submitSearch({ preventDefault() {} } as React.FormEvent);
                 else setSearchOpen(true);
               }}
-              className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white transition-colors hover:bg-white/[0.1]"
+              className="grid h-10 w-10 place-items-center rounded-full border border-hairline bg-white text-graphite transition-colors hover:bg-cloud"
               aria-label="Search"
             >
               <Search className="h-[18px] w-[18px]" />
@@ -131,7 +131,7 @@ export function Nav() {
           </div>
           <Link
             href="/account"
-            className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/[0.1] hover:text-white sm:inline-flex"
+            className="hidden items-center gap-2 rounded-full border border-hairline bg-white px-4 py-2 text-sm font-medium text-graphite transition-colors hover:bg-cloud sm:inline-flex"
             aria-label={user ? "Your account" : "Sign in"}
           >
             <User className="h-[18px] w-[18px]" />
@@ -140,12 +140,12 @@ export function Nav() {
           <button
             type="button"
             onClick={openCart}
-            className="relative grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white transition-colors hover:bg-white/[0.1]"
+            className="relative grid h-10 w-10 place-items-center rounded-full border border-hairline bg-white text-graphite transition-colors hover:bg-cloud"
             aria-label={`Open cart, ${count} item${count === 1 ? "" : "s"}`}
           >
             <ShoppingBag className="h-[18px] w-[18px]" />
             {count > 0 && (
-              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-grade-teal-orange px-1 text-[11px] font-bold text-ink">
+              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-sky px-1 text-[11px] font-bold text-white">
                 {count}
               </span>
             )}
@@ -153,7 +153,7 @@ export function Nav() {
           <button
             type="button"
             onClick={() => setMobileOpen((o) => !o)}
-            className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white md:hidden"
+            className="grid h-10 w-10 place-items-center rounded-full border border-hairline bg-white text-graphite md:hidden"
             aria-label="Toggle menu"
             aria-expanded={mobileOpen}
           >
@@ -171,14 +171,14 @@ export function Nav() {
         >
           <div className="glass flex flex-col gap-1 rounded-3xl p-3">
             <form role="search" onSubmit={submitSearch} className="relative mb-1">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-white/40" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate2" />
               <input
                 type="search"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 placeholder="Search looks…"
                 aria-label="Search products"
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3 pl-11 pr-4 text-sm text-white placeholder:text-white/40 focus:border-white/25 focus:outline-none"
+                className="w-full rounded-2xl border border-hairline bg-white py-3 pl-11 pr-4 text-sm text-graphite placeholder:text-slate2 focus:border-sky focus:outline-none focus:ring-2 focus:ring-sky/30"
               />
             </form>
             {links.map((l) => (
@@ -186,16 +186,16 @@ export function Nav() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setMobileOpen(false)}
-                className="rounded-2xl px-4 py-3 text-sm font-medium text-white/80 hover:bg-white/[0.06]"
+                className="rounded-2xl px-4 py-3 text-sm font-medium text-graphite hover:bg-cloud"
               >
                 {l.label}
               </Link>
             ))}
-            <div className="my-1 h-px bg-white/10" />
+            <div className="my-1 h-px bg-hairline" />
             <Link
               href="/account"
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium text-white/80 hover:bg-white/[0.06]"
+              className="flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium text-graphite hover:bg-cloud"
             >
               <User className="h-[18px] w-[18px]" />
               {user ? "Account" : "Sign in"}

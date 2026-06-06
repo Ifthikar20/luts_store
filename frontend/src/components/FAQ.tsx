@@ -35,7 +35,7 @@ const FAQS: FaqItem[] = [
 export function FAQ({ items = FAQS }: { items?: FaqItem[] }) {
   const [open, setOpen] = useState<number | null>(0);
   return (
-    <div className="mx-auto max-w-3xl divide-y divide-white/10 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02]">
+    <div className="mx-auto max-w-3xl divide-y divide-hairline overflow-hidden rounded-[28px] border border-hairline bg-white shadow-soft">
       {items.map((item, i) => {
         const isOpen = open === i;
         return (
@@ -46,13 +46,13 @@ export function FAQ({ items = FAQS }: { items?: FaqItem[] }) {
               className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
               aria-expanded={isOpen}
             >
-              <span className="font-display text-lg font-medium text-white">
+              <span className="font-display text-lg font-medium text-graphite">
                 {item.q}
               </span>
               <motion.span
                 animate={{ rotate: isOpen ? 45 : 0 }}
                 transition={{ duration: 0.2 }}
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/15 text-white/80"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-hairline text-slate2"
               >
                 <Plus className="h-4 w-4" />
               </motion.span>
@@ -66,7 +66,7 @@ export function FAQ({ items = FAQS }: { items?: FaqItem[] }) {
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                   className="overflow-hidden"
                 >
-                  <p className="px-6 pb-6 text-white/60">{item.a}</p>
+                  <p className="px-6 pb-6 leading-relaxed text-slate2">{item.a}</p>
                 </motion.div>
               )}
             </AnimatePresence>

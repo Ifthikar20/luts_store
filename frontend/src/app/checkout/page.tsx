@@ -67,7 +67,7 @@ function CheckoutContent() {
   if (loading) {
     return (
       <div className="container-xl grid min-h-[60vh] place-items-center pt-36">
-        <Loader2 className="h-6 w-6 animate-spin text-white/40" />
+        <Loader2 className="h-6 w-6 animate-spin text-slate2" />
       </div>
     );
   }
@@ -77,7 +77,7 @@ function CheckoutContent() {
       <div className="container-xl pt-36 pb-28 sm:pt-44">
         <Reveal className="mx-auto max-w-md">
           <div className="glass flex flex-col items-center gap-5 rounded-3xl px-8 py-16 text-center">
-            <p className="text-lg text-white/60">{error}</p>
+            <p className="text-lg text-slate2">{error}</p>
             <Link href="/cart" className="btn-grade">
               Back to cart
             </Link>
@@ -94,19 +94,19 @@ function CheckoutContent() {
       <Reveal>
         <Link
           href="/cart"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-white/55 transition-colors hover:text-white"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-slate2 transition-colors hover:text-graphite"
         >
           <ArrowLeft className="h-4 w-4" /> Back to cart
         </Link>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">
+          <h1 className="font-display text-4xl font-bold tracking-tightest text-graphite sm:text-5xl">
             Checkout
           </h1>
-          <span className="rounded-full border border-orange-grade/40 bg-orange-grade/10 px-3 py-1 text-xs font-semibold text-orange-grade">
+          <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
             Demo checkout
           </span>
         </div>
-        <p className="mt-3 max-w-xl text-white/55">
+        <p className="mt-3 max-w-xl text-slate2">
           This is a demonstration checkout — no real payment is taken. Enter an
           email to receive your download links. No account required.
         </p>
@@ -116,12 +116,12 @@ function CheckoutContent() {
         {/* Guest details + pay */}
         <Reveal>
           <div className="glass rounded-3xl p-6 sm:p-8">
-            <h2 className="font-display text-lg font-semibold text-white">
+            <h2 className="font-display text-lg font-semibold text-graphite">
               Your details
             </h2>
             <label
               htmlFor="checkout-email"
-              className="mt-5 block text-sm text-white/55"
+              className="mt-5 block text-sm text-slate2"
             >
               Email for your downloads
             </label>
@@ -134,10 +134,10 @@ function CheckoutContent() {
               onBlur={() => setTouched(true)}
               placeholder="you@example.com"
               aria-invalid={touched && !emailValid}
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-xl transition-colors focus:border-white/25 focus:bg-white/[0.06] focus:outline-none"
+              className="mt-2 w-full rounded-2xl border border-hairline bg-white px-4 py-3 text-sm text-graphite placeholder:text-slate2 transition-colors focus:border-sky focus:ring-2 focus:ring-sky/30 focus:outline-none"
             />
             {touched && !emailValid && (
-              <p className="mt-2 text-sm text-red-300/90" role="alert">
+              <p className="mt-2 text-sm text-red-600" role="alert">
                 Enter a valid email address.
               </p>
             )}
@@ -162,12 +162,12 @@ function CheckoutContent() {
             </div>
 
             {error && (
-              <p className="mt-3 text-center text-sm text-red-300/90" role="alert">
+              <p className="mt-3 text-center text-sm text-red-600" role="alert">
                 {error}
               </p>
             )}
 
-            <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-white/35">
+            <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-slate2">
               <ShieldCheck className="h-3.5 w-3.5" />
               Login-free — your download links work straight away.
             </p>
@@ -177,7 +177,7 @@ function CheckoutContent() {
         {/* Order summary */}
         <Reveal direction="left">
           <div className="glass rounded-3xl p-6 sm:p-8">
-            <h2 className="font-display text-lg font-semibold text-white">
+            <h2 className="font-display text-lg font-semibold text-graphite">
               Order summary
             </h2>
             <ul className="mt-5 space-y-4">
@@ -193,24 +193,24 @@ function CheckoutContent() {
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-white">
+                    <p className="truncate font-medium text-graphite">
                       {line.merchandise.product.title}
                     </p>
-                    <p className="text-sm text-white/45">×{line.quantity}</p>
+                    <p className="text-sm text-slate2">×{line.quantity}</p>
                   </div>
-                  <p className="shrink-0 font-display font-semibold text-white">
+                  <p className="shrink-0 font-display font-semibold text-graphite">
                     {formatMoney(line.merchandise.price)}
                   </p>
                 </li>
               ))}
             </ul>
 
-            <dl className="mt-6 space-y-3 border-t border-white/10 pt-5 text-sm">
-              <div className="flex justify-between text-white/55">
+            <dl className="mt-6 space-y-3 border-t border-hairline pt-5 text-sm">
+              <div className="flex justify-between text-slate2">
                 <dt>Subtotal</dt>
                 <dd>{cart && formatMoney(cart.cost.subtotal)}</dd>
               </div>
-              <div className="flex justify-between text-base font-semibold text-white">
+              <div className="flex justify-between text-base font-semibold text-graphite">
                 <dt>Total</dt>
                 <dd>{cart && formatMoney(cart.cost.total)}</dd>
               </div>
@@ -227,7 +227,7 @@ export default function CheckoutPage() {
     <Suspense
       fallback={
         <div className="container-xl grid min-h-[60vh] place-items-center pt-36">
-          <Loader2 className="h-6 w-6 animate-spin text-white/40" />
+          <Loader2 className="h-6 w-6 animate-spin text-slate2" />
         </div>
       }
     >

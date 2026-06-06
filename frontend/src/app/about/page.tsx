@@ -44,13 +44,13 @@ export default function AboutPage() {
 
       <div className="container-xl relative pt-36 sm:pt-44">
         <Reveal>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-grade-teal">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-sky">
             Our story
           </p>
-          <h1 className="max-w-3xl font-display text-4xl font-bold leading-tight tracking-tight text-white sm:text-6xl">
+          <h1 className="max-w-3xl font-display text-4xl font-bold leading-tight tracking-tightest text-graphite sm:text-6xl">
             Cinematic color, made approachable.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg text-white/55">
+          <p className="mt-6 max-w-2xl text-lg text-slate2">
             The Looks Lab started with a simple frustration: great color grades
             felt locked behind years of practice and expensive suites. We set
             out to bottle that craft into LUTs anyone can drop onto their
@@ -63,17 +63,17 @@ export default function AboutPage() {
         <div className="grid gap-12 lg:grid-cols-2">
           <Reveal>
             <div className="glass rounded-3xl p-8">
-              <h2 className="font-display text-2xl font-semibold text-white">
+              <h2 className="font-display text-2xl font-semibold text-graphite">
                 A studio, not a marketplace
               </h2>
-              <p className="mt-4 text-white/55">
+              <p className="mt-4 text-slate2">
                 We are a small team of colorists and filmmakers. Each pack is
                 hand-built in our grading suite, reviewed across cameras and
                 lighting conditions, and refined until it holds up on real
                 projects — weddings, music videos, commercials, short films and
                 everything in between.
               </p>
-              <p className="mt-4 text-white/55">
+              <p className="mt-4 text-slate2">
                 Because we make every look ourselves, we can stand behind it. If
                 a file ever misbehaves, we fix it. When we improve a pack, you
                 get the update free.
@@ -82,16 +82,16 @@ export default function AboutPage() {
           </Reveal>
           <Reveal direction="left">
             <div className="glass rounded-3xl p-8">
-              <h2 className="font-display text-2xl font-semibold text-white">
+              <h2 className="font-display text-2xl font-semibold text-graphite">
                 What we believe
               </h2>
-              <p className="mt-4 text-white/55">
+              <p className="mt-4 text-slate2">
                 Color is storytelling. The right grade sets mood, guides the
                 eye, and makes footage feel intentional. Our job is to give you
                 that emotional shorthand without the technical overhead — so you
                 can spend your energy on the story, not the scopes.
               </p>
-              <p className="mt-4 text-white/55">
+              <p className="mt-4 text-slate2">
                 We price honestly, deliver instantly, and never lock your work
                 behind a watermark or a renewal.
               </p>
@@ -110,10 +110,10 @@ export default function AboutPage() {
           {values.map((v) => (
             <StaggerItem key={v.title} className="h-full">
               <div className="glass h-full rounded-3xl p-7">
-                <h3 className="font-display text-lg font-semibold text-white">
+                <h3 className="font-display text-lg font-semibold text-graphite">
                   {v.title}
                 </h3>
-                <p className="mt-3 text-sm text-white/55">{v.body}</p>
+                <p className="mt-3 text-sm text-slate2">{v.body}</p>
               </div>
             </StaggerItem>
           ))}
@@ -122,10 +122,10 @@ export default function AboutPage() {
 
       <section className="container-xl relative mt-24">
         <Reveal className="glass flex flex-col items-center gap-6 rounded-3xl px-8 py-16 text-center">
-          <h2 className="max-w-xl font-display text-3xl font-bold text-white">
+          <h2 className="max-w-xl font-display text-3xl font-bold tracking-tightest text-graphite">
             Ready to grade your next project?
           </h2>
-          <p className="max-w-md text-white/55">
+          <p className="max-w-md text-slate2">
             Browse the full library of cinematic looks or reach out — we love
             hearing what you&apos;re making.
           </p>
@@ -135,7 +135,7 @@ export default function AboutPage() {
             </Link>
             <Link
               href="/contact"
-              className="text-sm font-semibold text-white/70 transition-colors hover:text-white"
+              className="text-sm font-semibold text-slate2 transition-colors hover:text-graphite"
             >
               Contact us
             </Link>

@@ -26,13 +26,13 @@ export default function SearchPage() {
 
       <div className="container-xl relative pt-36 sm:pt-44">
         <Reveal>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-grade-teal">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-sky">
             Discover
           </p>
-          <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-6xl">
+          <h1 className="font-display text-4xl font-bold tracking-tightest text-graphite sm:text-6xl">
             Search the library
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-white/55">
+          <p className="mt-5 max-w-2xl text-lg text-slate2">
             Find the look by name, tag, or style — then refine by price and
             category.
           </p>
@@ -54,7 +54,7 @@ export default function SearchPage() {
 
 function SearchFallback() {
   return (
-    <div className="glass rounded-3xl px-8 py-16 text-center text-white/50">
+    <div className="glass rounded-3xl px-8 py-16 text-center text-slate2">
       Loading search…
     </div>
   );

@@ -31,7 +31,7 @@ export function BeforeAfterSlider({
   return (
     <div
       ref={containerRef}
-      className="relative aspect-[16/10] w-full select-none overflow-hidden rounded-3xl border border-white/10"
+      className="relative aspect-[16/10] w-full select-none overflow-hidden rounded-[28px] border border-hairline shadow-soft"
       onPointerDown={(e) => {
         dragging.current = true;
         (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
@@ -54,7 +54,7 @@ export function BeforeAfterSlider({
         }}
         priority={false}
       />
-      <span className="pointer-events-none absolute bottom-4 right-4 z-10 rounded-full bg-grade-teal-orange px-3 py-1 text-xs font-semibold text-ink">
+      <span className="pointer-events-none absolute bottom-4 right-4 z-10 rounded-full bg-sky px-3 py-1 text-xs font-semibold text-white shadow-soft">
         After
       </span>
 

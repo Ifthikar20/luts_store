@@ -5,16 +5,18 @@ import { cn } from "@/lib/format";
 
 type Grade = "teal-orange" | "violet-magenta";
 
+// Very faint, light pastel washes for a subtle sense of depth on white pages.
+// Restrained on purpose — Apple-style sites keep accents minimal.
 const gradients: Record<Grade, string> = {
   "teal-orange":
-    "radial-gradient(circle at 30% 30%, rgba(22,216,198,0.55), transparent 60%), radial-gradient(circle at 70% 70%, rgba(255,138,61,0.45), transparent 60%)",
+    "radial-gradient(circle at 30% 30%, rgba(0,113,227,0.10), transparent 60%), radial-gradient(circle at 70% 70%, rgba(0,113,227,0.06), transparent 60%)",
   "violet-magenta":
-    "radial-gradient(circle at 30% 30%, rgba(139,92,246,0.5), transparent 60%), radial-gradient(circle at 70% 70%, rgba(236,72,153,0.45), transparent 60%)",
+    "radial-gradient(circle at 30% 30%, rgba(88,86,214,0.09), transparent 60%), radial-gradient(circle at 70% 70%, rgba(0,113,227,0.06), transparent 60%)",
 };
 
 /**
- * Soft animated gradient blob for cinematic backgrounds. Heavily blurred and
- * non-interactive. Stops animating under prefers-reduced-motion.
+ * Soft, heavily-blurred light pastel wash for white backgrounds. Non-interactive
+ * and very low opacity. Stops animating under prefers-reduced-motion.
  */
 export function GradientBlob({
   grade = "teal-orange",
@@ -36,19 +38,19 @@ export function GradientBlob({
         width: size,
         height: size,
         backgroundImage: gradients[grade],
-        opacity: 0.45,
+        opacity: 0.8,
       }}
       animate={
         reduced
           ? undefined
           : {
-              x: [0, 30, -20, 0],
-              y: [0, -40, 20, 0],
-              scale: [1, 1.12, 0.96, 1],
+              x: [0, 24, -16, 0],
+              y: [0, -30, 16, 0],
+              scale: [1, 1.08, 0.98, 1],
             }
       }
       transition={{
-        duration: 18,
+        duration: 22,
         ease: "easeInOut",
         repeat: Infinity,
         delay,

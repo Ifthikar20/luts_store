@@ -58,28 +58,26 @@ export default async function HomePage() {
       <Hero />
       <LogoMarquee />
 
-      {/* Looks in motion — video bento grid */}
-      <section className="container-xl py-24" id="looks-in-motion">
-        <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
-          <SectionHeading
-            eyebrow="Watch the grade"
-            title={
-              <>
-                Looks in <span className="text-grade-teal">motion.</span>
-              </>
-            }
-            subtitle="Hover any clip to watch a look come alive. Real cinematic grades, applied to motion — not just stills."
-          />
-          <Reveal direction="left">
-            <Link
-              href="/collections/cinematic"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white"
-            >
-              Explore the looks <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Reveal>
+      {/* Looks in motion — video bento grid on a light-gray band */}
+      <section className="bg-cloud py-24" id="looks-in-motion">
+        <div className="container-xl">
+          <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
+            <SectionHeading
+              eyebrow="Watch the grade"
+              title="Looks in motion."
+              subtitle="Real cinematic grades, applied to motion — not just stills. Each clip plays automatically as it scrolls into view."
+            />
+            <Reveal direction="left">
+              <Link
+                href="/collections/cinematic"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-sky transition-colors hover:text-sky-hover"
+              >
+                Explore the looks <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Reveal>
+          </div>
+          <LooksInMotion />
         </div>
-        <LooksInMotion />
       </section>
 
       {/* Featured LUTs */}
@@ -93,7 +91,7 @@ export default async function HomePage() {
           <Reveal direction="left">
             <Link
               href="/collections/cinematic"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-sky transition-colors hover:text-sky-hover"
             >
               View all looks <ArrowRight className="h-4 w-4" />
             </Link>
@@ -153,16 +151,18 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* How it works */}
-      <section className="container-xl py-24" id="how">
-        <SectionHeading
-          eyebrow="Dead simple"
-          title="How it works"
-          subtitle="From checkout to graded footage in under two minutes."
-          align="center"
-        />
-        <div className="mt-12">
-          <HowItWorks />
+      {/* How it works — on a light-gray band */}
+      <section className="bg-cloud py-24" id="how">
+        <div className="container-xl">
+          <SectionHeading
+            eyebrow="Dead simple"
+            title="How it works"
+            subtitle="From checkout to graded footage in under two minutes."
+            align="center"
+          />
+          <div className="mt-12">
+            <HowItWorks />
+          </div>
         </div>
       </section>
 
@@ -180,20 +180,12 @@ export default async function HomePage() {
 
       {/* Newsletter */}
       <section className="container-xl py-12 pb-28" id="newsletter">
-        <Reveal className="relative overflow-hidden rounded-4xl border border-white/10 bg-white/[0.02] p-8 text-center sm:p-14">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -inset-24 opacity-50 blur-3xl"
-            style={{
-              background:
-                "radial-gradient(420px circle at 30% 20%, rgba(22,216,198,0.18), transparent 60%), radial-gradient(420px circle at 80% 80%, rgba(255,138,61,0.16), transparent 60%)",
-            }}
-          />
+        <Reveal className="relative overflow-hidden rounded-[40px] border border-hairline bg-cloud p-8 text-center sm:p-14">
           <div className="relative mx-auto max-w-xl">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-grade-teal">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-sky">
               Stay in the loop
             </p>
-            <h2 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            <h2 className="font-display text-3xl font-bold tracking-tightest text-graphite sm:text-4xl">
               New looks, in your inbox
             </h2>
             <div className="mt-6 flex justify-center text-left">

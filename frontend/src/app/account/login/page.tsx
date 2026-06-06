@@ -64,40 +64,40 @@ function AccountAuthForm() {
       <Reveal className="mx-auto max-w-md">
         <Link
           href="/"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-white/55 transition-colors hover:text-white"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-slate2 transition-colors hover:text-graphite"
         >
           <ArrowLeft className="h-4 w-4" /> Back home
         </Link>
 
         <div className="glass rounded-3xl p-7 sm:p-9">
-          <h1 className="font-display text-3xl font-bold tracking-tight text-white">
+          <h1 className="font-display text-3xl font-bold tracking-tightest text-graphite">
             {mode === "login" ? "Welcome back" : "Create your account"}
           </h1>
-          <p className="mt-2 text-sm text-white/55">
+          <p className="mt-2 text-sm text-slate2">
             {mode === "login"
               ? "Sign in to access your download library."
               : "Sign up to keep every look you buy in one place."}
           </p>
 
           {/* Tabs */}
-          <div className="mt-6 grid grid-cols-2 rounded-full border border-white/10 bg-white/[0.03] p-1">
+          <div className="mt-6 grid grid-cols-2 rounded-full border border-hairline bg-cloud p-1">
             {(["login", "register"] as Mode[]).map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => switchMode(m)}
-                className="relative rounded-full px-4 py-2 text-sm font-medium text-white/70 transition-colors"
+                className="relative rounded-full px-4 py-2 text-sm font-medium transition-colors"
               >
                 {mode === m && (
                   <motion.span
                     layoutId="auth-tab"
                     transition={{ duration: reduced ? 0 : 0.3 }}
-                    className="absolute inset-0 rounded-full bg-grade-teal-orange"
+                    className="absolute inset-0 rounded-full bg-white shadow-soft"
                   />
                 )}
                 <span
                   className={
-                    mode === m ? "relative text-ink" : "relative text-white/70"
+                    mode === m ? "relative text-graphite" : "relative text-slate2"
                   }
                 >
                   {m === "login" ? "Sign in" : "Sign up"}
@@ -108,17 +108,17 @@ function AccountAuthForm() {
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
             <label className="block">
-              <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-white/45">
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate2">
                 Email
               </span>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate2" />
                 <input
                   type="email"
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.03] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-grade-teal/60"
+                  className="w-full rounded-2xl border border-hairline bg-white py-3 pl-10 pr-4 text-sm text-graphite placeholder:text-slate2 outline-none transition-colors focus:border-sky focus:ring-2 focus:ring-sky/30"
                   placeholder="you@example.com"
                   required
                 />
@@ -126,11 +126,11 @@ function AccountAuthForm() {
             </label>
 
             <label className="block">
-              <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-white/45">
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate2">
                 Password
               </span>
               <div className="relative">
-                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
+                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate2" />
                 <input
                   type="password"
                   autoComplete={
@@ -138,14 +138,14 @@ function AccountAuthForm() {
                   }
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.03] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-grade-teal/60"
+                  className="w-full rounded-2xl border border-hairline bg-white py-3 pl-10 pr-4 text-sm text-graphite placeholder:text-slate2 outline-none transition-colors focus:border-sky focus:ring-2 focus:ring-sky/30"
                   placeholder="••••••••"
                   required
                   minLength={8}
                 />
               </div>
               {mode === "register" && (
-                <span className="mt-1.5 block text-xs text-white/35">
+                <span className="mt-1.5 block text-xs text-slate2">
                   At least 8 characters. Avoid common or all-numeric passwords.
                 </span>
               )}
@@ -157,7 +157,7 @@ function AccountAuthForm() {
                   initial={reduced ? false : { opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+                  className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
                   role="alert"
                 >
                   {error}
@@ -175,14 +175,14 @@ function AccountAuthForm() {
             </button>
           </form>
 
-          <p className="mt-5 text-center text-xs text-white/35">
+          <p className="mt-5 text-center text-xs text-slate2">
             {mode === "login" ? (
               <>
                 New here?{" "}
                 <button
                   type="button"
                   onClick={() => switchMode("register")}
-                  className="text-grade-teal underline-offset-2 hover:underline"
+                  className="text-sky underline-offset-2 hover:underline"
                 >
                   Create an account
                 </button>
@@ -193,7 +193,7 @@ function AccountAuthForm() {
                 <button
                   type="button"
                   onClick={() => switchMode("login")}
-                  className="text-grade-teal underline-offset-2 hover:underline"
+                  className="text-sky underline-offset-2 hover:underline"
                 >
                   Sign in
                 </button>

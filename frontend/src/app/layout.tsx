@@ -63,7 +63,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0b",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
@@ -73,7 +73,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
-      <body className="grain font-sans antialiased">
+      <body className="bg-paper font-sans text-graphite antialiased">
         <Providers>
           <Nav />
           <CartDrawer />

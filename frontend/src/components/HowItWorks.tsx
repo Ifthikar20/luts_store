@@ -27,18 +27,18 @@ export function HowItWorks() {
       {steps.map((s, i) => (
         <StaggerItem
           key={s.title}
-          className="glass relative overflow-hidden rounded-3xl p-7"
+          className="glass relative overflow-hidden rounded-[28px] p-7"
         >
-          <span className="absolute right-5 top-4 font-display text-6xl font-bold text-white/[0.05]">
+          <span className="absolute right-5 top-4 font-display text-6xl font-bold text-black/[0.04]">
             {i + 1}
           </span>
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-grade-teal-orange text-ink">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-sky text-white">
             <s.icon className="h-6 w-6" />
           </span>
-          <h3 className="mt-5 font-display text-xl font-semibold text-white">
+          <h3 className="mt-5 font-display text-xl font-semibold text-graphite">
             {s.title}
           </h3>
-          <p className="mt-2 text-sm text-white/55">{s.body}</p>
+          <p className="mt-2 text-sm text-slate2">{s.body}</p>
         </StaggerItem>
       ))}
     </StaggerGroup>

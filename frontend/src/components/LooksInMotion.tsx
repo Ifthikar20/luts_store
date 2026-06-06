@@ -25,12 +25,13 @@ export function LooksInMotion() {
             src={c.src}
             poster={c.poster}
             alt={`${c.title} — ${c.mood}`}
+            rounded="rounded-[24px]"
           >
             <div className="pointer-events-none absolute inset-x-0 bottom-0 p-5">
               <p className="font-display text-lg font-semibold text-white drop-shadow">
                 {c.title}
               </p>
-              <p className="mt-0.5 text-xs text-white/70">{c.mood}</p>
+              <p className="mt-0.5 text-xs text-white/80">{c.mood}</p>
             </div>
           </VideoCard>
         </StaggerItem>

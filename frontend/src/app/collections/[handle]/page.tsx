@@ -60,22 +60,22 @@ export default async function CollectionPage({
 
       <div className="container-xl relative pt-36 sm:pt-44">
         <Reveal>
-          <nav className="mb-6 flex items-center gap-1.5 text-sm text-white/45">
-            <Link href="/" className="hover:text-white">
+          <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate2">
+            <Link href="/" className="hover:text-graphite">
               Home
             </Link>
             <ChevronRight className="h-4 w-4" />
-            <span className="text-white/70">{collection.title}</span>
+            <span className="text-slate2">{collection.title}</span>
           </nav>
-          <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-6xl">
+          <h1 className="font-display text-4xl font-bold tracking-tightest text-graphite sm:text-6xl">
             {collection.title}
           </h1>
           {collection.description && (
-            <p className="mt-5 max-w-2xl text-lg text-white/55">
+            <p className="mt-5 max-w-2xl text-lg text-slate2">
               {collection.description}
             </p>
           )}
-          <p className="mt-4 text-sm text-white/40">
+          <p className="mt-4 text-sm text-slate2">
             {collection.products.length} pack
             {collection.products.length === 1 ? "" : "s"}
           </p>
@@ -88,7 +88,7 @@ export default async function CollectionPage({
             wrapped in <Suspense> for the App Router build. */}
         <Suspense
           fallback={
-            <div className="glass rounded-3xl px-8 py-16 text-center text-white/50">
+            <div className="glass rounded-3xl px-8 py-16 text-center text-slate2">
               Loading…
             </div>
           }

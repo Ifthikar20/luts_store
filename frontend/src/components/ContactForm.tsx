@@ -11,7 +11,7 @@ import { submitContact } from "@/lib/api";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const inputClass =
-  "w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-xl transition-colors focus:border-white/25 focus:bg-white/[0.06] focus:outline-none";
+  "w-full rounded-2xl border border-hairline bg-white px-4 py-3 text-sm text-graphite placeholder:text-slate2 transition-colors focus:border-sky focus:outline-none focus:ring-2 focus:ring-sky/30";
 
 export function ContactForm() {
   const [name, setName] = useState("");
@@ -68,13 +68,13 @@ export function ContactForm() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center gap-4 py-10 text-center"
           >
-            <span className="grid h-14 w-14 place-items-center rounded-full border border-grade-teal/30 bg-grade-teal/10">
-              <CheckCircle2 className="h-7 w-7 text-grade-teal" />
+            <span className="grid h-14 w-14 place-items-center rounded-full border border-sky/30 bg-sky/10">
+              <CheckCircle2 className="h-7 w-7 text-sky" />
             </span>
-            <h2 className="font-display text-xl font-semibold text-white">
+            <h2 className="font-display text-xl font-semibold text-graphite">
               Message sent
             </h2>
-            <p className="max-w-sm text-sm text-white/55">{done}</p>
+            <p className="max-w-sm text-sm text-slate2">{done}</p>
           </motion.div>
         ) : (
           <motion.form
@@ -87,7 +87,7 @@ export function ContactForm() {
           >
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-widest text-white/40">
+                <span className="text-xs font-semibold uppercase tracking-widest text-slate2">
                   Name
                 </span>
                 <input
@@ -100,7 +100,7 @@ export function ContactForm() {
                 />
               </label>
               <label className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-widest text-white/40">
+                <span className="text-xs font-semibold uppercase tracking-widest text-slate2">
                   Email
                 </span>
                 <input
@@ -114,7 +114,7 @@ export function ContactForm() {
               </label>
             </div>
             <label className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-widest text-white/40">
+              <span className="text-xs font-semibold uppercase tracking-widest text-slate2">
                 Message
               </span>
               <textarea
@@ -129,7 +129,7 @@ export function ContactForm() {
 
             {error && (
               <p
-                className="rounded-2xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-200/90"
+                className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
                 role="alert"
               >
                 {error}

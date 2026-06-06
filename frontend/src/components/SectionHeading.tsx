@@ -21,14 +21,14 @@ export function SectionHeading({
       }
     >
       {eyebrow && (
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-grade-teal">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-sky">
           {eyebrow}
         </p>
       )}
-      <h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+      <h2 className="font-display text-3xl font-bold leading-tight tracking-tightest text-graphite sm:text-4xl md:text-5xl">
         {title}
       </h2>
-      {subtitle && <p className="mt-4 text-lg text-white/55">{subtitle}</p>}
+      {subtitle && <p className="mt-4 text-lg text-slate2">{subtitle}</p>}
     </Reveal>
   );
 }

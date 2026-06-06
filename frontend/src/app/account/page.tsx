@@ -52,7 +52,7 @@ export default function AccountPage() {
   if (authLoading) {
     return (
       <div className="container-xl grid min-h-[60vh] place-items-center pt-36">
-        <Loader2 className="h-6 w-6 animate-spin text-white/40" />
+        <Loader2 className="h-6 w-6 animate-spin text-slate2" />
       </div>
     );
   }
@@ -63,14 +63,14 @@ export default function AccountPage() {
       <div className="container-xl pt-36 pb-28 sm:pt-44">
         <Reveal className="mx-auto max-w-md">
           <div className="glass flex flex-col items-center gap-5 rounded-3xl px-8 py-16 text-center">
-            <span className="grid h-16 w-16 place-items-center rounded-full border border-white/10 bg-white/[0.03]">
-              <Library className="h-7 w-7 text-white/40" />
+            <span className="grid h-16 w-16 place-items-center rounded-full border border-hairline bg-cloud">
+              <Library className="h-7 w-7 text-slate2" />
             </span>
             <div>
-              <h1 className="font-display text-2xl font-bold text-white">
+              <h1 className="font-display text-2xl font-bold text-graphite">
                 Your download library
               </h1>
-              <p className="mt-2 text-sm text-white/55">
+              <p className="mt-2 text-sm text-slate2">
                 Sign in to access every LUT you&apos;ve purchased.
               </p>
             </div>
@@ -90,10 +90,10 @@ export default function AccountPage() {
       <Reveal>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">
+            <h1 className="font-display text-4xl font-bold tracking-tightest text-graphite sm:text-5xl">
               My downloads
             </h1>
-            <p className="mt-2 inline-flex items-center gap-2 text-sm text-white/55">
+            <p className="mt-2 inline-flex items-center gap-2 text-sm text-slate2">
               <UserCircle2 className="h-4 w-4" />
               {user.email}
             </p>
@@ -109,23 +109,23 @@ export default function AccountPage() {
       </Reveal>
 
       {error && (
-        <p className="glass mt-10 rounded-3xl border-red-500/30 bg-red-500/10 px-6 py-5 text-sm text-red-200">
+        <p className="glass mt-10 rounded-3xl border-red-200 bg-red-50 px-6 py-5 text-sm text-red-600">
           {error}
         </p>
       )}
 
       {!error && items === null && (
         <div className="mt-16 grid place-items-center">
-          <Loader2 className="h-6 w-6 animate-spin text-white/40" />
+          <Loader2 className="h-6 w-6 animate-spin text-slate2" />
         </div>
       )}
 
       {!error && items !== null && items.length === 0 && (
         <div className="glass mt-12 flex flex-col items-center gap-5 rounded-3xl px-8 py-20 text-center">
-          <span className="grid h-16 w-16 place-items-center rounded-full border border-white/10 bg-white/[0.03]">
-            <Library className="h-7 w-7 text-white/40" />
+          <span className="grid h-16 w-16 place-items-center rounded-full border border-hairline bg-cloud">
+            <Library className="h-7 w-7 text-slate2" />
           </span>
-          <p className="text-lg text-white/60">
+          <p className="text-lg text-slate2">
             Your library is empty — once you buy a look it lands here.
           </p>
           <Link href="/collections/cinematic" className="btn-grade">
@@ -143,20 +143,20 @@ export default function AccountPage() {
               className="glass glass-hover flex flex-col gap-4 rounded-3xl p-6"
             >
               <div className="flex items-start gap-3">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-grade-teal-orange text-ink">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-sky text-white">
                   <Download className="h-5 w-5" />
                 </span>
                 <div className="min-w-0">
-                  <h2 className="truncate font-display text-lg font-semibold text-white">
+                  <h2 className="truncate font-display text-lg font-semibold text-graphite">
                     {item.title}
                   </h2>
-                  <p className="truncate text-xs text-white/40">
+                  <p className="truncate text-xs text-slate2">
                     {item.productHandle}
                   </p>
                 </div>
               </div>
 
-              <p className="inline-flex items-center gap-1.5 text-xs text-white/45">
+              <p className="inline-flex items-center gap-1.5 text-xs text-slate2">
                 <Clock className="h-3.5 w-3.5" />
                 Link expires {formatExpiry(item.expiresAt)}
               </p>

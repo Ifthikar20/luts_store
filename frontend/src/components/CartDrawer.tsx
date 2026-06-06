@@ -21,7 +21,7 @@ export function CartDrawer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeCart}
-            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm"
           />
           <motion.aside
             key="drawer"
@@ -29,19 +29,19 @@ export function CartDrawer() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 34 }}
-            className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-md flex-col border-l border-white/10 bg-ink/95 backdrop-blur-2xl"
+            className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-md flex-col border-l border-hairline bg-white"
             role="dialog"
             aria-label="Shopping cart"
           >
-            <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
-              <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-white">
+            <div className="flex items-center justify-between border-b border-hairline px-6 py-5">
+              <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-graphite">
                 <ShoppingBag className="h-5 w-5" />
                 Your cart
               </h2>
               <button
                 type="button"
                 onClick={closeCart}
-                className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-white/80 hover:bg-white/[0.08]"
+                className="grid h-9 w-9 place-items-center rounded-full border border-hairline text-slate2 hover:bg-cloud"
                 aria-label="Close cart"
               >
                 <X className="h-4 w-4" />
@@ -51,10 +51,10 @@ export function CartDrawer() {
             <div className="flex-1 overflow-y-auto px-6 py-5">
               {lines.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-                  <span className="grid h-16 w-16 place-items-center rounded-full border border-white/10 bg-white/[0.03]">
-                    <ShoppingBag className="h-7 w-7 text-white/40" />
+                  <span className="grid h-16 w-16 place-items-center rounded-full border border-hairline bg-cloud">
+                    <ShoppingBag className="h-7 w-7 text-slate2" />
                   </span>
-                  <p className="text-white/50">Your cart is empty.</p>
+                  <p className="text-slate2">Your cart is empty.</p>
                   <button
                     type="button"
                     onClick={closeCart}
@@ -68,7 +68,7 @@ export function CartDrawer() {
                   {lines.map((line) => (
                     <li
                       key={line.id}
-                      className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-3"
+                      className="flex gap-4 rounded-2xl border border-hairline bg-white p-3"
                     >
                       <Link
                         href={`/luts/${line.merchandise.product.handle}`}
@@ -84,29 +84,29 @@ export function CartDrawer() {
                         />
                       </Link>
                       <div className="flex min-w-0 flex-1 flex-col">
-                        <p className="truncate font-medium text-white">
+                        <p className="truncate font-medium text-graphite">
                           {line.merchandise.product.title}
                         </p>
-                        <p className="text-xs text-white/45">
+                        <p className="text-xs text-slate2">
                           {line.merchandise.title}
                         </p>
-                        <p className="mt-1 text-sm font-semibold text-grade-teal">
+                        <p className="mt-1 text-sm font-semibold text-graphite">
                           {formatMoney(line.merchandise.price)}
                         </p>
                         <div className="mt-auto flex items-center justify-between pt-2">
-                          <div className="flex items-center gap-2 rounded-full border border-white/10">
+                          <div className="flex items-center gap-2 rounded-full border border-hairline">
                             <button
                               type="button"
                               disabled={loading}
                               onClick={() =>
                                 updateItem(line.id, line.quantity - 1)
                               }
-                              className="grid h-7 w-7 place-items-center rounded-full text-white/70 hover:bg-white/10 disabled:opacity-40"
+                              className="grid h-7 w-7 place-items-center rounded-full text-slate2 hover:bg-cloud disabled:opacity-40"
                               aria-label="Decrease quantity"
                             >
                               <Minus className="h-3.5 w-3.5" />
                             </button>
-                            <span className="min-w-5 text-center text-sm text-white">
+                            <span className="min-w-5 text-center text-sm text-graphite">
                               {line.quantity}
                             </span>
                             <button
@@ -115,7 +115,7 @@ export function CartDrawer() {
                               onClick={() =>
                                 updateItem(line.id, line.quantity + 1)
                               }
-                              className="grid h-7 w-7 place-items-center rounded-full text-white/70 hover:bg-white/10 disabled:opacity-40"
+                              className="grid h-7 w-7 place-items-center rounded-full text-slate2 hover:bg-cloud disabled:opacity-40"
                               aria-label="Increase quantity"
                             >
                               <Plus className="h-3.5 w-3.5" />
@@ -125,7 +125,7 @@ export function CartDrawer() {
                             type="button"
                             disabled={loading}
                             onClick={() => removeItem(line.id)}
-                            className="grid h-8 w-8 place-items-center rounded-full text-white/40 hover:bg-white/10 hover:text-white"
+                            className="grid h-8 w-8 place-items-center rounded-full text-slate2 hover:bg-cloud hover:text-graphite"
                             aria-label="Remove item"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -139,12 +139,12 @@ export function CartDrawer() {
             </div>
 
             {lines.length > 0 && cart && (
-              <div className="border-t border-white/10 px-6 py-5">
-                <div className="mb-1 flex justify-between text-sm text-white/55">
+              <div className="border-t border-hairline px-6 py-5">
+                <div className="mb-1 flex justify-between text-sm text-slate2">
                   <span>Subtotal</span>
                   <span>{formatMoney(cart.cost.subtotal)}</span>
                 </div>
-                <div className="mb-4 flex justify-between text-base font-semibold text-white">
+                <div className="mb-4 flex justify-between text-base font-semibold text-graphite">
                   <span>Total</span>
                   <span>{formatMoney(cart.cost.total)}</span>
                 </div>
@@ -155,7 +155,7 @@ export function CartDrawer() {
                 >
                   View cart & checkout
                 </Link>
-                <p className="mt-3 text-center text-xs text-white/35">
+                <p className="mt-3 text-center text-xs text-slate2">
                   Taxes calculated at checkout.
                 </p>
               </div>

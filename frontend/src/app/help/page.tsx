@@ -105,25 +105,25 @@ export default function HelpPage() {
 
       <div className="container-xl relative pt-36 sm:pt-44">
         <Reveal>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-grade-teal">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-sky">
             Help Center
           </p>
-          <h1 className="max-w-3xl font-display text-4xl font-bold leading-tight tracking-tight text-white sm:text-6xl">
+          <h1 className="max-w-3xl font-display text-4xl font-bold leading-tight tracking-tightest text-graphite sm:text-6xl">
             How can we help?
           </h1>
-          <p className="mt-6 max-w-2xl text-lg text-white/55">
+          <p className="mt-6 max-w-2xl text-lg text-slate2">
             Install guides, file formats, downloads and refunds. Can&apos;t find
             what you need? Manage purchases in your{" "}
             <Link
               href="/account"
-              className="text-grade-teal underline-offset-4 hover:underline"
+              className="text-sky underline-offset-4 hover:underline"
             >
               account library
             </Link>{" "}
             or{" "}
             <Link
               href="/contact"
-              className="text-grade-teal underline-offset-4 hover:underline"
+              className="text-sky underline-offset-4 hover:underline"
             >
               contact us
             </Link>

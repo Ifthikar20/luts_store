@@ -54,9 +54,9 @@ const base =
 
 const variants = {
   grade:
-    "text-ink bg-grade-teal-orange bg-[length:200%_200%] animate-gradient-pan shadow-[0_8px_40px_-8px_rgba(22,216,198,0.55)] hover:shadow-[0_10px_50px_-6px_rgba(255,138,61,0.6)]",
+    "text-white bg-sky shadow-[0_2px_10px_rgba(0,113,227,0.25)] transition-colors hover:bg-sky-hover",
   ghost:
-    "text-white border border-white/15 bg-white/[0.03] backdrop-blur-md hover:bg-white/[0.08] hover:border-white/25",
+    "text-graphite bg-haze transition-colors hover:bg-[#dcdce2]",
 };
 
 type ButtonProps = CommonProps & {

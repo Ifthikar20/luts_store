@@ -5,57 +5,71 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Near-black cinematic base
+        // Apple-style light system.
+        // `ink` is the near-black primary text/ink color (kept name for compatibility).
         ink: {
-          DEFAULT: "#0a0a0b",
-          50: "#16161a",
-          100: "#121216",
-          200: "#0f0f12",
+          DEFAULT: "#1d1d1f",
+          50: "#1d1d1f",
+          100: "#1d1d1f",
+          200: "#1d1d1f",
         },
-        teal: {
-          grade: "#16d8c6",
+        // Neutral surfaces / text scale.
+        paper: "#ffffff",
+        // Apple gray section band.
+        cloud: "#f5f5f7",
+        // Faint card surface variant.
+        mist: "#fafafa",
+        // Hairline border.
+        hairline: "#d2d2d7",
+        // Text scale.
+        graphite: "#1d1d1f",
+        slate2: "#6e6e73",
+        // Apple blue accents.
+        sky: {
+          DEFAULT: "#0071e3",
+          hover: "#0077ed",
+          link: "#0066cc",
         },
-        orange: {
-          grade: "#ff8a3d",
-        },
-        violet: {
-          grade: "#8b5cf6",
-        },
-        magenta: {
-          grade: "#ec4899",
-        },
+        // Light secondary button fill.
+        haze: "#e8e8ed",
+        // Retain old accent names so nothing referencing them breaks,
+        // but remap to the blue system so any stray usage stays on-brand.
+        teal: { grade: "#0071e3" },
+        orange: { grade: "#0071e3" },
+        violet: { grade: "#0071e3" },
+        magenta: { grade: "#0071e3" },
       },
       fontFamily: {
         display: ["var(--font-display)", "ui-sans-serif", "system-ui", "sans-serif"],
         sans: ["var(--font-body)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
+      letterSpacing: {
+        tightest: "-0.03em",
+        tighter2: "-0.022em",
+      },
       backgroundImage: {
-        "grade-teal-orange":
-          "linear-gradient(120deg, #16d8c6 0%, #2dd4bf 30%, #ff8a3d 100%)",
-        "grade-violet-magenta":
-          "linear-gradient(120deg, #8b5cf6 0%, #d946ef 50%, #ec4899 100%)",
-        "noise":
-          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E\")",
+        // Subtle light pastel wash, used sparingly for faint accents.
+        "wash-light":
+          "radial-gradient(60% 60% at 30% 30%, rgba(0,113,227,0.06), transparent 70%), radial-gradient(60% 60% at 75% 70%, rgba(88,86,214,0.05), transparent 70%)",
+        // Legacy accent-fill names remapped to the Apple blue system so any
+        // residual `bg-grade-*` usage (badges, icon chips) stays on-brand and
+        // light. These are now flat blue fills, not the old dark gradients.
+        "grade-teal-orange": "linear-gradient(135deg, #0071e3, #0077ed)",
+        "grade-violet-magenta": "linear-gradient(135deg, #0071e3, #0077ed)",
+      },
+      boxShadow: {
+        soft: "0 8px 30px rgba(0,0,0,0.06)",
+        lift: "0 16px 50px rgba(0,0,0,0.10)",
+        nav: "0 1px 0 rgba(0,0,0,0.06)",
       },
       keyframes: {
         marquee: {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
         },
-        blob: {
-          "0%,100%": { transform: "translate(0px,0px) scale(1)" },
-          "33%": { transform: "translate(30px,-40px) scale(1.1)" },
-          "66%": { transform: "translate(-20px,20px) scale(0.95)" },
-        },
-        "gradient-pan": {
-          "0%,100%": { backgroundPosition: "0% 50%" },
-          "50%": { backgroundPosition: "100% 50%" },
-        },
       },
       animation: {
         marquee: "marquee 30s linear infinite",
-        blob: "blob 18s ease-in-out infinite",
-        "gradient-pan": "gradient-pan 8s ease infinite",
       },
       borderRadius: {
         "4xl": "2rem",

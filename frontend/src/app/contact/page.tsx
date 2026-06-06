@@ -29,58 +29,58 @@ export default function ContactPage() {
       <div className="container-xl relative pt-36 sm:pt-44">
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr]">
           <Reveal>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-grade-teal">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-sky">
               Get in touch
             </p>
-            <h1 className="font-display text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
+            <h1 className="font-display text-4xl font-bold leading-tight tracking-tightest text-graphite sm:text-5xl">
               We&apos;d love to hear from you.
             </h1>
-            <p className="mt-5 max-w-md text-lg text-white/55">
+            <p className="mt-5 max-w-md text-lg text-slate2">
               Whether it&apos;s a question about a pack, a download issue, or a
               licensing query — drop us a note and we&apos;ll get back to you.
             </p>
 
             <ul className="mt-10 space-y-5">
               <li className="flex items-start gap-4">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-grade-teal">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-hairline bg-cloud text-sky">
                   <Mail className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-white">Email</p>
+                  <p className="text-sm font-semibold text-graphite">Email</p>
                   <a
                     href="mailto:support@thelookslab.com"
-                    className="text-sm text-white/55 transition-colors hover:text-white"
+                    className="text-sm text-slate2 transition-colors hover:text-graphite"
                   >
                     support@thelookslab.com
                   </a>
                 </div>
               </li>
               <li className="flex items-start gap-4">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-grade-teal">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-hairline bg-cloud text-sky">
                   <Clock className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-graphite">
                     Response time
                   </p>
-                  <p className="text-sm text-white/55">
+                  <p className="text-sm text-slate2">
                     Usually within one business day.
                   </p>
                 </div>
               </li>
               <li className="flex items-start gap-4">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-grade-teal">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-hairline bg-cloud text-sky">
                   <LifeBuoy className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-graphite">
                     Need a quick answer?
                   </p>
-                  <p className="text-sm text-white/55">
+                  <p className="text-sm text-slate2">
                     Browse the{" "}
                     <Link
                       href="/help"
-                      className="text-grade-teal underline-offset-4 hover:underline"
+                      className="text-sky underline-offset-4 hover:underline"
                     >
                       Help Center
                     </Link>{" "}

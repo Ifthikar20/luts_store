@@ -66,7 +66,7 @@ export function DiscoveryView({
 
         <div>
           <div className="mb-6 flex items-center justify-between gap-4">
-            <p className="flex items-center gap-2 text-sm text-white/50">
+            <p className="flex items-center gap-2 text-sm text-slate2">
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               {products.length} result{products.length === 1 ? "" : "s"}
             </p>

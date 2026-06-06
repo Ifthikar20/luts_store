@@ -43,17 +43,17 @@ export function ResendDownloads({ className }: { className?: string }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="text-sm text-white/45 underline-offset-4 transition-colors hover:text-white hover:underline"
+          className="text-sm text-slate2 underline-offset-4 transition-colors hover:text-graphite hover:underline"
         >
           Lost your downloads? Resend my links
         </button>
       ) : (
         <div className="glass rounded-3xl p-6 text-left">
-          <h2 className="inline-flex items-center gap-2 font-display text-base font-semibold text-white">
-            <Mail className="h-4 w-4 text-grade-teal" />
+          <h2 className="inline-flex items-center gap-2 font-display text-base font-semibold text-graphite">
+            <Mail className="h-4 w-4 text-sky" />
             Resend my download links
           </h2>
-          <p className="mt-1.5 text-xs text-white/50">
+          <p className="mt-1.5 text-xs text-slate2">
             Enter the email you purchased with and we&apos;ll resend your most
             recent order&apos;s download links.
           </p>
@@ -64,7 +64,7 @@ export function ResendDownloads({ className }: { className?: string }) {
                 key="done"
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-4 inline-flex items-start gap-2 rounded-2xl border border-grade-teal/30 bg-grade-teal/10 px-4 py-3 text-sm text-grade-teal"
+                className="mt-4 inline-flex items-start gap-2 rounded-2xl border border-sky/30 bg-sky/10 px-4 py-3 text-sm text-sky"
               >
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
                 {message}
@@ -84,7 +84,7 @@ export function ResendDownloads({ className }: { className?: string }) {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   aria-label="Email address"
-                  className="w-full flex-1 rounded-full border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-xl transition-colors focus:border-white/25 focus:bg-white/[0.06] focus:outline-none"
+                  className="w-full flex-1 rounded-full border border-hairline bg-white px-4 py-3 text-sm text-graphite placeholder:text-slate2 transition-colors focus:border-sky focus:outline-none focus:ring-2 focus:ring-sky/30"
                 />
                 <motion.button
                   type="submit"

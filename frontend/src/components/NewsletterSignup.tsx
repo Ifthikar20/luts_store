@@ -41,10 +41,10 @@ export function NewsletterSignup({
 
   return (
     <div className={cn("", className)}>
-      <h4 className="font-display text-base font-semibold text-white">
+      <h4 className="font-display text-base font-semibold text-graphite">
         {heading}
       </h4>
-      <p className="mt-2 max-w-sm text-sm text-white/50">{subtext}</p>
+      <p className="mt-2 max-w-sm text-sm text-slate2">{subtext}</p>
 
       <AnimatePresence mode="wait">
         {message ? (
@@ -52,7 +52,7 @@ export function NewsletterSignup({
             key="done"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 inline-flex items-start gap-2 rounded-2xl border border-grade-teal/30 bg-grade-teal/10 px-4 py-3 text-sm text-grade-teal"
+            className="mt-4 inline-flex items-start gap-2 rounded-2xl border border-sky/30 bg-sky/10 px-4 py-3 text-sm text-sky"
           >
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
             {message}
@@ -73,7 +73,7 @@ export function NewsletterSignup({
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               aria-label="Email address"
-              className="w-full flex-1 rounded-full border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-xl transition-colors focus:border-white/25 focus:bg-white/[0.06] focus:outline-none"
+              className="w-full flex-1 rounded-full border border-hairline bg-white px-4 py-3 text-sm text-graphite placeholder:text-slate2 transition-colors focus:border-sky focus:outline-none focus:ring-2 focus:ring-sky/30"
             />
             <motion.button
               type="submit"
@@ -93,7 +93,7 @@ export function NewsletterSignup({
       </AnimatePresence>
 
       {error && (
-        <p className="mt-3 text-sm text-red-300/90" role="alert">
+        <p className="mt-3 text-sm text-red-600" role="alert">
           {error}
         </p>
       )}
