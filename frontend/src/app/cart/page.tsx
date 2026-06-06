@@ -158,6 +158,25 @@ export default function CartPage() {
                 <Lock className="h-3 w-3" />
                 Secure checkout. Prices confirmed server-side.
               </p>
+
+              {/*
+                DEMO-ONLY funnel. In production, the real checkout completes on
+                Shopify and Shopify redirects back to a configured thank-you URL
+                (return_to). Since mock mode has no real Shopify checkout, this
+                link drives the same /thank-you confirmation flow using the cart
+                id so the whole purchase funnel is demoable end to end.
+              */}
+              {cart && (
+                <Link
+                  href={`/thank-you?cart=${encodeURIComponent(cart.id)}`}
+                  className="btn-ghost mt-3 w-full"
+                >
+                  Complete demo purchase
+                </Link>
+              )}
+              <p className="mt-2 text-center text-[11px] text-white/30">
+                Demo path — skips real payment.
+              </p>
             </div>
           </div>
         </div>

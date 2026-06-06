@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third party
     "rest_framework",
+    "rest_framework.authtoken",
     "corsheaders",
     # Local apps
     "common",
@@ -80,6 +81,7 @@ INSTALLED_APPS = [
     "cart",
     "orders",
     "delivery",
+    "accounts",
 ]
 
 MIDDLEWARE = [
@@ -202,8 +204,17 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": "120/min",
         "user": "240/min",
+        # Dedicated, stricter bucket for credential endpoints (login/register)
+        # to blunt brute-force / enumeration attempts.
+        "auth": "10/min",
     },
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    # TokenAuthentication lets the SPA authenticate with `Authorization: Token
+    # <token>`. Tokens are returned over the API for this demo; PRODUCTION
+    # NOTE: prefer httpOnly cookies or Shopify Customer Accounts so the token is
+    # never readable by JS (mitigates XSS token theft). See accounts/README note.
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],

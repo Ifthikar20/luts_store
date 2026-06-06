@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Menu, ShoppingBag, X } from "lucide-react";
+import { Menu, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/format";
 
 const links = [
@@ -19,6 +20,7 @@ export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { count, openCart } = useCart();
+  const { user } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -64,6 +66,14 @@ export function Nav() {
         </div>
 
         <div className="flex items-center gap-2 pr-1">
+          <Link
+            href="/account"
+            className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/[0.1] hover:text-white sm:inline-flex"
+            aria-label={user ? "Your account" : "Sign in"}
+          >
+            <User className="h-[18px] w-[18px]" />
+            {user ? "Account" : "Sign in"}
+          </Link>
           <button
             type="button"
             onClick={openCart}
@@ -107,6 +117,15 @@ export function Nav() {
                 {l.label}
               </Link>
             ))}
+            <div className="my-1 h-px bg-white/10" />
+            <Link
+              href="/account"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium text-white/80 hover:bg-white/[0.06]"
+            >
+              <User className="h-[18px] w-[18px]" />
+              {user ? "Account" : "Sign in"}
+            </Link>
           </div>
         </motion.div>
       )}

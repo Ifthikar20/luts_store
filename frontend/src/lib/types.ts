@@ -103,3 +103,42 @@ export interface CartLineInput {
   merchandiseId: string;
   quantity: number;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Phase 2: accounts, download library, order confirmation                    */
+/* -------------------------------------------------------------------------- */
+
+export interface User {
+  id: number;
+  email: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+// One purchased LUT in the customer's download library. `downloadUrl` is a
+// signed, expiring API path (GET /api/download/<token>).
+export interface DownloadItem {
+  productHandle: string;
+  title: string;
+  grantedAt: string;
+  downloadUrl: string;
+  expiresAt: string;
+}
+
+// A single immediate-download entry on the thank-you confirmation.
+export interface ConfirmationDownload {
+  title: string;
+  downloadUrl: string;
+  expiresAt: string;
+}
+
+export interface OrderConfirmation {
+  orderId: string;
+  email: string;
+  lines: { title: string; quantity: number }[];
+  total: Money;
+  downloads: ConfirmationDownload[];
+}

@@ -10,12 +10,16 @@
 // production — prices and availability are always authoritative from the API.
 
 import type {
+  AuthResponse,
   Cart,
   CartLineInput,
   Collection,
   CollectionWithProducts,
+  DownloadItem,
+  OrderConfirmation,
   Product,
   ProductsResponse,
+  User,
 } from "./types";
 import {
   emptyMockCart,
@@ -28,32 +32,93 @@ import {
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
+// The API origin (without the trailing /api) so we can resolve relative
+// download paths the BFF returns (e.g. "/api/download/<token>").
+export const API_ORIGIN = API_URL.replace(/\/api\/?$/, "");
+
 const TIMEOUT_MS = 4000;
 
-class ApiError extends Error {}
+class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Auth token storage (in-memory + localStorage)                              */
+/* -------------------------------------------------------------------------- */
+// The token is held in a module-level variable for synchronous header
+// injection and mirrored to localStorage so it survives reloads.
+// PRODUCTION NOTE: a token readable by JS is vulnerable to XSS theft; prefer
+// httpOnly cookies or Shopify Customer Accounts in production.
+const TOKEN_KEY = "looks-lab:authToken";
+let authToken: string | null = null;
+
+export function getAuthToken(): string | null {
+  if (authToken) return authToken;
+  if (typeof window === "undefined") return null;
+  try {
+    authToken = window.localStorage.getItem(TOKEN_KEY);
+  } catch {
+    authToken = null;
+  }
+  return authToken;
+}
+
+export function setAuthToken(token: string | null) {
+  authToken = token;
+  if (typeof window === "undefined") return;
+  try {
+    if (token) window.localStorage.setItem(TOKEN_KEY, token);
+    else window.localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* storage may be unavailable (private mode) — non-fatal */
+  }
+}
+
+// Resolve a (possibly relative) download URL against the API origin so it can
+// be opened directly in the browser.
+export function resolveDownloadUrl(url: string): string {
+  if (/^https?:\/\//.test(url)) return url;
+  return `${API_ORIGIN}${url}`;
+}
 
 async function request<T>(
   path: string,
-  init?: RequestInit & { timeoutMs?: number },
+  init?: RequestInit & { timeoutMs?: number; auth?: boolean },
 ): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
     init?.timeoutMs ?? TIMEOUT_MS,
   );
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...((init?.headers as Record<string, string>) ?? {}),
+  };
+  if (init?.auth) {
+    const token = getAuthToken();
+    if (token) headers.Authorization = `Token ${token}`;
+  }
   try {
     const res = await fetch(`${API_URL}${path}`, {
       ...init,
       signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...(init?.headers ?? {}),
-      },
+      headers,
       // Server Components: keep data fresh-ish but allow caching.
       next: { revalidate: 60 },
     });
     if (!res.ok) {
-      throw new ApiError(`Request to ${path} failed: ${res.status}`);
+      let detail = `Request to ${path} failed: ${res.status}`;
+      try {
+        const body = await res.json();
+        if (body?.detail) detail = body.detail;
+      } catch {
+        /* non-JSON error body — keep generic message */
+      }
+      throw new ApiError(detail, res.status);
     }
     return (await res.json()) as T;
   } finally {
@@ -202,4 +267,80 @@ export async function removeCartLine(id: string, lineId: string): Promise<Cart> 
   } catch {
     return emptyMockCart();
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Auth — these surface REAL errors (no silent mock-success fallback).        */
+/* The thrown Error's message is the API's generic, non-enumerating detail.   */
+/* -------------------------------------------------------------------------- */
+
+export async function register(
+  email: string,
+  password: string,
+): Promise<AuthResponse> {
+  const res = await request<AuthResponse>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+  setAuthToken(res.token);
+  return res;
+}
+
+export async function login(
+  email: string,
+  password: string,
+): Promise<AuthResponse> {
+  const res = await request<AuthResponse>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+  setAuthToken(res.token);
+  return res;
+}
+
+export async function logout(): Promise<void> {
+  try {
+    await request<{ status: string }>("/auth/logout", {
+      method: "POST",
+      auth: true,
+    });
+  } finally {
+    // Always clear the local token, even if the server call fails.
+    setAuthToken(null);
+  }
+}
+
+export async function getMe(): Promise<User | null> {
+  if (!getAuthToken()) return null;
+  try {
+    return await request<User>("/auth/me", { method: "GET", auth: true });
+  } catch (err) {
+    // An invalid/expired token -> drop it so the UI shows logged-out state.
+    if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+      setAuthToken(null);
+    }
+    return null;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Download library + order confirmation                                      */
+/* -------------------------------------------------------------------------- */
+
+export async function getMyDownloads(): Promise<DownloadItem[]> {
+  return request<DownloadItem[]>("/me/downloads", {
+    method: "GET",
+    auth: true,
+  });
+}
+
+// Confirm an order/checkout. Pass the order id (real Shopify order) or, in mock
+// mode, a cart id (the placeholder checkoutUrl ends with the cart id).
+export async function confirmOrder(
+  idOrToken: string,
+): Promise<OrderConfirmation> {
+  return request<OrderConfirmation>(
+    `/orders/${encodeURIComponent(idOrToken)}`,
+    { method: "GET" },
+  );
 }

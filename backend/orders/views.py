@@ -23,7 +23,7 @@ from rest_framework.decorators import (
     throttle_classes,
 )
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 from common.security import verify_shopify_webhook
 
@@ -63,3 +63,33 @@ def orders_paid_webhook(request):
         },
         status=200,
     )
+
+
+@api_view(["GET", "POST"])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
+def order_confirm(request, id_or_token: str | None = None):
+    """Thank-you confirmation lookup.
+
+    * ``GET  /api/orders/<idOrToken>`` -> confirmation for that id.
+    * ``POST /api/orders/confirm {token}`` -> confirmation for the body token.
+
+    Returns ``{orderId, email, lines:[{title,quantity}], total, downloads:[...]}``.
+
+    In MOCK_MODE the id may be a cart id (the placeholder checkout URL ends with
+    the cart id); a confirmation is synthesized from that cart so the full
+    purchase funnel is demoable without a real Shopify order. See
+    ``orders.services.confirm_order``.
+    """
+    if request.method == "POST":
+        data = request.data if isinstance(request.data, dict) else {}
+        id_or_token = data.get("token") or data.get("order") or id_or_token
+
+    if not id_or_token:
+        return Response({"detail": "Missing order id or token."}, status=400)
+
+    try:
+        confirmation = services.confirm_order(str(id_or_token))
+    except services.OrderNotFound:
+        return Response({"detail": "Order not found."}, status=404)
+
+    return Response(confirmation)

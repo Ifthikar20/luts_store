@@ -18,10 +18,16 @@ from django.conf import settings
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import api_view, throttle_classes
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    throttle_classes,
+)
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
+from . import services
 from .models import DownloadGrant
 from .signing import ExpiredToken, InvalidToken, read_download_token
 
@@ -56,3 +62,15 @@ def download(request, token: str):
     # ``generate_presigned_url`` and redirect to the short-lived S3 URL.
     signed_url = f"{settings.DOWNLOAD_S3_BASE_URL}/{product_handle}.zip"
     return redirect(signed_url)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_downloads(request):
+    """The authenticated user's purchased download library.
+
+    Returns ``[{productHandle, title, grantedAt, downloadUrl, expiresAt}]``.
+    Each ``downloadUrl`` is a signed, expiring link to the existing
+    ``GET /api/download/<token>`` endpoint.
+    """
+    return Response(services.downloads_for_user(request.user))

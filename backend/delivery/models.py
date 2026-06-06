@@ -18,6 +18,15 @@ class DownloadGrant(models.Model):
         null=True,
         blank=True,
     )
+    # Optional link to a customer account. Grants are also keyed by email so a
+    # purchase made before signup can be attached to a user later (by email).
+    user = models.ForeignKey(
+        "auth.User",
+        related_name="download_grants",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     email = models.EmailField(blank=True)
     product_handle = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
