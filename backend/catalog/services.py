@@ -57,13 +57,26 @@ def get_collection(handle: str) -> dict[str, Any] | None:
     return _live_get_collection(handle)
 
 
+# Sort keys accepted by ``list_products``. ``featured`` is the default and
+# preserves the natural catalog order with featured products floated to the top.
+VALID_SORTS = ("featured", "price-asc", "price-desc", "title-asc", "newest")
+
+
 def list_products(
     *,
     collection: str | None = None,
     featured: bool | None = None,
     search: str | None = None,
+    sort: str | None = None,
+    min_price: float | None = None,
+    max_price: float | None = None,
+    tags: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Return a filtered list of Products."""
+    """Return a filtered + sorted list of Products.
+
+    All discovery params compose: collection scope, featured flag, text search,
+    price range, and tag (any-match) filtering, followed by a final sort.
+    """
     if settings.MOCK_MODE:
         if collection:
             products = mockdata.products_in_collection(collection)
@@ -74,9 +87,16 @@ def list_products(
         if search:
             needle = search.lower().strip()
             products = [p for p in products if _matches_search(p, needle)]
-        return products
+        products = _apply_filters(products, min_price, max_price, tags)
+        return _apply_sort(products, sort)
     return _live_list_products(
-        collection=collection, featured=featured, search=search
+        collection=collection,
+        featured=featured,
+        search=search,
+        sort=sort,
+        min_price=min_price,
+        max_price=max_price,
+        tags=tags,
     )
 
 
@@ -85,6 +105,106 @@ def get_product(handle: str) -> dict[str, Any] | None:
     if settings.MOCK_MODE:
         return mockdata.get_product(handle)
     return _live_get_product(handle)
+
+
+def facets(collection: str | None = None) -> dict[str, Any]:
+    """Return filter facets (price range, tags, product types) for the UI.
+
+    Scoped to ``collection`` when provided. Counts reflect how many products
+    in the scope carry each tag / product type.
+    """
+    if settings.MOCK_MODE:
+        if collection:
+            products = mockdata.products_in_collection(collection)
+        else:
+            products = mockdata.all_products()
+        return _compute_facets(products)
+    return _live_facets(collection)
+
+
+def _min_price_amount(product: dict[str, Any]) -> float:
+    """Best-effort float of priceRange.min.amount (0.0 if missing/garbled)."""
+    try:
+        return float(product["priceRange"]["min"]["amount"])
+    except (KeyError, TypeError, ValueError):
+        return 0.0
+
+
+def _apply_filters(
+    products: list[dict[str, Any]],
+    min_price: float | None,
+    max_price: float | None,
+    tags: list[str] | None,
+) -> list[dict[str, Any]]:
+    if min_price is not None:
+        products = [p for p in products if _min_price_amount(p) >= min_price]
+    if max_price is not None:
+        products = [p for p in products if _min_price_amount(p) <= max_price]
+    if tags:
+        wanted = {t.lower() for t in tags}
+        products = [
+            p
+            for p in products
+            if wanted & {t.lower() for t in p.get("tags", [])}
+        ]
+    return products
+
+
+def _apply_sort(
+    products: list[dict[str, Any]], sort: str | None
+) -> list[dict[str, Any]]:
+    """Sort products by the requested key. Unknown keys fall back to featured."""
+    if sort == "price-asc":
+        return sorted(products, key=_min_price_amount)
+    if sort == "price-desc":
+        return sorted(products, key=_min_price_amount, reverse=True)
+    if sort == "title-asc":
+        return sorted(products, key=lambda p: p.get("title", "").lower())
+    if sort == "newest":
+        # No real timestamps in the contract; the numeric product id encodes
+        # insertion order well enough for the mock catalog (higher == newer).
+        return sorted(products, key=_product_sort_id, reverse=True)
+    # "featured" (default): keep catalog order, float featured products up.
+    return sorted(products, key=lambda p: 0 if p.get("featured") else 1)
+
+
+def _product_sort_id(product: dict[str, Any]) -> int:
+    """Extract the trailing numeric id from a Shopify gid for newest ordering."""
+    raw = str(product.get("id", "")).rsplit("/", 1)[-1]
+    try:
+        return int(raw)
+    except ValueError:
+        return 0
+
+
+def _compute_facets(products: list[dict[str, Any]]) -> dict[str, Any]:
+    prices = [_min_price_amount(p) for p in products]
+    tag_counts: dict[str, int] = {}
+    type_counts: dict[str, int] = {}
+    for p in products:
+        for tag in p.get("tags", []):
+            tag_counts[tag] = tag_counts.get(tag, 0) + 1
+        ptype = p.get("productType")
+        if ptype:
+            type_counts[ptype] = type_counts.get(ptype, 0) + 1
+
+    def _sorted(counts: dict[str, int]) -> list[dict[str, Any]]:
+        # Highest count first, then alphabetical for stable, predictable output.
+        return [
+            {"value": value, "count": count}
+            for value, count in sorted(
+                counts.items(), key=lambda kv: (-kv[1], kv[0].lower())
+            )
+        ]
+
+    return {
+        "priceRange": {
+            "min": min(prices) if prices else 0.0,
+            "max": max(prices) if prices else 0.0,
+        },
+        "tags": _sorted(tag_counts),
+        "productTypes": _sorted(type_counts),
+    }
 
 
 def _matches_search(product: dict[str, Any], needle: str) -> bool:
@@ -145,34 +265,93 @@ def _live_get_collection(handle: str) -> dict[str, Any] | None:
     }
 
 
+# Map our public sort keys to Shopify Storefront ``ProductSortKeys`` plus a
+# reverse flag. ``featured`` -> RELEVANCE keeps Shopify's own ordering; the
+# others map directly. Used only on the live path.
+_SHOPIFY_SORT_KEYS: dict[str, tuple[str, bool]] = {
+    "featured": ("RELEVANCE", False),
+    "price-asc": ("PRICE", False),
+    "price-desc": ("PRICE", True),
+    "title-asc": ("TITLE", False),
+    "newest": ("CREATED_AT", True),
+}
+
+
+def _build_shopify_query(
+    search: str | None,
+    min_price: float | None,
+    max_price: float | None,
+    tags: list[str] | None,
+) -> str | None:
+    """Compose a Shopify Storefront search query string from discovery params.
+
+    See https://shopify.dev/docs/api/usage/search-syntax. Price uses the
+    ``variants.price`` field; tags use OR semantics for any-match.
+    """
+    parts: list[str] = []
+    if search:
+        parts.append(search.strip())
+    if min_price is not None:
+        parts.append(f"variants.price:>={min_price}")
+    if max_price is not None:
+        parts.append(f"variants.price:<={max_price}")
+    if tags:
+        ors = " OR ".join(f"tag:'{t}'" for t in tags)
+        parts.append(f"({ors})")
+    return " AND ".join(parts) if parts else None
+
+
 def _live_list_products(
     *,
     collection: str | None,
     featured: bool | None,
     search: str | None,
+    sort: str | None = None,
+    min_price: float | None = None,
+    max_price: float | None = None,
+    tags: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     from shopify_client import storefront
 
+    sort_key, reverse = _SHOPIFY_SORT_KEYS.get(
+        sort or "featured", _SHOPIFY_SORT_KEYS["featured"]
+    )
+
     if collection:
+        # Collection products are fetched whole, then filtered/sorted locally
+        # (the collection query does not expose the same sort/query args).
         coll = _live_get_collection(collection)
         products = coll["products"] if coll else []
-    else:
-        query_parts = []
         if search:
-            query_parts.append(search)
+            needle = search.lower().strip()
+            products = [p for p in products if _matches_search(p, needle)]
+        products = _apply_filters(products, min_price, max_price, tags)
+    else:
+        query = _build_shopify_query(search, min_price, max_price, tags)
         data = storefront.get_products(
-            query=" ".join(query_parts) if query_parts else None
+            query=query, sort_key=sort_key, reverse=reverse
         )
         products = [
             _normalize_product(e["node"])
             for e in data.get("products", {}).get("edges", [])
         ]
+
     if featured:
         products = [p for p in products if p.get("featured")]
-    if search:
-        needle = search.lower().strip()
-        products = [p for p in products if _matches_search(p, needle)]
-    return products
+    # Apply our canonical ordering so the result is deterministic regardless of
+    # whether the (untested) Shopify-side sort took effect.
+    return _apply_sort(products, sort)
+
+
+def _live_facets(collection: str | None) -> dict[str, Any]:
+    # Best-effort: fetch the in-scope products and compute facets in-process,
+    # mirroring the mock path. Untested against a live store.
+    products = _live_list_products(
+        collection=collection,
+        featured=None,
+        search=None,
+    )
+    return _compute_facets(products)
 
 
 def _live_get_product(handle: str) -> dict[str, Any] | None:

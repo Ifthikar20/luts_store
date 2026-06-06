@@ -99,6 +99,44 @@ export interface ProductsResponse {
   products: Product[];
 }
 
+/* -------------------------------------------------------------------------- */
+/* Phase 3: discovery (search, sort, filters, facets)                         */
+/* -------------------------------------------------------------------------- */
+
+// The sort keys accepted by GET /api/products (?sort=). Must stay in sync with
+// the backend's VALID_SORTS. `featured` is the default.
+export type SortKey =
+  | "featured"
+  | "price-asc"
+  | "price-desc"
+  | "title-asc"
+  | "newest";
+
+// A single selectable facet value with the number of in-scope products.
+export interface FacetCount {
+  value: string;
+  count: number;
+}
+
+// GET /api/facets response — drives the filter UI.
+export interface Facets {
+  priceRange: { min: number; max: number };
+  tags: FacetCount[];
+  productTypes: FacetCount[];
+}
+
+// The full discovery query understood by getProducts(). Every field is
+// optional and composes (collection scope + search + price + tags + sort).
+export interface ProductQuery {
+  collection?: string;
+  featured?: boolean;
+  search?: string;
+  sort?: SortKey;
+  minPrice?: number;
+  maxPrice?: number;
+  tags?: string[];
+}
+
 export interface CartLineInput {
   merchandiseId: string;
   quantity: number;

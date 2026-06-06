@@ -26,18 +26,52 @@ def collection_detail(request, handle: str):
     return Response(data)
 
 
+def _parse_float(raw: str | None) -> float | None:
+    if raw is None or raw.strip() == "":
+        return None
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return None
+
+
 @api_view(["GET"])
 def products(request):
     collection = request.query_params.get("collection")
     featured_raw = request.query_params.get("featured")
     featured = featured_raw is not None and featured_raw.lower() in ("1", "true", "yes")
     search = request.query_params.get("search")
+
+    sort = request.query_params.get("sort")
+    if sort not in services.VALID_SORTS:
+        sort = None  # unknown -> service default (featured)
+
+    min_price = _parse_float(request.query_params.get("minPrice"))
+    max_price = _parse_float(request.query_params.get("maxPrice"))
+
+    tags_raw = request.query_params.get("tags")
+    tags = (
+        [t.strip() for t in tags_raw.split(",") if t.strip()]
+        if tags_raw
+        else None
+    )
+
     result = services.list_products(
         collection=collection or None,
         featured=featured or None,
         search=search or None,
+        sort=sort,
+        min_price=min_price,
+        max_price=max_price,
+        tags=tags,
     )
     return Response({"products": result})
+
+
+@api_view(["GET"])
+def facets(request):
+    collection = request.query_params.get("collection")
+    return Response(services.facets(collection=collection or None))
 
 
 @api_view(["GET"])

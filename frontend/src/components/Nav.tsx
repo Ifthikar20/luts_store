@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { Menu, ShoppingBag, User, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/format";
@@ -17,8 +18,12 @@ const links = [
 
 export function Nav() {
   const reduced = useReducedMotion() ?? false;
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { count, openCart } = useCart();
   const { user } = useAuth();
 
@@ -28,6 +33,19 @@ export function Nav() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Focus the expanding search field once it opens.
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchValue.trim();
+    router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
+    setSearchOpen(false);
+    setMobileOpen(false);
+  };
 
   return (
     <motion.header
@@ -66,6 +84,51 @@ export function Nav() {
         </div>
 
         <div className="flex items-center gap-2 pr-1">
+          {/* Search affordance: an icon that expands an inline input and
+              navigates to /search?q=… on submit. */}
+          <div className="flex items-center">
+            <AnimatePresence initial={false}>
+              {searchOpen && (
+                <motion.form
+                  role="search"
+                  onSubmit={submitSearch}
+                  initial={reduced ? { opacity: 0 } : { width: 0, opacity: 0 }}
+                  animate={
+                    reduced
+                      ? { opacity: 1 }
+                      : { width: "auto", opacity: 1 }
+                  }
+                  exit={reduced ? { opacity: 0 } : { width: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  className="overflow-hidden"
+                >
+                  <input
+                    ref={searchInputRef}
+                    type="search"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    onBlur={() => {
+                      if (!searchValue.trim()) setSearchOpen(false);
+                    }}
+                    placeholder="Search looks…"
+                    aria-label="Search products"
+                    className="mr-1 w-40 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-white/25 focus:outline-none sm:w-52"
+                  />
+                </motion.form>
+              )}
+            </AnimatePresence>
+            <button
+              type="button"
+              onClick={() => {
+                if (searchOpen) submitSearch({ preventDefault() {} } as React.FormEvent);
+                else setSearchOpen(true);
+              }}
+              className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white transition-colors hover:bg-white/[0.1]"
+              aria-label="Search"
+            >
+              <Search className="h-[18px] w-[18px]" />
+            </button>
+          </div>
           <Link
             href="/account"
             className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/[0.1] hover:text-white sm:inline-flex"
@@ -107,6 +170,17 @@ export function Nav() {
           className="container-xl mt-2 md:hidden"
         >
           <div className="glass flex flex-col gap-1 rounded-3xl p-3">
+            <form role="search" onSubmit={submitSearch} className="relative mb-1">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-white/40" />
+              <input
+                type="search"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder="Search looks…"
+                aria-label="Search products"
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3 pl-11 pr-4 text-sm text-white placeholder:text-white/40 focus:border-white/25 focus:outline-none"
+              />
+            </form>
             {links.map((l) => (
               <Link
                 key={l.href}

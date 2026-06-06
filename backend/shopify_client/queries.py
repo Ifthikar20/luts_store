@@ -130,8 +130,18 @@ query CollectionByHandle($handle: String!, $first: Int!) {
 
 PRODUCTS_QUERY = (
     """
-query Products($first: Int!, $query: String) {
-  products(first: $first, query: $query) {
+query Products(
+  $first: Int!
+  $query: String
+  $sortKey: ProductSortKeys
+  $reverse: Boolean
+) {
+  products(
+    first: $first
+    query: $query
+    sortKey: $sortKey
+    reverse: $reverse
+  ) {
     edges { node { ...ProductFields } }
   }
 }

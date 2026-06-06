@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 import { ChevronRight } from "lucide-react";
-import { getCollection, getCollections } from "@/lib/api";
-import { ProductGrid } from "@/components/ProductGrid";
+import { getCollection, getCollections, getFacets } from "@/lib/api";
+import { DiscoveryView } from "@/components/DiscoveryView";
 import { GradientBlob } from "@/components/motion/GradientBlob";
 import { Reveal } from "@/components/motion/Reveal";
 
@@ -34,6 +35,10 @@ export default async function CollectionPage({
   const { handle } = await params;
   const collection = await getCollection(handle);
   if (!collection) notFound();
+
+  // Facets scoped to this collection, computed server-side for the initial
+  // render so the filter UI is populated without a client round-trip.
+  const facets = await getFacets(handle);
 
   return (
     <div className="relative overflow-hidden">
@@ -70,10 +75,23 @@ export default async function CollectionPage({
       </div>
 
       <div className="container-xl relative py-16">
-        <ProductGrid
-          products={collection.products}
-          emptyMessage="No packs in this collection yet — check back soon."
-        />
+        {/* SSG/ISR renders the initial product list + facets; DiscoveryView
+            then allows client-side refine. It reads useSearchParams, so it is
+            wrapped in <Suspense> for the App Router build. */}
+        <Suspense
+          fallback={
+            <div className="glass rounded-3xl px-8 py-16 text-center text-white/50">
+              Loading…
+            </div>
+          }
+        >
+          <DiscoveryView
+            collection={handle}
+            initialProducts={collection.products}
+            initialFacets={facets}
+            emptyMessage="No packs match your filters — try widening them."
+          />
+        </Suspense>
       </div>
     </div>
   );

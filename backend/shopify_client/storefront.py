@@ -78,8 +78,23 @@ def get_collection_by_handle(handle: str, first: int = 100) -> dict[str, Any]:
     )
 
 
-def get_products(first: int = 100, query: str | None = None) -> dict[str, Any]:
-    return execute(queries.PRODUCTS_QUERY, {"first": first, "query": query})
+def get_products(
+    first: int = 100,
+    query: str | None = None,
+    sort_key: str | None = None,
+    reverse: bool = False,
+) -> dict[str, Any]:
+    return execute(
+        queries.PRODUCTS_QUERY,
+        {
+            "first": first,
+            "query": query,
+            # ProductSortKeys enum value (e.g. PRICE, TITLE, CREATED_AT,
+            # RELEVANCE). None lets Shopify use its default ordering.
+            "sortKey": sort_key,
+            "reverse": reverse,
+        },
+    )
 
 
 def get_product_by_handle(handle: str) -> dict[str, Any]:

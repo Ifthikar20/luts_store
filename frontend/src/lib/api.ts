@@ -16,8 +16,10 @@ import type {
   Collection,
   CollectionWithProducts,
   DownloadItem,
+  Facets,
   OrderConfirmation,
   Product,
+  ProductQuery,
   ProductsResponse,
   User,
 } from "./types";
@@ -150,40 +152,118 @@ export async function getCollection(
   }
 }
 
-export async function getProducts(params?: {
-  collection?: string;
-  featured?: boolean;
-  search?: string;
-}): Promise<Product[]> {
+// Build the querystring for GET /api/products from a ProductQuery. Empty /
+// default values are omitted so URLs stay clean and caches stay warm.
+function buildProductsQuery(params?: ProductQuery): string {
   const qs = new URLSearchParams();
   if (params?.collection) qs.set("collection", params.collection);
   if (params?.featured) qs.set("featured", "true");
   if (params?.search) qs.set("search", params.search);
-  const query = qs.toString();
+  if (params?.sort && params.sort !== "featured") qs.set("sort", params.sort);
+  if (params?.minPrice != null) qs.set("minPrice", String(params.minPrice));
+  if (params?.maxPrice != null) qs.set("maxPrice", String(params.maxPrice));
+  if (params?.tags && params.tags.length) qs.set("tags", params.tags.join(","));
+  return qs.toString();
+}
+
+export async function getProducts(params?: ProductQuery): Promise<Product[]> {
+  const query = buildProductsQuery(params);
   try {
     const data = await request<ProductsResponse>(
       `/products${query ? `?${query}` : ""}`,
     );
     return data.products;
   } catch {
-    // Mirror the API's filtering against mock data.
-    let list = mockProducts;
-    if (params?.collection)
-      list = list.filter((p) =>
-        p.collections.some((c) => c.handle === params.collection),
-      );
-    if (params?.featured) list = list.filter((p) => p.featured);
-    if (params?.search) {
-      const q = params.search.toLowerCase();
-      list = list.filter(
-        (p) =>
-          p.title.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q) ||
-          p.tags.some((t) => t.toLowerCase().includes(q)),
-      );
-    }
-    return list;
+    // DEV-ONLY fallback: mirror the API's filtering + sorting against the local
+    // mock catalog so the UI keeps working when the BFF is unreachable. Never
+    // authoritative — production always reflects the API response above.
+    return filterMockProducts(params);
   }
+}
+
+// DEV-ONLY: client-side reimplementation of the backend discovery pipeline.
+function filterMockProducts(params?: ProductQuery): Product[] {
+  const minAmount = (p: Product) => Number.parseFloat(p.priceRange.min.amount);
+  let list = mockProducts.slice();
+  if (params?.collection)
+    list = list.filter((p) =>
+      p.collections.some((c) => c.handle === params.collection),
+    );
+  if (params?.featured) list = list.filter((p) => p.featured);
+  if (params?.search) {
+    const q = params.search.toLowerCase();
+    list = list.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.productType.toLowerCase().includes(q) ||
+        p.tags.some((t) => t.toLowerCase().includes(q)),
+    );
+  }
+  if (params?.minPrice != null)
+    list = list.filter((p) => minAmount(p) >= params.minPrice!);
+  if (params?.maxPrice != null)
+    list = list.filter((p) => minAmount(p) <= params.maxPrice!);
+  if (params?.tags && params.tags.length) {
+    const wanted = new Set(params.tags.map((t) => t.toLowerCase()));
+    list = list.filter((p) => p.tags.some((t) => wanted.has(t.toLowerCase())));
+  }
+  switch (params?.sort) {
+    case "price-asc":
+      return list.sort((a, b) => minAmount(a) - minAmount(b));
+    case "price-desc":
+      return list.sort((a, b) => minAmount(b) - minAmount(a));
+    case "title-asc":
+      return list.sort((a, b) => a.title.localeCompare(b.title));
+    case "newest":
+      return list.sort((a, b) => b.id.localeCompare(a.id));
+    default:
+      return list.sort(
+        (a, b) => (a.featured ? 0 : 1) - (b.featured ? 0 : 1),
+      );
+  }
+}
+
+// GET /api/facets — optionally scoped to a collection. Falls back (dev-only) to
+// computing facets from the local mock catalog.
+export async function getFacets(collection?: string): Promise<Facets> {
+  const query = collection
+    ? `?collection=${encodeURIComponent(collection)}`
+    : "";
+  try {
+    return await request<Facets>(`/facets${query}`);
+  } catch {
+    return computeMockFacets(collection);
+  }
+}
+
+// DEV-ONLY: mirror the backend facets computation over the mock catalog.
+function computeMockFacets(collection?: string): Facets {
+  const scope = collection
+    ? mockProducts.filter((p) =>
+        p.collections.some((c) => c.handle === collection),
+      )
+    : mockProducts;
+  const prices = scope.map((p) => Number.parseFloat(p.priceRange.min.amount));
+  const tagCounts = new Map<string, number>();
+  const typeCounts = new Map<string, number>();
+  for (const p of scope) {
+    for (const t of p.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
+    if (p.productType)
+      typeCounts.set(p.productType, (typeCounts.get(p.productType) ?? 0) + 1);
+  }
+  const toSorted = (m: Map<string, number>) =>
+    [...m.entries()]
+      .map(([value, count]) => ({ value, count }))
+      .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+  return {
+    priceRange: {
+      min: prices.length ? Math.min(...prices) : 0,
+      max: prices.length ? Math.max(...prices) : 0,
+    },
+    tags: toSorted(tagCounts),
+    productTypes: toSorted(typeCounts),
+  };
 }
 
 export async function getProduct(handle: string): Promise<Product | null> {
