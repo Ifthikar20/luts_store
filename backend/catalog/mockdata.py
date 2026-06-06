@@ -106,12 +106,17 @@ def _product(
     lut_count: int,
     featured: bool = False,
     max_price: str | None = None,
+    file_key: str | None = None,
 ) -> dict[str, Any]:
     alt = f"{title} LUT preview"
     coll_map = {c["handle"]: c["title"] for c in COLLECTIONS}
     return {
         "id": f"gid://shopify/Product/{pid}",
         "handle": handle,
+        # Server-side S3 object key for the purchasable file. This is the ONLY
+        # source of the download key; it is never read from the client/token.
+        # Defaults to "<S3_KEY_PREFIX>/<handle>.zip" via file_key_for_handle().
+        "file_key": file_key or f"luts/{handle}.zip",
         "title": title,
         "description": description,
         "descriptionHtml": f"<p>{description}</p>",
@@ -397,6 +402,24 @@ def products_in_collection(handle: str) -> list[dict[str, Any]]:
         for p in PRODUCTS
         if any(c["handle"] == handle for c in p["collections"])
     ]
+
+
+def file_key_for_handle(handle: str) -> str:
+    """Resolve a product handle to its S3 object key, derived SERVER-SIDE.
+
+    Uses the product's stored ``file_key`` when present, otherwise defaults to
+    ``"<S3_KEY_PREFIX>/<handle>.zip"``. The handle is the validated identity
+    carried by the signed download token; the key is always computed here (never
+    supplied by the client) so a tampered/handcrafted token cannot point the
+    download at an arbitrary object (no path traversal / IDOR).
+    """
+    from django.conf import settings
+
+    product = _PRODUCTS_BY_HANDLE.get(handle)
+    if product and product.get("file_key"):
+        return str(product["file_key"])
+    prefix = getattr(settings, "S3_KEY_PREFIX", "luts").strip("/")
+    return f"{prefix}/{handle}.zip"
 
 
 def find_variant(variant_id: str) -> dict[str, Any] | None:

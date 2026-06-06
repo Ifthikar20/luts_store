@@ -119,8 +119,10 @@ def test_email_body_has_titles_and_resolvable_download_link(
     assert match, "no /api/download/<token> link found in email"
     download_path = match.group(0)
     resp = client.get(download_path)
-    assert resp.status_code == 200  # mock mode returns {url, expiresAt}
-    assert "url" in resp.json()
+    # Mock mode streams a .cube placeholder as an attachment (no longer JSON).
+    assert resp.status_code == 200
+    assert resp["Content-Disposition"].startswith("attachment;")
+    assert b"LUT_3D_SIZE" in resp.content
 
 
 # ---------------------------------------------------------------------------

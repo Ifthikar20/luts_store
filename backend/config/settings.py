@@ -62,6 +62,36 @@ DOWNLOAD_S3_BASE_URL = config(
 )
 
 # ---------------------------------------------------------------------------
+# Secure file delivery via S3 (presigned URLs)
+# ---------------------------------------------------------------------------
+# Real digital delivery is backed by a PRIVATE S3 (or S3-compatible) bucket.
+# When AWS credentials AND a bucket are present we are in "real delivery" mode:
+# the download endpoint resolves a server-derived object key and 302-redirects
+# to a short-lived, AWS-SigV4-signed presigned URL. With these unset we stay in
+# the placeholder/streaming mock path so the demo download button still works.
+AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID", default="")
+AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY", default="")
+AWS_S3_REGION = config("AWS_S3_REGION", default="us-east-1")
+AWS_S3_BUCKET = config("AWS_S3_BUCKET", default="")
+# Optional custom endpoint for S3-compatible stores (MinIO, R2, Wasabi, ...).
+AWS_S3_ENDPOINT_URL = config("AWS_S3_ENDPOINT_URL", default="")
+# Prefix under which LUT files live in the bucket. Object keys are derived
+# server-side as ``<prefix>/<handle>.zip`` (never taken from the client/token).
+S3_KEY_PREFIX = config("S3_KEY_PREFIX", default="luts")
+# Lifetime (seconds) of a presigned download URL. Short so a leaked URL expires
+# fast. Distinct from DOWNLOAD_TOKEN_MAX_AGE (the signed-token / grant lifetime).
+DOWNLOAD_URL_TTL = config("DOWNLOAD_URL_TTL", default=60, cast=int)
+
+# Real S3 delivery is active only when keys AND a bucket are configured. Keep
+# this independent of MOCK_MODE: a store could run live Shopify but still demo
+# downloads, or vice-versa. The download view branches on this flag.
+S3_DELIVERY_ENABLED = bool(
+    AWS_ACCESS_KEY_ID.strip()
+    and AWS_SECRET_ACCESS_KEY.strip()
+    and AWS_S3_BUCKET.strip()
+)
+
+# ---------------------------------------------------------------------------
 # Frontend / public site URL (used to build links inside emails)
 # ---------------------------------------------------------------------------
 # FRONTEND_URL is where customer-facing links (library, support) point. It
@@ -117,6 +147,7 @@ INSTALLED_APPS = [
     "common",
     "catalog",
     "cart",
+    "checkout",
     "orders",
     "delivery",
     "accounts",
@@ -249,6 +280,9 @@ REST_FRAMEWORK = {
         # Stricter bucket for sensitive, email-triggering endpoints (resend
         # downloads) to blunt enumeration / mail-bombing attempts.
         "sensitive": "5/min",
+        # Dedicated bucket for the public, login-free download endpoint to deter
+        # scraping/enumeration of signed links (60 requests/min per client IP).
+        "download": "60/min",
     },
     # TokenAuthentication lets the SPA authenticate with `Authorization: Token
     # <token>`. Tokens are returned over the API for this demo; PRODUCTION

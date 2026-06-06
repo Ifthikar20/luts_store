@@ -44,8 +44,15 @@ Browser ──► Next.js (storefront, :3000) ──► Django BFF (:8000) ─�
 | `SHOPIFY_ADMIN_TOKEN` | Live mode | empty | Admin API token (order reads/fulfillment). |
 | `SHOPIFY_ADMIN_API_VERSION` | No | `2024-10` | Admin API version. |
 | `SHOPIFY_WEBHOOK_SECRET` | Live mode | empty | Shared secret to verify `orders/paid` HMAC. |
-| `DOWNLOAD_TOKEN_MAX_AGE` | No | `86400` | Signed download-link lifetime (seconds). |
-| `DOWNLOAD_S3_BASE_URL` | Live delivery | `https://example-bucket.s3.amazonaws.com` | Base for real LUT file URLs. |
+| `DOWNLOAD_TOKEN_MAX_AGE` | No | `86400` | Signed download-token (grant link) lifetime, seconds. |
+| `DOWNLOAD_S3_BASE_URL` | No | `https://example-bucket.s3.amazonaws.com` | Legacy base; presigned flow derives URLs via boto3 instead. |
+| `AWS_ACCESS_KEY_ID` | Real delivery | empty → mock | IAM access key for presigned S3 downloads. Setting keys+bucket enables real delivery. |
+| `AWS_SECRET_ACCESS_KEY` | Real delivery | empty | IAM secret key. |
+| `AWS_S3_REGION` | Real delivery | `us-east-1` | Bucket region. |
+| `AWS_S3_BUCKET` | Real delivery | empty | **Private** bucket holding the LUT files. |
+| `AWS_S3_ENDPOINT_URL` | No | empty | Custom endpoint for S3-compatible stores (MinIO/R2/Wasabi). |
+| `S3_KEY_PREFIX` | No | `luts` | Key prefix; objects are `<prefix>/<handle>.zip` (server-derived). |
+| `DOWNLOAD_URL_TTL` | No | `60` | Presigned-URL lifetime (seconds). Keep short. |
 | `FRONTEND_URL` / `SITE_URL` | Prod | `http://localhost:3000` | Customer-facing links in emails. |
 | `API_BASE_URL` | Prod | `http://localhost:8000` | Public origin of the backend, to make download links absolute in emails. |
 | `EMAIL_BACKEND` | Prod | console backend | Set to the SMTP backend for real mail. |
@@ -212,13 +219,91 @@ DEFAULT_FROM_EMAIL=The Looks Lab <hello@thelookslab.com>
 
 ---
 
-## 11. S3 for real LUT file delivery
+## 11. Secure digital delivery (S3)
 
-In mock mode, downloads are served from in-repo fixtures. In production, host the
-`.cube` files in private S3 and set `DOWNLOAD_S3_BASE_URL`. The backend issues
-**signed, expiring** download tokens (`DOWNLOAD_TOKEN_MAX_AGE`, default 24h)
-exchanged at `GET /api/download/<token>` — the bucket itself stays private and is
-never exposed directly.
+LUT files are delivered from a **private** S3 (or S3-compatible) bucket via
+short-lived **presigned URLs**. The download endpoint requires **no login** —
+the signed token is the only credential, so guests who buy via the email link or
+thank-you page can download immediately.
+
+### Bucket setup (private + Block Public Access)
+
+1. Create a bucket (e.g. `luts-private`) and **enable S3 Block Public Access**
+   (all four settings ON). No bucket policy grants public read.
+2. Upload files under the key prefix, named by product handle:
+   `s3://luts-private/luts/<handle>.zip` (matches `S3_KEY_PREFIX`).
+3. The bucket is **never** publicly readable. The *only* way to fetch an object
+   is a presigned URL minted by the backend.
+
+### Least-privilege IAM user
+
+Create an IAM user whose keys go in `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`,
+with a policy granting **only** `s3:GetObject` on the key prefix:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::luts-private/luts/*"
+  }]
+}
+```
+
+No list, no put, no delete, no access outside `luts/*`. If the keys leak, the
+blast radius is read-only on the LUT files.
+
+### Why downloads cannot be manipulated
+
+| Control | Effect |
+| --- | --- |
+| **HMAC-signed token** (`django.core.signing`) | The token carries the grant id + product handle + expiry, signed with `SECRET_KEY`. **Any** edit → `BadSignature` → **403**. |
+| **Server-derived key** | The S3 object key is computed server-side as `<S3_KEY_PREFIX>/<handle>.zip` from the *validated* handle. It is never read from the client/token → no path traversal, no IDOR. Editing the handle to grab another product breaks the signature. |
+| **AWS SigV4 presigned URL** | The S3 URL is signed with the IAM secret; it cannot be forged or its key/params edited. |
+| **Short TTL** | `DOWNLOAD_URL_TTL` (default 60s) means a leaked presigned URL expires almost immediately. The grant link (`DOWNLOAD_TOKEN_MAX_AGE`) is separately bounded. |
+| **Throttling** | `GET /api/download/<token>` is rate-limited by a dedicated `download` scope (60/min per IP) to deter scraping/enumeration. |
+
+### Behavior
+
+`GET /api/download/<token>`:
+- Validates the token (signature + expiry). Bad/expired/tampered → **403**;
+  unknown/mismatched grant → **404**.
+- **Real mode** (AWS keys + bucket set): **302 redirect** to the presigned S3
+  URL (`ResponseContentDisposition: attachment; filename="<handle>.zip"`).
+- **Mock mode** (no AWS keys): streams a small generated `.cube` placeholder as
+  an attachment (`Content-Disposition: attachment; filename="<handle>.cube"`) so
+  the demo download button works with zero external services.
+
+### CDN (optional, recommended)
+
+For scale, front the private bucket with CloudFront (Origin Access Control) and
+edge-cache the bytes; keep the presigned-URL TTL short. See `PERFORMANCE.md`.
+
+---
+
+## 11b. Checkout flow
+
+`POST /api/checkout` `{cartId, email?}` → `{mode, checkoutUrl}`:
+
+- **Real mode** (`SHOPIFY_STOREFRONT_TOKEN` set): `mode="shopify"`,
+  `checkoutUrl` is Shopify's **hosted checkout** URL for the cart (from the
+  Storefront `cartCreate`). Configure Shopify's checkout **return URL** to your
+  storefront thank-you page (`FRONTEND_URL`), and register the `orders/paid`
+  webhook (see §4) — that webhook creates the order, grants, and sends the
+  confirmation email.
+- **Mock mode**: `mode="mock"`, `checkoutUrl="/checkout?cart=<cartId>"` — a
+  **relative** path the frontend renders as a demo checkout page.
+
+`POST /api/checkout/complete` `{cartId, email}` → `{orderId}` — **MOCK MODE
+ONLY** (returns **404** in real mode). It simulates Shopify completing payment +
+firing `orders/paid` for the demo: builds the order from the cart (idempotent on
+a synthetic id), issues `DownloadGrant`s for the email (attached to a user if one
+exists), and sends one confirmation email. In production this is done by the real
+`orders/paid` webhook, never this endpoint.
+
+The thank-you confirmation `GET /api/orders/<orderId>` returns the guest's
+`downloads` **login-free** for both real orders and the mock-completed order.
 
 ---
 

@@ -213,11 +213,11 @@ def test_download_token_endpoint(client):
     grant = DownloadGrant.objects.create(email="b@e.com", product_handle="midnight-noir")
     token = make_download_token(grant.id, "midnight-noir")
     resp = client.get(f"/api/download/{token}")
+    # Mock mode streams a .cube attachment (no longer JSON).
     assert resp.status_code == 200
-    body = resp.json()
-    assert "url" in body and "expiresAt" in body
+    assert resp["Content-Disposition"].startswith("attachment;")
 
 
 def test_download_token_invalid(client):
     resp = client.get("/api/download/not-a-real-token")
-    assert resp.status_code == 401
+    assert resp.status_code == 403

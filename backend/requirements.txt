@@ -8,6 +8,8 @@ gunicorn>=22.0
 # Postgres driver — only used when DATABASE_URL points at Postgres (e.g. the
 # docker-compose `db` service). SQLite remains the zero-config local default.
 psycopg[binary]>=3.2
+# AWS SDK — minting presigned URLs for private-S3 LUT file delivery (real mode).
+boto3>=1.34
 
 # Test dependencies
 pytest>=8.0

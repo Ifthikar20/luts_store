@@ -49,6 +49,34 @@ def serialize_grant(grant: DownloadGrant) -> dict[str, Any]:
     }
 
 
+def placeholder_cube(product_handle: str) -> str:
+    """Generate a small, valid-looking .cube file body for the mock download.
+
+    In mock mode there is no real S3 object, but the download button must still
+    download an actual file. This returns a tiny 2x2x2 identity LUT in the
+    standard Adobe .cube text format so the byte stream is genuinely a usable
+    (no-op) LUT, titled for the product.
+    """
+    title = _title_for_handle(product_handle)
+    lines = [
+        f"# The Looks Lab — {title}",
+        "# MOCK placeholder LUT (demo download). Real files ship from S3.",
+        f'TITLE "{title}"',
+        "LUT_3D_SIZE 2",
+        "",
+        "0.000000 0.000000 0.000000",
+        "1.000000 0.000000 0.000000",
+        "0.000000 1.000000 0.000000",
+        "1.000000 1.000000 0.000000",
+        "0.000000 0.000000 1.000000",
+        "1.000000 0.000000 1.000000",
+        "0.000000 1.000000 1.000000",
+        "1.000000 1.000000 1.000000",
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def downloads_for_user(user: User) -> list[dict[str, Any]]:
     """All download items for a user, newest first, de-duplicated by handle."""
     grants = DownloadGrant.objects.filter(user=user).order_by("-created_at")

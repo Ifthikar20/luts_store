@@ -107,6 +107,18 @@ def get_product(handle: str) -> dict[str, Any] | None:
     return _live_get_product(handle)
 
 
+def file_key_for_handle(handle: str) -> str:
+    """Resolve a product handle to its private S3 object key, server-side.
+
+    Single seam used by the download endpoint. In mock mode it delegates to the
+    fixture's per-product ``file_key`` (default ``<S3_KEY_PREFIX>/<handle>.zip``).
+    In live mode there is no Shopify-side key, so we fall back to the same
+    deterministic default. The key is ALWAYS derived here from the validated
+    handle and is never read from the client/token -> no path traversal/IDOR.
+    """
+    return mockdata.file_key_for_handle(handle)
+
+
 def facets(collection: str | None = None) -> dict[str, Any]:
     """Return filter facets (price range, tags, product types) for the UI.
 
