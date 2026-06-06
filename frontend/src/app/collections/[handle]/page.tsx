@@ -1,0 +1,80 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import { getCollection, getCollections } from "@/lib/api";
+import { ProductGrid } from "@/components/ProductGrid";
+import { GradientBlob } from "@/components/motion/GradientBlob";
+import { Reveal } from "@/components/motion/Reveal";
+
+export async function generateStaticParams() {
+  const collections = await getCollections();
+  return collections.map((c) => ({ handle: c.handle }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ handle: string }>;
+}): Promise<Metadata> {
+  const { handle } = await params;
+  const collection = await getCollection(handle);
+  if (!collection) return { title: "Collection not found" };
+  return {
+    title: collection.title,
+    description: collection.description,
+  };
+}
+
+export default async function CollectionPage({
+  params,
+}: {
+  params: Promise<{ handle: string }>;
+}) {
+  const { handle } = await params;
+  const collection = await getCollection(handle);
+  if (!collection) notFound();
+
+  return (
+    <div className="relative overflow-hidden">
+      <GradientBlob grade="teal-orange" className="-left-32 top-10" size={500} />
+      <GradientBlob
+        grade="violet-magenta"
+        className="-right-40 top-64"
+        size={460}
+        delay={4}
+      />
+
+      <div className="container-xl relative pt-36 sm:pt-44">
+        <Reveal>
+          <nav className="mb-6 flex items-center gap-1.5 text-sm text-white/45">
+            <Link href="/" className="hover:text-white">
+              Home
+            </Link>
+            <ChevronRight className="h-4 w-4" />
+            <span className="text-white/70">{collection.title}</span>
+          </nav>
+          <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-6xl">
+            {collection.title}
+          </h1>
+          {collection.description && (
+            <p className="mt-5 max-w-2xl text-lg text-white/55">
+              {collection.description}
+            </p>
+          )}
+          <p className="mt-4 text-sm text-white/40">
+            {collection.products.length} pack
+            {collection.products.length === 1 ? "" : "s"}
+          </p>
+        </Reveal>
+      </div>
+
+      <div className="container-xl relative py-16">
+        <ProductGrid
+          products={collection.products}
+          emptyMessage="No packs in this collection yet — check back soon."
+        />
+      </div>
+    </div>
+  );
+}
