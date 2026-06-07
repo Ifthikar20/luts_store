@@ -18,10 +18,11 @@ import { cn } from "@/lib/format";
  * product clips), with a gentle hover lift.
  *
  * Performance + a11y:
- *  - The <video> starts with NO `src` and `preload="none"`. The real source is
- *    only attached once the card is scrolled into view (or hovered), so we never
- *    download video the user can't see. This lazy-load contract is what the
- *    VideoCard test asserts (no eager <video>/src on the initial render).
+ *  - The <video> is not mounted at all until the card nears/enters the viewport
+ *    (or is hovered); its source is attached only then, so we never download
+ *    video the user can't see. Once mounted it carries the native `autoPlay`
+ *    attribute (muted) for reliable autoplay. This lazy-mount contract is what
+ *    the VideoCard test asserts (no eager <video>/src on the initial render).
  *  - An IntersectionObserver plays/pauses the clip as it enters/leaves the
  *    viewport; offscreen cards are paused to save battery/CPU.
  *  - The muted clip plays even under prefers-reduced-motion (it's the section's
@@ -83,7 +84,9 @@ export function VideoCard({
     if (!el || typeof IntersectionObserver === "undefined") return;
     const obs = new IntersectionObserver(
       ([entry]) => setInView(entry.isIntersecting),
-      { threshold: 0.25, rootMargin: "0px 0px -10% 0px" },
+      // Start a touch before the card enters so the clip is ready to play the
+      // moment it's visible (feels like instant autoplay).
+      { threshold: 0.01, rootMargin: "200px 0px 200px 0px" },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -147,10 +150,11 @@ export function VideoCard({
       {loadVideo && (
         <video
           ref={videoRef}
+          autoPlay
           muted
           loop
           playsInline
-          preload="none"
+          preload="metadata"
           poster={poster}
           aria-hidden
           className={cn(
