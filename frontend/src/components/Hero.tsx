@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Play, Star } from "lucide-react";
+import { ArrowRight, Aperture, Play } from "lucide-react";
 import { HeroVideo } from "./HeroVideo";
 import { HERO_VIDEO } from "@/lib/media";
 
@@ -49,12 +49,8 @@ export function Hero() {
             variants={item}
             className="inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-4 py-1.5 text-xs font-medium text-slate2 shadow-soft"
           >
-            <span className="flex">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="h-3.5 w-3.5 fill-sky text-sky" />
-              ))}
-            </span>
-            Loved by 12,000+ editors
+            <Aperture className="h-3.5 w-3.5 text-sky" />
+            Built for log &amp; flat footage
           </motion.span>
 
           <motion.h1
@@ -68,12 +64,13 @@ export function Hero() {
             variants={item}
             className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-slate2 sm:text-xl"
           >
-            Cinematic LUTs engineered by colorists. Drop a{" "}
+            Hand-built{" "}
             <code className="rounded-md bg-cloud px-1.5 py-0.5 text-base text-graphite">
               .cube
             </code>{" "}
-            onto your timeline and your footage looks like film — no guesswork,
-            no endless wheels.
+            LUTs for DJI, Sony, iPhone and mirrorless log. Drag one onto your
+            clip and the grade lands — contrast, color, skin tones — then push or
+            pull it to taste.
           </motion.p>
 
           <motion.div
@@ -94,11 +91,11 @@ export function Hero() {
             variants={item}
             className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate2"
           >
-            <span>52+ LUTs</span>
+            <span>Works in Resolve, Premiere &amp; Final Cut</span>
             <span className="h-1 w-1 rounded-full bg-hairline" />
             <span>.cube &amp; .3dl</span>
             <span className="h-1 w-1 rounded-full bg-hairline" />
-            <span>Resolve · Premiere · FCP</span>
+            <span>Buy once, yours forever</span>
           </motion.div>
         </motion.div>
 
