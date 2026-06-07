@@ -50,7 +50,7 @@ export function Hero() {
             className="inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-4 py-1.5 text-xs font-medium text-slate2 shadow-soft"
           >
             <Aperture className="h-3.5 w-3.5 text-sky" />
-            Built for log &amp; flat footage
+            For log &amp; flat footage
           </motion.span>
 
           <motion.h1
@@ -68,9 +68,8 @@ export function Hero() {
             <code className="rounded-md bg-cloud px-1.5 py-0.5 text-base text-graphite">
               .cube
             </code>{" "}
-            LUTs for DJI, Sony, iPhone and mirrorless log. Drag one onto your
-            clip and the grade lands — contrast, color, skin tones — then push or
-            pull it to taste.
+            LUTs for log footage. Drag one onto your clip — and it just looks
+            right.
           </motion.p>
 
           <motion.div
@@ -91,11 +90,11 @@ export function Hero() {
             variants={item}
             className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate2"
           >
-            <span>Works in Resolve, Premiere &amp; Final Cut</span>
+            <span>Resolve, Premiere &amp; Final Cut</span>
             <span className="h-1 w-1 rounded-full bg-hairline" />
             <span>.cube &amp; .3dl</span>
             <span className="h-1 w-1 rounded-full bg-hairline" />
-            <span>Buy once, yours forever</span>
+            <span>Buy once</span>
           </motion.div>
         </motion.div>
 
