@@ -12,8 +12,9 @@ import { cn } from "@/lib/format";
 
 const links = [
   { href: "/collections/cinematic", label: "Cinematic" },
-  { href: "/collections/moody", label: "Moody" },
-  { href: "/collections/vibrant", label: "Vibrant" },
+  { href: "/collections/drone-dji", label: "Drone / DJI" },
+  { href: "/collections/mobile-capcut", label: "Mobile / CapCut" },
+  { href: "/collections/film-emulation", label: "Film" },
   { href: "/collections/bundles", label: "Bundles" },
 ];
 

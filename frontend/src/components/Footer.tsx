@@ -6,8 +6,9 @@ const columns = [
     title: "Shop",
     links: [
       { href: "/collections/cinematic", label: "Cinematic" },
-      { href: "/collections/moody", label: "Moody & Dark" },
-      { href: "/collections/vibrant", label: "Vibrant" },
+      { href: "/collections/drone-dji", label: "Drone / DJI" },
+      { href: "/collections/mobile-capcut", label: "Mobile / CapCut" },
+      { href: "/collections/film-emulation", label: "Film Emulation" },
       { href: "/collections/bundles", label: "Bundles" },
     ],
   },
@@ -67,7 +68,14 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-hairline pt-6 text-xs text-slate2 sm:flex-row sm:items-center">
           <p>© {new Date().getFullYear()} Luts.store. All rights reserved.</p>
-          <p>Built with Next.js · A premium color-grading storefront.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/policies/terms" className="transition-colors hover:text-graphite">
+              Terms
+            </Link>
+            <Link href="/policies/privacy" className="transition-colors hover:text-graphite">
+              Privacy
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
