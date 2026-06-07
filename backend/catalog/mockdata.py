@@ -327,8 +327,10 @@ PRODUCTS: list[dict[str, Any]] = [
         pid="5001",
         handle="the-cinematic-bundle",
         title="The Cinematic Bundle",
-        description="All three of our flagship cinematic LUT packs in one "
-        "discounted bundle. 24 looks for narrative and commercial work.",
+        description="Our three cinematic packs together — Nocturne, Ember and "
+        "Midnight Noir. 24 looks built on real log and flat footage, from neon "
+        "night exteriors to warm, natural skin. Costs less than buying the "
+        "three packs on their own.",
         price="79.00",
         image_url="https://images.unsplash.com/photo-1500051638674-ff996a0ec29e?w=1200&q=80",
         extra_image_url="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1200&q=80",

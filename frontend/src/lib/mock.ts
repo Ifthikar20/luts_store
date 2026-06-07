@@ -191,7 +191,7 @@ export const mockProducts: Product[] = [
     handle: "the-everything-bundle",
     title: "The Everything Bundle",
     price: "129.00",
-    desc: "All 6 signature packs — 52 LUTs total — in every supported format. One drag, every look.",
+    desc: "Every pack we make in one download — 52 looks in .cube and .3dl, graded for everything from DJI and iPhone to mirrorless. The whole library, the best price.",
     imgId: "photo-1500530855697-b586d89ba3ee",
     imgId2: "photo-1502082553048-f009c37129b9",
     productType: "Bundle",

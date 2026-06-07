@@ -12,12 +12,12 @@ export function BundleCard({ bundle }: { bundle: Product }) {
   const variant = bundle.variants[0];
 
   const perks = [
-    `${bundle.metafields.lutCount} LUTs across every signature look`,
-    `Delivered in ${bundle.metafields.formats.join(" + ")}`,
+    `${bundle.metafields.lutCount} hand-built looks`,
+    `Drag-and-drop ${bundle.metafields.formats.join(" / ")} — no plugins`,
     `Works in ${bundle.metafields.compatibleApps.slice(0, 3).join(", ")}${
       bundle.metafields.compatibleApps.length > 3 ? " + more" : ""
     }`,
-    "Free lifetime updates",
+    "One-time purchase — yours forever",
   ];
 
   return (
