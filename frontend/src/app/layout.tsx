@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from "next";
 // access to fetch the font files, swap these for `next/font/local` with .woff2
 // files in /public/fonts, or fall back to the system stack already declared in
 // tailwind.config.ts (ui-sans-serif, system-ui).
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Space_Grotesk, Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Nav } from "@/components/Nav";
@@ -21,6 +21,13 @@ const display = Space_Grotesk({
 const body = Inter({
   subsets: ["latin"],
   variable: "--font-body",
+  display: "swap",
+});
+
+const serif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -73,7 +80,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html
+      lang="en"
+      className={`${display.variable} ${body.variable} ${serif.variable}`}
+    >
       <body className="bg-paper font-sans text-graphite antialiased">
         <Providers>
           <Nav />

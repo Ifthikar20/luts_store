@@ -6,11 +6,13 @@ export function SectionHeading({
   title,
   subtitle,
   align = "left",
+  titleClassName,
 }: {
   eyebrow?: string;
   title: ReactNode;
   subtitle?: ReactNode;
   align?: "left" | "center";
+  titleClassName?: string;
 }) {
   return (
     <Reveal
@@ -25,7 +27,12 @@ export function SectionHeading({
           {eyebrow}
         </p>
       )}
-      <h2 className="font-display text-3xl font-bold leading-tight tracking-tightest text-graphite sm:text-4xl md:text-5xl">
+      <h2
+        className={
+          titleClassName ??
+          "font-display text-3xl font-bold leading-tight tracking-tightest text-graphite sm:text-4xl md:text-5xl"
+        }
+      >
         {title}
       </h2>
       {subtitle && <p className="mt-4 text-lg text-slate2">{subtitle}</p>}

@@ -133,6 +133,7 @@ export default async function HomePage() {
             eyebrow="Signature looks"
             title="Featured LUT packs"
             subtitle="Hand-built grades our community reaches for again and again. Hover a card to preview the look in motion."
+            titleClassName="font-serif text-4xl font-normal leading-[1.05] tracking-tight text-graphite sm:text-5xl md:text-6xl"
           />
           <Reveal direction="left">
             <Link
