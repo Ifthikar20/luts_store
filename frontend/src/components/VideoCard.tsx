@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { Play } from "lucide-react";
 import { cn } from "@/lib/format";
 
 /**
@@ -23,8 +24,9 @@ import { cn } from "@/lib/format";
  *    VideoCard test asserts (no eager <video>/src on the initial render).
  *  - An IntersectionObserver plays/pauses the clip as it enters/leaves the
  *    viewport; offscreen cards are paused to save battery/CPU.
- *  - Under prefers-reduced-motion we render the static poster ONLY and never
- *    attach a video source or autoplay.
+ *  - The muted clip plays even under prefers-reduced-motion (it's the section's
+ *    content, not decorative motion); only the hover ZOOM animation is gated by
+ *    reduced motion. If a browser blocks autoplay we surface a tap-to-play button.
  */
 export function VideoCard({
   src,
@@ -59,39 +61,58 @@ export function VideoCard({
   const [loadVideo, setLoadVideo] = useState(false);
   const [inView, setInView] = useState(false);
   const [hovering, setHovering] = useState(false);
+  // Set if the browser refuses to autoplay — we then show a tap-to-play button.
+  const [needsTap, setNeedsTap] = useState(false);
+  // Set when the user explicitly taps play (overrides everything).
+  const [forced, setForced] = useState(false);
 
-  // Lazily reveal + play, respecting reduced motion.
-  const wantsPlay = !reduced && ((playInView && inView) || (playOnHover && hovering));
+  // Lazily reveal + play. NOTE: playback is NOT gated on reduced motion — the
+  // clip is the content; only the hover zoom (below) respects reduced motion.
+  const wantsPlay =
+    forced || (playInView && inView) || (playOnHover && hovering);
 
   // Attach the source the first time we want to play.
   useEffect(() => {
     if (wantsPlay && !loadVideo) setLoadVideo(true);
   }, [wantsPlay, loadVideo]);
 
-  // Observe viewport intersection (skip entirely under reduced motion).
+  // Observe viewport intersection.
   useEffect(() => {
-    if (reduced || !playInView) return;
+    if (!playInView) return;
     const el = containerRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
     const obs = new IntersectionObserver(
       ([entry]) => setInView(entry.isIntersecting),
-      { threshold: 0.35 },
+      { threshold: 0.25, rootMargin: "0px 0px -10% 0px" },
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [reduced, playInView]);
+  }, [playInView]);
 
-  // Drive play/pause off the derived intent.
+  // Drive play/pause off the derived intent; surface a tap-to-play fallback if
+  // the browser rejects autoplay (e.g. data-saver), and clear it on success.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
     if (wantsPlay) {
-      // play() can reject if the element is removed mid-flight — swallow it.
-      void v.play().catch(() => {});
+      void v
+        .play()
+        .then(() => setNeedsTap(false))
+        .catch(() => setNeedsTap(true));
     } else {
       v.pause();
     }
   }, [wantsPlay, loadVideo]);
+
+  const tapToPlay = useCallback(() => {
+    setForced(true);
+    setLoadVideo(true);
+    setNeedsTap(false);
+    // Attempt immediately within the user gesture so the browser allows it.
+    requestAnimationFrame(() => {
+      void videoRef.current?.play().catch(() => setNeedsTap(true));
+    });
+  }, []);
 
   const onEnter = useCallback(() => setHovering(true), []);
   const onLeave = useCallback(() => setHovering(false), []);
@@ -123,7 +144,7 @@ export function VideoCard({
       />
 
       {/* Video overlays the poster once loaded; fades in when actually playing. */}
-      {!reduced && loadVideo && (
+      {loadVideo && (
         <video
           ref={videoRef}
           muted
@@ -144,6 +165,18 @@ export function VideoCard({
       {/* Subtle bottom scrim so any overlaid label text stays legible. */}
       {overlay && (
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-black/0 to-transparent" />
+      )}
+
+      {/* Tap-to-play fallback if the browser blocked muted autoplay. */}
+      {needsTap && (
+        <button
+          type="button"
+          onClick={tapToPlay}
+          aria-label="Play preview"
+          className="absolute left-1/2 top-1/2 z-10 grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-graphite shadow-lift backdrop-blur transition-transform hover:scale-105"
+        >
+          <Play className="h-6 w-6 translate-x-0.5 fill-current" />
+        </button>
       )}
 
       {children}
