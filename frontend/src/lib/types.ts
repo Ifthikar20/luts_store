@@ -43,6 +43,9 @@ export interface Product {
   featuredImage: Image;
   images: Image[];
   priceRange: PriceRange;
+  // Optional "was" price — present on discounted items (e.g. bundles). When set
+  // and higher than priceRange.min, the UI shows a strikethrough + savings.
+  compareAtPrice?: Money;
   variants: Variant[];
   tags: string[];
   productType: string;

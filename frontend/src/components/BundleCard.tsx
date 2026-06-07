@@ -11,6 +11,20 @@ export function BundleCard({ bundle }: { bundle: Product }) {
   const { addItem, loading } = useCart();
   const variant = bundle.variants[0];
 
+  const price = bundle.priceRange.min;
+  const priceAmount = Number.parseFloat(price.amount);
+  const compareAmount = bundle.compareAtPrice
+    ? Number.parseFloat(bundle.compareAtPrice.amount)
+    : null;
+  const hasDiscount =
+    compareAmount !== null &&
+    !Number.isNaN(compareAmount) &&
+    compareAmount > priceAmount;
+  const saveAmount = hasDiscount ? compareAmount - priceAmount : 0;
+  const savePercent = hasDiscount
+    ? Math.round((saveAmount / compareAmount) * 100)
+    : 0;
+
   const perks = [
     `${bundle.metafields.lutCount} hand-built looks`,
     `Drag-and-drop ${bundle.metafields.formats.join(" / ")} — no plugins`,
@@ -34,10 +48,17 @@ export function BundleCard({ bundle }: { bundle: Product }) {
         </div>
 
         <div className="flex flex-col justify-center gap-5 p-8 sm:p-10">
-          <span className="inline-flex w-fit items-center gap-2 rounded-full bg-sky/10 px-3 py-1 text-xs font-semibold text-sky">
-            <Sparkles className="h-3.5 w-3.5" />
-            Best value
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full bg-sky/10 px-3 py-1 text-xs font-semibold text-sky">
+              <Sparkles className="h-3.5 w-3.5" />
+              Best value
+            </span>
+            {hasDiscount && (
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600">
+                {savePercent}% off
+              </span>
+            )}
+          </div>
           <h3 className="font-display text-3xl font-bold leading-tight tracking-tight text-graphite sm:text-4xl">
             {bundle.title}
           </h3>
@@ -54,10 +75,28 @@ export function BundleCard({ bundle }: { bundle: Product }) {
             ))}
           </ul>
 
-          <div className="mt-2 flex flex-wrap items-center gap-5">
-            <span className="font-display text-3xl font-bold text-graphite">
-              {formatMoney(bundle.priceRange.min)}
-            </span>
+          <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-baseline gap-3">
+                {hasDiscount && (
+                  <span className="font-display text-xl font-semibold text-slate2 line-through decoration-slate2/50 decoration-2">
+                    {formatMoney(bundle.compareAtPrice!)}
+                  </span>
+                )}
+                <span className="font-display text-4xl font-bold text-graphite">
+                  {formatMoney(price)}
+                </span>
+              </div>
+              {hasDiscount && (
+                <span className="text-sm font-medium text-emerald-600">
+                  You save{" "}
+                  {formatMoney({
+                    amount: saveAmount.toFixed(2),
+                    currencyCode: price.currencyCode,
+                  })}
+                </span>
+              )}
+            </div>
             {variant && (
               <MagneticButton
                 variant="grade"

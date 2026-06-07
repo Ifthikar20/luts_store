@@ -107,10 +107,11 @@ def _product(
     featured: bool = False,
     max_price: str | None = None,
     file_key: str | None = None,
+    compare_at_price: str | None = None,
 ) -> dict[str, Any]:
     alt = f"{title} LUT preview"
     coll_map = {c["handle"]: c["title"] for c in COLLECTIONS}
-    return {
+    product = {
         "id": f"gid://shopify/Product/{pid}",
         "handle": handle,
         # Server-side S3 object key for the purchasable file. This is the ONLY
@@ -139,6 +140,11 @@ def _product(
         "metafields": _metafields(lut_count),
         "featured": featured,
     }
+    # Optional "was" price for showing a discount (e.g. bundles vs buying the
+    # individual packs). Only present when explicitly set.
+    if compare_at_price is not None:
+        product["compareAtPrice"] = _money(compare_at_price)
+    return product
 
 
 # ---------------------------------------------------------------------------
@@ -332,6 +338,7 @@ PRODUCTS: list[dict[str, Any]] = [
         "night exteriors to warm, natural skin. Costs less than buying the "
         "three packs on their own.",
         price="79.00",
+        compare_at_price="117.00",
         image_url="https://images.unsplash.com/photo-1500051638674-ff996a0ec29e?w=1200&q=80",
         extra_image_url="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1200&q=80",
         tags=["bundle", "cinematic", "value"],
@@ -347,6 +354,7 @@ PRODUCTS: list[dict[str, Any]] = [
         description="Everything a drone pilot needs to grade D-Log and D-Cinelike "
         "footage. Three aerial packs bundled together.",
         price="59.00",
+        compare_at_price="90.00",
         image_url="https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=1200&q=80",
         extra_image_url="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
         tags=["bundle", "drone", "dji", "value"],
@@ -361,6 +369,7 @@ PRODUCTS: list[dict[str, Any]] = [
         description="Our entire library in one place. Every cinematic, drone, "
         "mobile, and film-emulation LUT we make, at the best possible price.",
         price="129.00",
+        compare_at_price="299.00",
         image_url="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=1200&q=80",
         extra_image_url="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=1200&q=80",
         tags=["bundle", "everything", "value", "complete"],
