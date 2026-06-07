@@ -54,14 +54,15 @@ export function Nav() {
       initial={reduced ? false : { y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="fixed inset-x-0 top-0 z-50"
+      className={cn(
+        "fixed inset-x-0 top-0 z-50 border-b bg-white/80 backdrop-blur-xl transition-all duration-300",
+        scrolled ? "border-hairline shadow-soft" : "border-transparent",
+      )}
     >
       <nav
         className={cn(
-          "container-xl mt-3 flex items-center justify-between rounded-full transition-all duration-300",
-          scrolled
-            ? "border border-hairline bg-white/80 py-2.5 shadow-soft backdrop-blur-xl"
-            : "border border-transparent bg-transparent py-4",
+          "container-xl flex items-center justify-between transition-all duration-300",
+          scrolled ? "py-3" : "py-4",
         )}
       >
         <Link href="/" className="pl-2" aria-label="Luts.store home">
@@ -120,7 +121,7 @@ export function Nav() {
                 if (searchOpen) submitSearch({ preventDefault() {} } as React.FormEvent);
                 else setSearchOpen(true);
               }}
-              className="grid h-10 w-10 place-items-center rounded-full border border-hairline bg-white text-graphite transition-colors hover:bg-cloud"
+              className="grid h-10 w-10 place-items-center rounded-full text-graphite transition-colors hover:bg-cloud"
               aria-label="Search"
             >
               <Search className="h-[18px] w-[18px]" />
@@ -128,7 +129,7 @@ export function Nav() {
           </div>
           <Link
             href="/account"
-            className="hidden items-center gap-2 rounded-full border border-hairline bg-white px-4 py-2 text-sm font-medium text-graphite transition-colors hover:bg-cloud sm:inline-flex"
+            className="hidden items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium text-graphite transition-colors hover:bg-cloud sm:inline-flex"
             aria-label={authenticated ? "Your account" : "Sign in"}
           >
             <User className="h-[18px] w-[18px]" />
@@ -137,7 +138,7 @@ export function Nav() {
           <button
             type="button"
             onClick={openCart}
-            className="relative grid h-10 w-10 place-items-center rounded-full border border-hairline bg-white text-graphite transition-colors hover:bg-cloud"
+            className="relative grid h-10 w-10 place-items-center rounded-full text-graphite transition-colors hover:bg-cloud"
             aria-label={`Open cart, ${count} item${count === 1 ? "" : "s"}`}
           >
             <ShoppingBag className="h-[18px] w-[18px]" />
@@ -150,7 +151,7 @@ export function Nav() {
           <button
             type="button"
             onClick={() => setMobileOpen((o) => !o)}
-            className="grid h-10 w-10 place-items-center rounded-full border border-hairline bg-white text-graphite md:hidden"
+            className="grid h-10 w-10 place-items-center rounded-full text-graphite transition-colors hover:bg-cloud md:hidden"
             aria-label="Toggle menu"
             aria-expanded={mobileOpen}
           >
