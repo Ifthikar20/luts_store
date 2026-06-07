@@ -58,10 +58,10 @@ export default function RefundPage() {
         <p>
           Email{" "}
           <a
-            href="mailto:support@thelookslab.com"
+            href="mailto:support@luts.store"
             className="text-grade-teal underline-offset-4 hover:underline"
           >
-            support@thelookslab.com
+            support@luts.store
           </a>{" "}
           with your order number and a description of the problem. We aim to
           respond within one business day. Approved refunds are returned to your

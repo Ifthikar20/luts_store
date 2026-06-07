@@ -8,9 +8,9 @@ import { Reveal } from "@/components/motion/Reveal";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Questions about a LUT pack, your download, or licensing? Get in touch with The Looks Lab — we usually reply within one business day.",
+    "Questions about a LUT pack, your download, or licensing? Get in touch with Luts.store — we usually reply within one business day.",
   openGraph: {
-    title: "Contact The Looks Lab",
+    title: "Contact Luts.store",
     description: "Get in touch with the studio — we usually reply within one business day.",
   },
 };
@@ -48,10 +48,10 @@ export default function ContactPage() {
                 <div>
                   <p className="text-sm font-semibold text-graphite">Email</p>
                   <a
-                    href="mailto:support@thelookslab.com"
+                    href="mailto:support@luts.store"
                     className="text-sm text-slate2 transition-colors hover:text-graphite"
                   >
-                    support@thelookslab.com
+                    support@luts.store
                   </a>
                 </div>
               </li>

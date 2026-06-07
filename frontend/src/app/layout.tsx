@@ -33,11 +33,12 @@ const siteDescription =
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "The Looks Lab — Cinematic LUTs",
-    template: "%s | The Looks Lab",
+    default: "Luts.store — Cinematic LUTs",
+    template: "%s | Luts.store",
   },
   description: siteDescription,
-  applicationName: "The Looks Lab",
+  applicationName: "Luts.store",
+  icons: { icon: "/favicon.svg" },
   keywords: [
     "LUTs",
     "cinematic LUTs",
@@ -50,14 +51,14 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     type: "website",
-    siteName: "The Looks Lab",
+    siteName: "Luts.store",
     url: siteUrl,
-    title: "The Looks Lab — Cinematic LUTs",
+    title: "Luts.store — Cinematic LUTs",
     description: "Color grade in one drag. Premium cinematic LUT packs.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "The Looks Lab — Cinematic LUTs",
+    title: "Luts.store — Cinematic LUTs",
     description: "Color grade in one drag. Premium cinematic LUT packs.",
   },
 };

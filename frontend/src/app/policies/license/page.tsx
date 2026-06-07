@@ -4,7 +4,7 @@ import { PolicyLayout, PolicySection } from "@/components/PolicyLayout";
 export const metadata: Metadata = {
   title: "LUT License / EULA",
   description:
-    "The end-user license agreement for The Looks Lab LUT packs, covering personal and commercial use and non-redistribution terms.",
+    "The end-user license agreement for Luts.store LUT packs, covering personal and commercial use and non-redistribution terms.",
 };
 
 export default function LicensePage() {
@@ -12,7 +12,7 @@ export default function LicensePage() {
     <PolicyLayout
       title="LUT License / EULA"
       lastUpdated="June 6, 2026"
-      intro="This End-User License Agreement (“License”) governs your use of any LUT files (“Looks”) purchased or downloaded from The Looks Lab. By downloading or using the Looks, you agree to this License."
+      intro="This End-User License Agreement (“License”) governs your use of any LUT files (“Looks”) purchased or downloaded from Luts.store. By downloading or using the Looks, you agree to this License."
     >
       <PolicySection heading="1. License granted">
         <p>
@@ -101,10 +101,10 @@ export default function LicensePage() {
           Need an extended or team license, or unsure whether your use is
           permitted? Email{" "}
           <a
-            href="mailto:support@thelookslab.com"
+            href="mailto:support@luts.store"
             className="text-grade-teal underline-offset-4 hover:underline"
           >
-            support@thelookslab.com
+            support@luts.store
           </a>
           .
         </p>

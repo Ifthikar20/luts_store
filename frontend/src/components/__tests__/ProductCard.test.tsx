@@ -52,7 +52,7 @@ const product: Product = {
   ],
   tags: ["cinematic"],
   productType: "LUT Pack",
-  vendor: "The Looks Lab",
+  vendor: "Luts.store",
   collections: [{ handle: "cinematic", title: "Cinematic" }],
   metafields: { lutCount: 12, formats: ["CUBE", "3DL"], compatibleApps: [] },
   featured: true,

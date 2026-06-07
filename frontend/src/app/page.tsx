@@ -11,7 +11,6 @@ import { BundleCard } from "@/components/BundleCard";
 import { HowItWorks } from "@/components/HowItWorks";
 import { LooksInMotion } from "@/components/LooksInMotion";
 import { FAQ } from "@/components/FAQ";
-import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
@@ -126,7 +125,7 @@ export default async function HomePage() {
                 One LUT. <span className="text-grade-teal">Instant cinema.</span>
               </>
             }
-            subtitle="Drag the handle to reveal what a single Looks Lab grade does to raw footage — richer contrast, filmic color, glowing skin."
+            subtitle="Drag the handle to reveal what a single Luts.store grade does to raw footage — richer contrast, filmic color, glowing skin."
           />
           <Reveal direction="left">
             <BeforeAfterSlider
@@ -176,27 +175,6 @@ export default async function HomePage() {
         <div className="mt-12">
           <FAQ />
         </div>
-      </section>
-
-      {/* Newsletter */}
-      <section className="container-xl py-12 pb-28" id="newsletter">
-        <Reveal className="relative overflow-hidden rounded-[40px] border border-hairline bg-cloud p-8 text-center sm:p-14">
-          <div className="relative mx-auto max-w-xl">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-sky">
-              Stay in the loop
-            </p>
-            <h2 className="font-display text-3xl font-bold tracking-tightest text-graphite sm:text-4xl">
-              New looks, in your inbox
-            </h2>
-            <div className="mt-6 flex justify-center text-left">
-              <NewsletterSignup
-                className="w-full max-w-md text-center [&>h4]:sr-only [&>p]:mx-auto [&>p]:text-center"
-                heading="Join the color list"
-                subtext="New LUT drops, grading tips and subscriber-only deals. No spam — unsubscribe anytime."
-              />
-            </div>
-          </div>
-        </Reveal>
       </section>
     </>
   );

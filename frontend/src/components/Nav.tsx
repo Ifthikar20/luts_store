@@ -7,6 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/format";
 
 const links = [
@@ -62,13 +63,8 @@ export function Nav() {
             : "border border-transparent bg-transparent py-4",
         )}
       >
-        <Link href="/" className="flex items-center gap-2.5 pl-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-grade-teal-orange text-white">
-            <span className="font-display text-sm font-black">L</span>
-          </span>
-          <span className="font-display text-base font-bold tracking-tight text-graphite">
-            The Looks Lab
-          </span>
+        <Link href="/" className="pl-2" aria-label="Luts.store home">
+          <Logo />
         </Link>
 
         <div className="hidden items-center gap-1 md:flex">

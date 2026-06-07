@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { NewsletterSignup } from "./NewsletterSignup";
+import { Logo } from "./Logo";
 
 const columns = [
   {
@@ -36,13 +36,8 @@ export function Footer() {
       <div className="container-xl py-16">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <Link href="/" className="flex items-center gap-2.5">
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-grade-teal-orange text-white">
-                <span className="font-display text-sm font-black">L</span>
-              </span>
-              <span className="font-display text-base font-bold text-graphite">
-                The Looks Lab
-              </span>
+            <Link href="/" aria-label="Luts.store home">
+              <Logo />
             </Link>
             <p className="mt-4 max-w-xs text-sm text-slate2">
               Cinematic color in one drag. Hand-crafted LUTs for filmmakers,
@@ -70,13 +65,8 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Newsletter signup */}
-        <div className="mt-14 border-t border-hairline pt-10">
-          <NewsletterSignup />
-        </div>
-
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-hairline pt-6 text-xs text-slate2 sm:flex-row sm:items-center">
-          <p>© {new Date().getFullYear()} The Looks Lab. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Luts.store. All rights reserved.</p>
           <p>Built with Next.js · A premium color-grading storefront.</p>
         </div>
       </div>

@@ -1,0 +1,16 @@
+<svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <rect width="44" height="44" rx="9" fill="#ffffff"/>
+  <g stroke="#1d1d1f">
+    <circle cx="22" cy="22" r="18.5" stroke-width="1.25"/>
+    <circle cx="22" cy="22" r="14" stroke-width="0.75" opacity="0.45"/>
+    <g stroke-width="1" stroke-linecap="round" opacity="0.8">
+      <line x1="22" y1="3.5" x2="22" y2="7.5"/>
+      <line x1="22" y1="36.5" x2="22" y2="40.5"/>
+      <line x1="3.5" y1="22" x2="7.5" y2="22"/>
+      <line x1="36.5" y1="22" x2="40.5" y2="22"/>
+    </g>
+  </g>
+  <text x="22" y="22" text-anchor="middle" dominant-baseline="central"
+        font-family="Georgia, 'Times New Roman', serif" font-style="italic"
+        font-size="18" fill="#1d1d1f">L</text>
+</svg>

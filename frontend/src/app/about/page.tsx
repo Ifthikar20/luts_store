@@ -8,9 +8,9 @@ import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "The Looks Lab is a color-grading studio crafting cinematic LUTs for filmmakers, editors and creators. Learn the story behind our looks.",
+    "Luts.store is a color-grading studio crafting cinematic LUTs for filmmakers, editors and creators. Learn the story behind our looks.",
   openGraph: {
-    title: "About The Looks Lab",
+    title: "About Luts.store",
     description:
       "A color-grading studio crafting cinematic LUTs for filmmakers and editors.",
   },
@@ -51,7 +51,7 @@ export default function AboutPage() {
             Cinematic color, made approachable.
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-slate2">
-            The Looks Lab started with a simple frustration: great color grades
+            Luts.store started with a simple frustration: great color grades
             felt locked behind years of practice and expensive suites. We set
             out to bottle that craft into LUTs anyone can drop onto their
             timeline and get a filmic result in seconds.

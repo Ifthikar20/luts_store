@@ -5,7 +5,7 @@ export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
 ).replace(/\/$/, "");
 
-export const SITE_NAME = "The Looks Lab";
+export const SITE_NAME = "Luts.store";
 
 // Absolute URL helper for a site-relative path (e.g. "/about" -> full URL).
 export function absoluteUrl(path: string): string {
