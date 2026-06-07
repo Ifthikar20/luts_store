@@ -113,8 +113,16 @@ export default async function HomePage() {
           subtitle="Drag the handle to reveal what a single Luts.store grade does to raw footage from DJI Osmo, iPhone and mirrorless cameras — richer contrast, filmic color, glowing skin."
           align="center"
         />
-        <StaggerGroup className="mt-12 grid gap-6 lg:grid-cols-3">
-          {beforeAfterExamples.map((ex) => (
+        {/* Featured large comparison + two supporting examples below. */}
+        <Reveal className="mx-auto mt-12 max-w-5xl">
+          <BeforeAfterSlider
+            image={beforeAfterExamples[0].image}
+            alt={beforeAfterExamples[0].alt}
+            label={beforeAfterExamples[0].label}
+          />
+        </Reveal>
+        <StaggerGroup className="mx-auto mt-6 grid max-w-5xl gap-6 sm:grid-cols-2">
+          {beforeAfterExamples.slice(1).map((ex) => (
             <StaggerItem key={ex.label}>
               <BeforeAfterSlider image={ex.image} alt={ex.alt} label={ex.label} />
             </StaggerItem>

@@ -72,7 +72,7 @@ export const BENTO_CLIPS: BentoClip[] = [
     id: "tropic",
     title: "Tropic",
     mood: "Warm golden hour",
-    span: "tall",
+    span: "wide",
     src: resolveMedia("NEXT_PUBLIC_CLIP_2_URL", CLIPS.fun),
     poster:
       "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1000&q=80",
@@ -81,7 +81,7 @@ export const BENTO_CLIPS: BentoClip[] = [
     id: "noir",
     title: "Midnight Noir",
     mood: "Crushed shadows",
-    span: "normal",
+    span: "wide",
     src: resolveMedia("NEXT_PUBLIC_CLIP_3_URL", CLIPS.escapes),
     poster:
       "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1000&q=80",
@@ -99,7 +99,7 @@ export const BENTO_CLIPS: BentoClip[] = [
     id: "cascade",
     title: "Cascade",
     mood: "Cool cinematic blues",
-    span: "normal",
+    span: "wide",
     src: resolveMedia("NEXT_PUBLIC_CLIP_5_URL", CLIPS.elephants),
     poster:
       "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1000&q=80",
