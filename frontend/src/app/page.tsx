@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { getCollections, getProducts } from "@/lib/api";
+import { getProducts } from "@/lib/api";
 import { Hero } from "@/components/Hero";
 import { LogoMarquee } from "@/components/LogoMarquee";
 import { SectionHeading } from "@/components/SectionHeading";
 import { ProductGrid } from "@/components/ProductGrid";
-import { CategoryCard } from "@/components/CategoryCard";
 import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
 import { BundleCard } from "@/components/BundleCard";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -62,15 +61,12 @@ const websiteJsonLd = {
 };
 
 export default async function HomePage() {
-  const [featured, collections, bundleList] = await Promise.all([
+  const [featured, bundleList] = await Promise.all([
     getProducts({ featured: true }),
-    getCollections(),
     getProducts({ collection: "bundles" }),
   ]);
 
   const bundle = bundleList[0] ?? null;
-  // Categories section excludes the bundles collection (it has its own block).
-  const categories = collections.filter((c) => c.handle !== "bundles");
 
   return (
     <>
@@ -148,22 +144,6 @@ export default async function HomePage() {
           </Reveal>
         </div>
         <ProductGrid products={featured.slice(0, 3)} withVideoPreview />
-      </section>
-
-      {/* Categories */}
-      <section className="container-xl py-12" id="categories">
-        <SectionHeading
-          eyebrow="Browse by mood"
-          title="Find your grade"
-          align="center"
-        />
-        <StaggerGroup className="mt-12 grid gap-6 md:grid-cols-3">
-          {categories.map((c) => (
-            <StaggerItem key={c.handle} className="h-full">
-              <CategoryCard collection={c} />
-            </StaggerItem>
-          ))}
-        </StaggerGroup>
       </section>
 
       {/* Bundle highlight */}
