@@ -1,21 +1,26 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import { GripVertical } from "lucide-react";
 
 /**
  * Interactive before/after comparison. The "after" image is color-graded via a
  * CSS filter to simulate applying a LUT, so we only need one source image.
- * Fully keyboard accessible via the range input.
+ * Fully keyboard accessible via the range input. An optional `label` captions
+ * the example (e.g. the camera the footage came from), and a unique input id
+ * (useId) lets multiple sliders live on one page.
  */
 export function BeforeAfterSlider({
   image,
   alt,
+  label,
 }: {
   image: string;
   alt: string;
+  label?: string;
 }) {
+  const rangeId = useId();
   const [pos, setPos] = useState(55);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
@@ -57,6 +62,11 @@ export function BeforeAfterSlider({
       <span className="pointer-events-none absolute bottom-4 right-4 z-10 rounded-full bg-sky px-3 py-1 text-xs font-semibold text-white shadow-soft">
         After
       </span>
+      {label && (
+        <span className="pointer-events-none absolute left-4 top-4 z-10 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-graphite shadow-soft backdrop-blur">
+          {label}
+        </span>
+      )}
 
       {/* BEFORE (flat/ungraded) — clipped to the left of the handle */}
       <div
@@ -87,11 +97,11 @@ export function BeforeAfterSlider({
       </div>
 
       {/* Accessible control */}
-      <label className="sr-only" htmlFor="ba-range">
+      <label className="sr-only" htmlFor={rangeId}>
         Reveal graded image
       </label>
       <input
-        id="ba-range"
+        id={rangeId}
         type="range"
         min={0}
         max={100}

@@ -12,7 +12,7 @@ import {
   Mail,
   PartyPopper,
 } from "lucide-react";
-import { confirmOrder, resolveDownloadUrl } from "@/lib/api";
+import { confirmOrder, resendDownloads, resolveDownloadUrl } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
 import type { OrderConfirmation } from "@/lib/types";
 import { Reveal } from "@/components/motion/Reveal";
@@ -26,6 +26,19 @@ function ThankYouContent() {
     null,
   );
   const [error, setError] = useState<string | null>(null);
+  const [emailState, setEmailState] = useState<"idle" | "sending" | "sent">(
+    "idle",
+  );
+
+  const emailCopy = async () => {
+    if (!confirmation?.email || emailState === "sending") return;
+    setEmailState("sending");
+    try {
+      await resendDownloads(confirmation.email);
+    } finally {
+      setEmailState("sent");
+    }
+  };
 
   useEffect(() => {
     if (!lookupId) {
@@ -126,9 +139,34 @@ function ThankYouContent() {
         {/* Downloads */}
         {confirmation.downloads.length > 0 && (
           <div className="mt-8">
-            <h2 className="font-display text-lg font-semibold text-graphite">
-              Your downloads
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-display text-lg font-semibold text-graphite">
+                Your downloads
+              </h2>
+              {confirmation.email && (
+                <button
+                  type="button"
+                  onClick={emailCopy}
+                  disabled={emailState !== "idle"}
+                  className="btn-ghost text-sm disabled:opacity-60"
+                >
+                  {emailState === "sent" ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 text-sky" /> Sent to your
+                      inbox
+                    </>
+                  ) : emailState === "sending" ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Sending…
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4" /> Email me a copy
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
             <div className="mt-4 space-y-3">
               {confirmation.downloads.map((dl, i) => (
                 <div

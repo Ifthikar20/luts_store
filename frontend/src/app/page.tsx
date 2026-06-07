@@ -15,6 +15,28 @@ import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 
+// Before/after examples by camera source (the "See the difference" section).
+const beforeAfterExamples = [
+  {
+    label: "DJI Osmo Pocket 3",
+    alt: "Aerial drone landscape",
+    image:
+      "https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=1400&q=80",
+  },
+  {
+    label: "iPhone",
+    alt: "Street portrait shot on phone",
+    image:
+      "https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?auto=format&fit=crop&w=1400&q=80",
+  },
+  {
+    label: "Mirrorless",
+    alt: "Cinematic city scene",
+    image:
+      "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1400&q=80",
+  },
+];
+
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
@@ -79,6 +101,27 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Before / After — moved up; multiple camera examples */}
+      <section className="container-xl py-24" id="before-after">
+        <SectionHeading
+          eyebrow="See the difference"
+          title={
+            <>
+              One LUT. <span className="text-grade-teal">Instant cinema.</span>
+            </>
+          }
+          subtitle="Drag the handle to reveal what a single Luts.store grade does to raw footage from DJI Osmo, iPhone and mirrorless cameras — richer contrast, filmic color, glowing skin."
+          align="center"
+        />
+        <StaggerGroup className="mt-12 grid gap-6 lg:grid-cols-3">
+          {beforeAfterExamples.map((ex) => (
+            <StaggerItem key={ex.label}>
+              <BeforeAfterSlider image={ex.image} alt={ex.alt} label={ex.label} />
+            </StaggerItem>
+          ))}
+        </StaggerGroup>
+      </section>
+
       {/* Featured LUTs */}
       <section className="container-xl py-24" id="featured">
         <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
@@ -96,7 +139,7 @@ export default async function HomePage() {
             </Link>
           </Reveal>
         </div>
-        <ProductGrid products={featured} withVideoPreview />
+        <ProductGrid products={featured.slice(0, 3)} withVideoPreview />
       </section>
 
       {/* Categories */}
@@ -113,27 +156,6 @@ export default async function HomePage() {
             </StaggerItem>
           ))}
         </StaggerGroup>
-      </section>
-
-      {/* Before / After */}
-      <section className="container-xl py-24" id="before-after">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
-          <SectionHeading
-            eyebrow="See the difference"
-            title={
-              <>
-                One LUT. <span className="text-grade-teal">Instant cinema.</span>
-              </>
-            }
-            subtitle="Drag the handle to reveal what a single Luts.store grade does to raw footage — richer contrast, filmic color, glowing skin."
-          />
-          <Reveal direction="left">
-            <BeforeAfterSlider
-              image="https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1400&q=80"
-              alt="Cinematic city scene"
-            />
-          </Reveal>
-        </div>
       </section>
 
       {/* Bundle highlight */}
