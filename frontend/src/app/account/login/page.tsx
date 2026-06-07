@@ -113,15 +113,23 @@ function AccountAuthForm() {
           </AnimatePresence>
 
           {!mockMode ? (
-            <button
-              type="button"
-              onClick={onContinue}
-              disabled={submitting}
-              className="btn-grade mt-7 w-full disabled:opacity-60"
-            >
-              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              <Lock className="h-4 w-4" /> Continue with Shopify
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={onContinue}
+                disabled={submitting}
+                className="btn-grade mt-7 w-full disabled:opacity-60"
+              >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                <Lock className="h-4 w-4" /> Continue with Shopify
+              </button>
+              <p className="mt-3 text-center text-xs text-slate2">
+                Secure passwordless sign-in powered by{" "}
+                <span className="font-semibold text-graphite">Shop</span> — the
+                same account as Shop Pay. You&apos;ll get a one-time code or use
+                a passkey; no password to remember.
+              </p>
+            </>
           ) : (
             <form onSubmit={onMockSubmit} className="mt-7 space-y-4" noValidate>
               <p className="rounded-2xl border border-hairline bg-cloud px-4 py-3 text-xs text-slate2">

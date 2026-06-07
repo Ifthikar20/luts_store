@@ -195,6 +195,28 @@ grants by email), logs in the session, and 302s to `FRONTEND_URL + returnTo`.
 > verifies `nonce` + `exp` (the minimum); add JWKS-based RS256 verification
 > (PyJWT + `PyJWKClient`) before going live for full assurance.
 
+### 7. What the customer sees: "Sign in to Shop"
+With New customer accounts, Shopify hands the whole login to **Shop** — its
+centralized buyer identity (the same account behind **Shop Pay** and the **Shop
+app**). So after "Continue with Shopify" the customer lands on a Shopify-hosted
+**"Sign in to Shop"** screen, not a Luts.store page. Expect:
+
+- **Passwordless:** the customer enters their email and gets a **one-time code**,
+  or signs in with a **passkey** (Face ID / fingerprint). There is no password
+  to manage, reset, or 2FA to configure — Shop owns all of it.
+- **Consent screen:** an OAuth/OIDC consent ("share your email, name, avatar
+  with …") for the `openid email customer-account-api:full` scopes. After the
+  customer approves, Shop redirects to our `/api/auth/shopify/callback`.
+- **One identity across stores:** a Shop account works on every Shopify store
+  that uses it — returning customers are recognized instantly.
+
+**Branding note:** the sign-in screen is **Shopify-branded ("Shop")** and
+**cannot be fully white-labeled to Luts.store** on standard plans — the same
+constraint every Shopify store using new customer accounts lives with. Our
+`/account/login` page sets expectations with a "powered by Shop" note before the
+redirect. Login remains **optional**: guest checkout and login-free downloads
+are unaffected.
+
 ---
 
 ## C. Verify
