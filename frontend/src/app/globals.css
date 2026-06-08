@@ -77,6 +77,18 @@ body {
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-full bg-haze px-6 py-3 text-sm font-semibold text-graphite transition-colors hover:bg-[#dcdce2];
   }
+
+  /* Frosted "glass" pills — for use OVER imagery/video (Apple media controls
+     feel). Translucent, blurred, with a 1px light rim and a top inner highlight.
+     `-strong` is the high-contrast frosted-white primary. */
+  .btn-glass {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-xl backdrop-saturate-150 transition duration-300 hover:-translate-y-0.5 hover:bg-white/20;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  }
+  .btn-glass-strong {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/60 bg-white/80 px-6 py-3 text-sm font-semibold text-graphite backdrop-blur-xl backdrop-saturate-150 transition duration-300 hover:-translate-y-0.5 hover:bg-white;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
 }
 
 /* Thin custom scrollbar — light. */
