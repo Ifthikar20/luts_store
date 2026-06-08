@@ -57,11 +57,11 @@ export function Hero() {
             animate={reduced ? undefined : "visible"}
             className="absolute inset-x-0 bottom-5 flex flex-wrap items-center justify-center gap-3 px-4 sm:bottom-9"
           >
-            <Link href="/collections/cinematic" className="btn-glass-strong">
+            <Link href="/collections/cinematic" className="btn-grade">
               Shop LUTs
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/#looks-in-motion" className="btn-glass">
+            <Link href="/#looks-in-motion" className="btn-outline-onmedia">
               <Play className="h-4 w-4" />
               See it in motion
             </Link>

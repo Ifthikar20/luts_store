@@ -78,16 +78,13 @@ body {
     @apply inline-flex items-center justify-center gap-2 rounded-full bg-haze px-6 py-3 text-sm font-semibold text-graphite transition-colors hover:bg-[#dcdce2];
   }
 
-  /* Frosted "glass" pills — for use OVER imagery/video (Apple media controls
-     feel). Translucent, blurred, with a 1px light rim and a top inner highlight.
-     `-strong` is the high-contrast frosted-white primary. */
-  .btn-glass {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-xl backdrop-saturate-150 transition duration-300 hover:-translate-y-0.5 hover:bg-white/20;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  /* Apple-style secondary CTA: outlined pill. `-onmedia` is the white-outlined
+     variant for use OVER video/imagery (the primary stays solid blue). */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-sky bg-transparent px-6 py-3 text-sm font-semibold text-sky transition-colors duration-300 hover:bg-sky hover:text-white;
   }
-  .btn-glass-strong {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/60 bg-white/80 px-6 py-3 text-sm font-semibold text-graphite backdrop-blur-xl backdrop-saturate-150 transition duration-300 hover:-translate-y-0.5 hover:bg-white;
-    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  .btn-outline-onmedia {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/70 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition-colors duration-300 hover:bg-white hover:text-graphite;
   }
 }
 
