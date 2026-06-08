@@ -54,15 +54,14 @@ export function Nav() {
       initial={reduced ? false : { y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className={cn(
-        "fixed inset-x-0 top-0 z-50 border-b bg-white/80 backdrop-blur-xl transition-all duration-300",
-        scrolled ? "border-hairline shadow-soft" : "border-transparent",
-      )}
+      className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4"
     >
       <nav
         className={cn(
-          "container-xl flex items-center justify-between transition-all duration-300",
-          scrolled ? "py-3" : "py-4",
+          "mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-black/[0.06] backdrop-blur-xl transition-all duration-300",
+          scrolled
+            ? "bg-white/85 px-4 py-2 shadow-lift"
+            : "bg-white/65 px-4 py-2.5 shadow-soft",
         )}
       >
         <Link href="/" className="pl-2" aria-label="Luts.store home">
@@ -165,7 +164,7 @@ export function Nav() {
         <motion.div
           initial={reduced ? false : { opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="container-xl mt-2 md:hidden"
+          className="mx-auto mt-2 w-full max-w-6xl px-1 md:hidden"
         >
           <div className="glass flex flex-col gap-1 rounded-3xl p-3">
             <form role="search" onSubmit={submitSearch} className="relative mb-1">
