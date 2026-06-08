@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 // next/font self-hosts these at build time. If the build machine has no network
 // access to fetch the font files, swap these for `next/font/local` with .woff2
 // files in /public/fonts, or fall back to the system stack already declared in
-// tailwind.config.ts (ui-sans-serif, system-ui).
-import { Space_Grotesk, Inter, Instrument_Serif } from "next/font/google";
+// tailwind.config.ts (ui-serif, Georgia, serif).
+import { Newsreader } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Nav } from "@/components/Nav";
@@ -11,22 +11,13 @@ import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
 import { PageTransition } from "@/components/PageTransition";
 
-const display = Space_Grotesk({
+// One classic, high-contrast book serif (roman + italic) used site-wide for
+// both headings and body — the editorial look of the reference. Exposed on a
+// single CSS variable that every Tailwind font family points at.
+const serif = Newsreader({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-display",
-  display: "swap",
-});
-
-const body = Inter({
-  subsets: ["latin"],
-  variable: "--font-body",
-  display: "swap",
-});
-
-const serif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
   variable: "--font-serif",
   display: "swap",
 });
@@ -80,10 +71,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${display.variable} ${body.variable} ${serif.variable}`}
-    >
+    <html lang="en" className={serif.variable}>
       <body className="bg-paper font-sans text-graphite antialiased">
         <Providers>
           <Nav />

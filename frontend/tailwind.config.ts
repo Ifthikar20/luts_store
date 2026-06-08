@@ -40,8 +40,10 @@ const config: Config = {
         magenta: { grade: "#0071e3" },
       },
       fontFamily: {
-        display: ["var(--font-display)", "ui-sans-serif", "system-ui", "sans-serif"],
-        sans: ["var(--font-body)", "ui-sans-serif", "system-ui", "sans-serif"],
+        // Site-wide serif (Newsreader). display/sans/serif all resolve to the
+        // same family so every heading and paragraph picks up the book serif.
+        display: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
+        sans: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
         serif: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
       },
       letterSpacing: {
