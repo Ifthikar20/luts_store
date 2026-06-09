@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="1180" viewBox="0 0 1640 1180" font-family="Georgia,serif">
+<rect width="1640" height="1180" fill="#F4F3EC"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6e6e73"/></marker><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0a8754"/></marker></defs>
+<text x="820.0" y="46" text-anchor="middle" font-size="30" font-weight="bold" fill="#1d1d1f">Luts.store — Architecture</text>
+<text x="820.0" y="72" text-anchor="middle" font-size="13.5" font-weight="normal" fill="#6e6e73">Next.js storefront  ·  Django BFF (camelCase contract)  ·  dual MOCK / LIVE mode  ·  green = purchase→download pipeline</text>
+<rect x="670.0" y="96" width="300" height="50" rx="12" fill="#fff" stroke="#1d1d1f" stroke-width="1.5"/>
+<text x="820.0" y="126.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#1d1d1f">User · Browser</text>
+<line x1="820.0" y1="146" x2="820.0" y2="176" stroke="#6e6e73" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="176" width="1560" height="150" rx="18" fill="none" stroke="#0071e3" stroke-width="1.5" stroke-dasharray="2 5"/>
+<text x="56" y="200" font-size="13" font-weight="bold" fill="#0071e3" letter-spacing="1">FRONTEND — Next.js App Router (SSR/ISR + client)</text>
+<rect x="70" y="212" width="470" height="92" rx="12" fill="#E6F0FB" stroke="#0071e3" stroke-width="1.5"/>
+<text x="305.0" y="255.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#1d1d1f">Pages / UI</text>
+<text x="305.0" y="273.0" text-anchor="middle" font-size="11.5" fill="#6e6e73">Home · Collections · Product · Cart · Checkout · Thank-you · Account</text>
+<rect x="580" y="212" width="360" height="92" rx="12" fill="#E6F0FB" stroke="#0071e3" stroke-width="1.5"/>
+<text x="760.0" y="255.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#1d1d1f">Client state (Context)</text>
+<text x="760.0" y="273.0" text-anchor="middle" font-size="11.5" fill="#6e6e73">CartContext (localStorage id) · AuthContext</text>
+<rect x="980" y="212" width="580" height="92" rx="12" fill="#E6F0FB" stroke="#0071e3" stroke-width="1.5"/>
+<text x="1270.0" y="255.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#1d1d1f">lib/api.ts</text>
+<text x="1270.0" y="273.0" text-anchor="middle" font-size="11.5" fill="#6e6e73">typed fetch layer — all calls to the Django BFF over /api/*</text>
+<line x1="820.0" y1="326" x2="820.0" y2="356" stroke="#6e6e73" stroke-width="2" marker-end="url(#a)"/>
+<text x="970.0" y="348" text-anchor="middle" font-size="12" font-weight="normal" fill="#6e6e73">HTTPS  JSON (camelCase)</text>
+<rect x="40" y="356" width="1560" height="196" rx="18" fill="none" stroke="#5856d6" stroke-width="1.5" stroke-dasharray="2 5"/>
+<text x="56" y="380" font-size="13" font-weight="bold" fill="#5856d6" letter-spacing="1">BACKEND — Django REST Framework  (the BFF / API, ~50 endpoints)</text>
+<rect x="70" y="392" width="350" height="60" rx="12" fill="#ECEBFB" stroke="#5856d6" stroke-width="1.5"/>
+<text x="245.0" y="419.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">catalog</text>
+<text x="245.0" y="437.0" text-anchor="middle" font-size="11" fill="#6e6e73">products, collections, facets</text>
+<rect x="442" y="392" width="350" height="60" rx="12" fill="#ECEBFB" stroke="#5856d6" stroke-width="1.5"/>
+<text x="617.0" y="419.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">cart</text>
+<text x="617.0" y="437.0" text-anchor="middle" font-size="11" fill="#6e6e73">create / add / update / remove</text>
+<rect x="814" y="392" width="350" height="60" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="989.0" y="419.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">checkout</text>
+<text x="989.0" y="437.0" text-anchor="middle" font-size="11" fill="#6e6e73">start + complete</text>
+<rect x="1186" y="392" width="350" height="60" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="1361.0" y="419.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">orders</text>
+<text x="1361.0" y="437.0" text-anchor="middle" font-size="11" fill="#6e6e73">ingest, confirm, resend, webhook</text>
+<rect x="70" y="466" width="350" height="60" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="245.0" y="493.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">delivery</text>
+<text x="245.0" y="511.0" text-anchor="middle" font-size="11" fill="#6e6e73">downloads, library, signing</text>
+<rect x="442" y="466" width="350" height="60" rx="12" fill="#ECEBFB" stroke="#5856d6" stroke-width="1.5"/>
+<text x="617.0" y="493.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">accounts</text>
+<text x="617.0" y="511.0" text-anchor="middle" font-size="11" fill="#6e6e73">register / login / me (token)</text>
+<rect x="814" y="466" width="350" height="60" rx="12" fill="#ECEBFB" stroke="#5856d6" stroke-width="1.5"/>
+<text x="989.0" y="493.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">customer_auth</text>
+<text x="989.0" y="511.0" text-anchor="middle" font-size="11" fill="#6e6e73">Shopify OAuth session</text>
+<rect x="1186" y="466" width="350" height="60" rx="12" fill="#ECEBFB" stroke="#5856d6" stroke-width="1.5"/>
+<text x="1361.0" y="493.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">engagement</text>
+<text x="1361.0" y="511.0" text-anchor="middle" font-size="11" fill="#6e6e73">newsletter, contact</text>
+<line x1="820.0" y1="552" x2="820.0" y2="582" stroke="#6e6e73" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="582" width="1560" height="88" rx="18" fill="none" stroke="#b06a1f" stroke-width="1.5" stroke-dasharray="2 5"/>
+<text x="56" y="606" font-size="13" font-weight="bold" fill="#b06a1f" letter-spacing="1">SERVICE LAYER</text>
+<rect x="70" y="612" width="1500" height="44" rx="12" fill="#FBEEDD" stroke="#b06a1f" stroke-width="1.5"/>
+<text x="820.0" y="639.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">services.py  —  if settings.MOCK_MODE:  mock fixtures   else:  live integrations</text>
+<line x1="820.0" y1="670" x2="820.0" y2="700" stroke="#6e6e73" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="700" width="1560" height="240" rx="18" fill="none" stroke="#0a8754" stroke-width="1.5" stroke-dasharray="2 5"/>
+<text x="56" y="724" font-size="13" font-weight="bold" fill="#0a8754" letter-spacing="1">DATA &amp; EXTERNAL INTEGRATIONS</text>
+<rect x="70" y="736" width="270" height="100" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="205.0" y="783.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">SQLite / Postgres</text>
+<text x="205.0" y="801.0" text-anchor="middle" font-size="11.5" fill="#6e6e73">Order · Purchase
+DownloadGrant · MockCart · User</text>
+<rect x="360" y="736" width="290" height="100" rx="12" fill="#ECECE6" stroke="#6e6e73" stroke-width="1.5"/>
+<text x="505.0" y="783.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">Shopify Storefront</text>
+<text x="505.0" y="801.0" text-anchor="middle" font-size="11.5" fill="#6e6e73">products &amp; checkout
+(LIVE mode only)</text>
+<rect x="670" y="736" width="290" height="100" rx="12" fill="#FBE9D6" stroke="#b06a1f" stroke-width="1.5"/>
+<text x="815.0" y="783.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">Payment</text>
+<text x="815.0" y="801.0" text-anchor="middle" font-size="11.5" fill="#6e6e73">Shopify hosted checkout
+(or Stripe — TBD)</text>
+<rect x="980" y="736" width="270" height="100" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="1115.0" y="783.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">AWS S3 / R2</text>
+<text x="1115.0" y="801.0" text-anchor="middle" font-size="11.5" fill="#6e6e73">real .zip/.cube files
+presigned URLs</text>
+<rect x="1270" y="736" width="290" height="100" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="1415.0" y="783.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d1d1f">Email / SMTP</text>
+<text x="1415.0" y="801.0" text-anchor="middle" font-size="11.5" fill="#6e6e73">order receipt
+(console in dev)</text>
+<text x="70" y="974" text-anchor="start" font-size="14" font-weight="bold" fill="#0a8754">PURCHASE → DOWNLOAD PIPELINE</text>
+<rect x="70" y="986" width="198" height="58" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="169.0" y="1020.0" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#1d1d1f">Add to cart</text>
+<line x1="268" y1="1015" x2="284" y2="1015" stroke="#0a8754" stroke-width="2" marker-end="url(#ag)"/>
+<rect x="284" y="986" width="198" height="58" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="383.0" y="1020.0" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#1d1d1f">Checkout</text>
+<line x1="482" y1="1015" x2="498" y2="1015" stroke="#0a8754" stroke-width="2" marker-end="url(#ag)"/>
+<rect x="498" y="986" width="198" height="58" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="597.0" y="1012.0" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#1d1d1f">Payment OK</text>
+<text x="597.0" y="1030.0" text-anchor="middle" font-size="11" fill="#6e6e73">(webhook)</text>
+<line x1="696" y1="1015" x2="712" y2="1015" stroke="#0a8754" stroke-width="2" marker-end="url(#ag)"/>
+<rect x="712" y="986" width="198" height="58" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="811.0" y="1020.0" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#1d1d1f">ingest_paid_order</text>
+<line x1="910" y1="1015" x2="926" y2="1015" stroke="#0a8754" stroke-width="2" marker-end="url(#ag)"/>
+<rect x="926" y="986" width="198" height="58" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="1025.0" y="1012.0" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#1d1d1f">DownloadGrant</text>
+<text x="1025.0" y="1030.0" text-anchor="middle" font-size="11" fill="#6e6e73">+ 📧 receipt email</text>
+<line x1="1124" y1="1015" x2="1140" y2="1015" stroke="#0a8754" stroke-width="2" marker-end="url(#ag)"/>
+<rect x="1140" y="986" width="198" height="58" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="1239.0" y="1020.0" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#1d1d1f">Signed link</text>
+<line x1="1338" y1="1015" x2="1354" y2="1015" stroke="#0a8754" stroke-width="2" marker-end="url(#ag)"/>
+<rect x="1354" y="986" width="198" height="58" rx="12" fill="#E3F3EC" stroke="#0a8754" stroke-width="1.5"/>
+<text x="1453.0" y="1020.0" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#1d1d1f">Download file</text>
+<text x="820.0" y="1154" text-anchor="middle" font-size="13" font-weight="normal" fill="#6e6e73">MOCK mode (current): in-repo catalog, simulated checkout, generated .cube, console email.   LIVE: set Shopify/Stripe + S3 + SMTP keys.</text>
+</svg>
