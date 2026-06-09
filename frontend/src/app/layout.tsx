@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
-// next/font self-hosts these at build time. If the build machine has no network
-// access to fetch the font files, swap these for `next/font/local` with .woff2
-// files in /public/fonts, or fall back to the system stack already declared in
-// tailwind.config.ts (ui-serif, Georgia, serif).
-import { Newsreader } from "next/font/google";
+// next/font self-hosts this at build time. If the build machine has no network
+// access, the Apple system stack in tailwind.config.ts (-apple-system, …) takes
+// over — which renders as real San Francisco on Apple devices.
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Nav } from "@/components/Nav";
@@ -11,14 +10,12 @@ import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
 import { PageTransition } from "@/components/PageTransition";
 
-// One classic, high-contrast book serif (roman + italic) used site-wide for
-// both headings and body — the editorial look of the reference. Exposed on a
-// single CSS variable that every Tailwind font family points at.
-const serif = Newsreader({
+// Inter — a free, open-source near-clone of Apple's San Francisco (SF Pro) —
+// used site-wide for headings and body. Exposed on one CSS variable that every
+// Tailwind font family points at; the system SF stack is the fallback.
+const sans = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-serif",
+  variable: "--font-sans",
   display: "swap",
 });
 
@@ -71,7 +68,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={serif.variable}>
+    <html lang="en" className={sans.variable}>
       <body className="bg-paper font-sans text-graphite antialiased">
         <Providers>
           <Nav />

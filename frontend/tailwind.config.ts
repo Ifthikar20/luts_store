@@ -40,11 +40,12 @@ const config: Config = {
         magenta: { grade: "#0071e3" },
       },
       fontFamily: {
-        // Site-wide serif (Newsreader). display/sans/serif all resolve to the
-        // same family so every heading and paragraph picks up the book serif.
-        display: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
-        sans: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
-        serif: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
+        // Site-wide Apple-style sans: Inter, then the system San Francisco stack
+        // (real SF on Apple devices, Segoe UI / Roboto elsewhere). display/sans/
+        // serif all resolve to the same family so the whole app is consistent.
+        display: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+        sans: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+        serif: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
       },
       letterSpacing: {
         tightest: "-0.03em",
