@@ -1,12 +1,14 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Check, Sparkles } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
 import { useCart } from "@/context/CartContext";
 import { BundleMosaic } from "./BundleMosaic";
 
 export function BundleCard({ bundle }: { bundle: Product }) {
+  const reduced = useReducedMotion() ?? false;
   const { addItem, loading } = useCart();
   const variant = bundle.variants[0];
 
@@ -34,7 +36,13 @@ export function BundleCard({ bundle }: { bundle: Product }) {
   ];
 
   return (
-    <div className="overflow-hidden rounded-[28px] bg-white shadow-soft">
+    <motion.div
+      initial={reduced ? false : { opacity: 0, scale: 0.85, y: 28 }}
+      whileInView={reduced ? undefined : { opacity: 1, scale: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ type: "spring", stiffness: 220, damping: 17 }}
+      className="overflow-hidden rounded-[28px] bg-white shadow-lift ring-1 ring-emerald-500/10"
+    >
       <div className="grid items-stretch gap-0 md:grid-cols-2">
         <div className="relative bg-cloud">
           <BundleMosaic />
@@ -81,13 +89,26 @@ export function BundleCard({ bundle }: { bundle: Product }) {
               </span>
             </div>
             {hasDiscount && (
-              <span className="text-sm font-medium text-emerald-600">
-                You save{" "}
+              <motion.span
+                initial={reduced ? false : { scale: 0, rotate: -8 }}
+                whileInView={reduced ? undefined : { scale: 1, rotate: -2 }}
+                viewport={{ once: true, amount: 0.6 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 420,
+                  damping: 12,
+                  delay: 0.45,
+                }}
+                className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-500 px-3.5 py-1.5 text-sm font-bold text-white shadow-[0_8px_22px_rgba(16,185,129,0.4)]"
+              >
+                <Sparkles className="h-4 w-4" />
+                You&rsquo;re saving{" "}
                 {formatMoney({
                   amount: saveAmount.toFixed(2),
                   currencyCode: price.currencyCode,
                 })}
-              </span>
+                !
+              </motion.span>
             )}
           </div>
 
@@ -103,6 +124,6 @@ export function BundleCard({ bundle }: { bundle: Product }) {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

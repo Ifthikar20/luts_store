@@ -82,9 +82,9 @@ export default async function HomePage() {
             title="Get every look"
             align="center"
           />
-          <Reveal className="mt-12">
+          <div className="mt-12">
             <BundleCard bundle={bundle} />
-          </Reveal>
+          </div>
         </section>
       )}
 
