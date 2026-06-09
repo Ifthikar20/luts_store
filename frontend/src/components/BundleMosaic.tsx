@@ -19,6 +19,18 @@ const TILES = [
   "photo-1506905925346-21bda4d32df4",
   "photo-1542038784456-1ea8e935640e",
   "photo-1500051638674-ff996a0ec29e",
+  "photo-1418065460487-3e41a6c84dc5",
+  "photo-1419242902214-272b3f66ee7a",
+  "photo-1469474968028-56623f02e42e",
+  "photo-1470071459604-3b5ec3a7fe05",
+  "photo-1502082553048-f009c37129b9",
+  "photo-1507525428034-b723cf961d3e",
+  "photo-1512790182412-b19e6d62bc39",
+  "photo-1524504388940-b1c1722653e1",
+  "photo-1533750349088-cd871a92f312",
+  "photo-1536440136628-849c177e76a1",
+  "photo-1490750967868-88aa4486c946",
+  "photo-1500530855697-b586d89ba3ee",
 ].map((id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=400&q=70`);
 
 // Deterministic pseudo-random (stable across SSR/CSR — avoids hydration drift).
@@ -61,7 +73,7 @@ export function BundleMosaic() {
         hidden: {},
         visible: { transition: { staggerChildren: reduced ? 0 : 0.05 } },
       }}
-      className="grid h-full min-h-[320px] w-full grid-cols-4 grid-rows-3 gap-1.5 p-1.5"
+      className="grid h-full min-h-[340px] w-full grid-cols-6 grid-rows-4 gap-1 p-1.5"
     >
       {TILES.map((src, i) => (
         <motion.div
@@ -74,7 +86,7 @@ export function BundleMosaic() {
             src={src}
             alt=""
             fill
-            sizes="(max-width: 768px) 25vw, 13vw"
+            sizes="(max-width: 768px) 16vw, 9vw"
             className="object-cover"
           />
         </motion.div>
