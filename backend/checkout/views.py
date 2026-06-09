@@ -11,6 +11,7 @@ buy and download without an account.
 from __future__ import annotations
 
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -64,11 +65,13 @@ def checkout(request):
 def checkout_complete(request):
     """MOCK_MODE ONLY: simulate Shopify completing payment for a cart.
 
-    Returns 404 when NOT in mock mode (in production the ``orders/paid`` webhook
-    completes the order, never this endpoint). Creates the Order + DownloadGrants
-    + sends the confirmation email, then returns ``{orderId}``.
+    Returns 404 unless we're in the pure in-app demo (no Stripe, no Shopify). In
+    production the order is completed by the payment provider's webhook (Stripe's
+    ``checkout.session.completed`` or Shopify's ``orders/paid``), never here.
+    Creates the Order + DownloadGrants + sends the confirmation email, then
+    returns ``{orderId}``.
     """
-    if not settings.MOCK_MODE:
+    if settings.STRIPE_ENABLED or not settings.MOCK_MODE:
         return Response({"detail": "Not found."}, status=404)
 
     data = request.data if isinstance(request.data, dict) else {}
@@ -84,3 +87,46 @@ def checkout_complete(request):
     except services.CheckoutError as exc:
         return Response({"detail": str(exc)}, status=400)
     return Response(result)
+
+
+@csrf_exempt
+@api_view(["POST"])
+@authentication_classes([])
+@permission_classes([])
+@throttle_classes([AnonRateThrottle])
+def stripe_webhook(request):
+    """Stripe webhook receiver.
+
+    Verifies the ``Stripe-Signature`` header against ``STRIPE_WEBHOOK_SECRET``
+    over the EXACT raw body, then on ``checkout.session.completed`` ingests the
+    paid session (Order + DownloadGrants + confirmation email) via the shared
+    pipeline. Idempotent: replayed events resolve to the same order. Always 200
+    on a valid signature so Stripe stops retrying a processed event.
+    """
+    if not settings.STRIPE_ENABLED:
+        return Response({"detail": "Not found."}, status=404)
+
+    from . import stripe_gateway
+
+    raw_body = request.body  # exact bytes Stripe signed
+    sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
+    try:
+        event = stripe_gateway.construct_event(raw_body, sig_header)
+    except stripe_gateway.StripeError:
+        return Response({"detail": "Invalid signature."}, status=400)
+
+    event_type = event["type"] if isinstance(event, dict) else event.type
+    if event_type == "checkout.session.completed":
+        session = (
+            event["data"]["object"]
+            if isinstance(event, dict)
+            else event.data.object
+        )
+        try:
+            stripe_gateway.ingest_session(session)
+        except stripe_gateway.StripeError as exc:
+            # Don't ask Stripe to retry forever on a bad/unresolvable session.
+            return Response({"detail": str(exc)}, status=400)
+
+    # Acknowledge all other event types without action.
+    return Response({"status": "ok"}, status=200)

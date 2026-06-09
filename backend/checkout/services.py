@@ -39,6 +39,17 @@ def begin_checkout(cart_id: str, email: str | None = None) -> dict[str, Any]:
     except cart_services.CartNotFound as exc:
         raise CheckoutError(f"Cart not found: {cart_id}") from exc
 
+    # Stripe takes priority when configured (self-contained, no Shopify needed):
+    # create a hosted Checkout Session and hand back its absolute URL.
+    if settings.STRIPE_ENABLED:
+        from . import stripe_gateway
+
+        try:
+            session = stripe_gateway.create_checkout_session(cart, cart_id, email)
+        except stripe_gateway.StripeError as exc:
+            raise CheckoutError(str(exc)) from exc
+        return {"mode": "stripe", "checkoutUrl": session.url}
+
     if settings.MOCK_MODE:
         # Relative path -> the frontend renders a demo checkout page. The cart id
         # is echoed so the demo can call /api/checkout/complete next.

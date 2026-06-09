@@ -56,6 +56,22 @@ SHOPIFY_WEBHOOK_SECRET = config("SHOPIFY_WEBHOOK_SECRET", default="")
 MOCK_MODE = not bool(SHOPIFY_STOREFRONT_TOKEN.strip())
 
 # ---------------------------------------------------------------------------
+# Payments — Stripe Checkout (self-contained, no Shopify store required)
+# ---------------------------------------------------------------------------
+# When STRIPE_SECRET_KEY is set the backend takes payments through Stripe's
+# hosted Checkout: begin_checkout creates a Checkout Session and returns its URL;
+# Stripe then calls the signed /api/webhooks/stripe endpoint on
+# ``checkout.session.completed``, which feeds the SAME order->grant->email
+# ->download pipeline as the Shopify webhook. With the key unset, checkout falls
+# back to Shopify (live) or the in-app demo (mock).
+STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET", default="")
+# Optional publishable key (only needed for a custom client-side Stripe UI; the
+# hosted Checkout flow used here does not require it server-side).
+STRIPE_PUBLISHABLE_KEY = config("STRIPE_PUBLISHABLE_KEY", default="")
+STRIPE_ENABLED = bool(STRIPE_SECRET_KEY.strip())
+
+# ---------------------------------------------------------------------------
 # Shopify Customer Accounts (OAuth 2.0 / OpenID Connect, PKCE) — OPTIONAL login
 # ---------------------------------------------------------------------------
 # Powers the hosted-login account/library portal at account.<domain>, exactly

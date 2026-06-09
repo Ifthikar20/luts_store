@@ -249,7 +249,9 @@ export interface ContactInput {
 // - mode "mock":    `checkoutUrl` is the in-app demo path "/checkout?cart=..."
 //   — handle it with the client router.
 export interface CheckoutResponse {
-  mode: "shopify" | "mock";
+  // "stripe" / "shopify" -> absolute hosted-checkout URL (full-page redirect).
+  // "mock" -> relative in-app demo checkout path (client router push).
+  mode: "stripe" | "shopify" | "mock";
   checkoutUrl: string;
 }
 

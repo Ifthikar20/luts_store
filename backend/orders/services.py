@@ -254,10 +254,46 @@ def confirm_order(id_or_token: str) -> dict[str, Any]:
     if order is not None:
         return _confirm_from_order(order)
 
+    # Stripe fallback: the success redirect can beat the webhook. If this is a
+    # Stripe session id with no order yet, retrieve the session and (if paid)
+    # ingest it synchronously so the thank-you page is never empty. Idempotent
+    # with the webhook (both key on the same stripe-<session> id).
+    if settings.STRIPE_ENABLED and str(id_or_token).startswith("stripe-"):
+        order = _ensure_stripe_order(str(id_or_token))
+        if order is not None:
+            return _confirm_from_order(order)
+
     if settings.MOCK_MODE:
         return _confirm_from_mock_cart(str(id_or_token))
 
     raise OrderNotFound(str(id_or_token))
+
+
+def _ensure_stripe_order(order_id: str) -> Order | None:
+    """Retrieve a Stripe session by id and ingest it if paid. Returns the Order
+    or None. Best-effort: any Stripe/resolution error yields None (404 upstream).
+    """
+    from checkout import stripe_gateway
+
+    session_id = order_id[len("stripe-") :]
+    try:
+        session = stripe_gateway.retrieve_session(session_id)
+    except stripe_gateway.StripeError:
+        return None
+
+    paid = (
+        session.get("payment_status")
+        if isinstance(session, dict)
+        else getattr(session, "payment_status", None)
+    )
+    if paid != "paid":
+        return None
+
+    try:
+        order, _created = stripe_gateway.ingest_session(session)
+    except stripe_gateway.StripeError:
+        return None
+    return order
 
 
 def resend_downloads(email: str) -> bool:

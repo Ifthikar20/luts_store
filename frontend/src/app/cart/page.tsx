@@ -18,8 +18,8 @@ export default function CartPage() {
   const lines = cart?.lines ?? [];
 
   // Checkout: the BFF decides the mode and owns the authoritative checkout.
-  // - "shopify": full-page redirect to the hosted Shopify checkout.
-  // - "mock":    in-app demo checkout ("/checkout?cart=...") via the router.
+  // - "stripe"/"shopify": full-page redirect to the hosted checkout (absolute URL).
+  // - "mock":             in-app demo checkout ("/checkout?cart=...") via the router.
   // We never compute prices or build a checkout on the client.
   async function checkout() {
     if (!cart?.id || redirecting) return;
@@ -27,10 +27,10 @@ export default function CartPage() {
     setError(null);
     try {
       const { mode, checkoutUrl } = await createCheckout(cart.id);
-      if (mode === "shopify") {
-        window.location.assign(checkoutUrl);
-      } else {
+      if (mode === "mock") {
         router.push(checkoutUrl);
+      } else {
+        window.location.assign(checkoutUrl);
       }
     } catch {
       setError("We couldn't start checkout just now. Please try again.");

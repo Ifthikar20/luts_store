@@ -6,4 +6,5 @@ urlpatterns = [
     # /checkout/complete must be declared before /checkout? no — distinct paths.
     path("checkout", views.checkout, name="checkout"),
     path("checkout/complete", views.checkout_complete, name="checkout-complete"),
+    path("webhooks/stripe", views.stripe_webhook, name="stripe-webhook"),
 ]
