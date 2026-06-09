@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Suspense } from "react";
 import { ChevronRight } from "lucide-react";
-import { getCollection, getCollections, getFacets } from "@/lib/api";
-import { DiscoveryView } from "@/components/DiscoveryView";
+import { getCollection, getCollections } from "@/lib/api";
+import { ProductGrid } from "@/components/ProductGrid";
 import { GradientBlob } from "@/components/motion/GradientBlob";
 import { Reveal } from "@/components/motion/Reveal";
 
@@ -44,10 +43,6 @@ export default async function CollectionPage({
   const collection = await getCollection(handle);
   if (!collection) notFound();
 
-  // Facets scoped to this collection, computed server-side for the initial
-  // render so the filter UI is populated without a client round-trip.
-  const facets = await getFacets(handle);
-
   return (
     <div className="relative overflow-hidden">
       <GradientBlob grade="teal-orange" className="-left-32 top-10" size={500} />
@@ -83,23 +78,18 @@ export default async function CollectionPage({
       </div>
 
       <div className="container-xl relative py-16">
-        {/* SSG/ISR renders the initial product list + facets; DiscoveryView
-            then allows client-side refine. It reads useSearchParams, so it is
-            wrapped in <Suspense> for the App Router build. */}
-        <Suspense
-          fallback={
-            <div className="glass rounded-3xl px-8 py-16 text-center text-slate2">
-              Loading…
-            </div>
-          }
-        >
-          <DiscoveryView
-            collection={handle}
-            initialProducts={collection.products}
-            initialFacets={facets}
-            emptyMessage="No packs match your filters — try widening them."
+        <Reveal>
+          <h2 className="font-display text-3xl font-bold tracking-tight text-graphite sm:text-4xl">
+            All packs. <span className="text-slate2">Take your pick.</span>
+          </h2>
+        </Reveal>
+        <div className="mt-10">
+          <ProductGrid
+            products={collection.products}
+            withVideoPreview
+            emptyMessage="No packs in this collection yet."
           />
-        </Suspense>
+        </div>
       </div>
     </div>
   );
