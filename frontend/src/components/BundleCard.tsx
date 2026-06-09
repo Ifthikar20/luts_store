@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { Check } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
 import { useCart } from "@/context/CartContext";
+import { BundleMosaic } from "./BundleMosaic";
 
 export function BundleCard({ bundle }: { bundle: Product }) {
   const { addItem, loading } = useCart();
@@ -36,14 +36,8 @@ export function BundleCard({ bundle }: { bundle: Product }) {
   return (
     <div className="overflow-hidden rounded-[28px] bg-white shadow-soft">
       <div className="grid items-stretch gap-0 md:grid-cols-2">
-        <div className="relative min-h-[320px] bg-cloud">
-          <Image
-            src={bundle.featuredImage.url}
-            alt={bundle.featuredImage.altText}
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover"
-          />
+        <div className="relative bg-cloud">
+          <BundleMosaic />
         </div>
 
         <div className="flex flex-col justify-center gap-5 p-8 sm:p-10">
