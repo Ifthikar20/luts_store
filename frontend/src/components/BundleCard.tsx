@@ -1,11 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { Check, Sparkles } from "lucide-react";
+import { Check } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
 import { useCart } from "@/context/CartContext";
-import { MagneticButton } from "./motion/MagneticButton";
 
 export function BundleCard({ bundle }: { bundle: Product }) {
   const { addItem, loading } = useCart();
@@ -35,9 +34,9 @@ export function BundleCard({ bundle }: { bundle: Product }) {
   ];
 
   return (
-    <div className="glass relative overflow-hidden rounded-[40px]">
+    <div className="overflow-hidden rounded-[28px] bg-white shadow-soft">
       <div className="grid items-stretch gap-0 md:grid-cols-2">
-        <div className="relative min-h-[300px]">
+        <div className="relative min-h-[320px] bg-cloud">
           <Image
             src={bundle.featuredImage.url}
             alt={bundle.featuredImage.altText}
@@ -48,17 +47,18 @@ export function BundleCard({ bundle }: { bundle: Product }) {
         </div>
 
         <div className="flex flex-col justify-center gap-5 p-8 sm:p-10">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex w-fit items-center gap-2 rounded-full bg-sky/10 px-3 py-1 text-xs font-semibold text-sky">
-              <Sparkles className="h-3.5 w-3.5" />
+          {/* Eyebrow — orange "Best value" (like Apple's NEW) + savings chip. */}
+          <div className="flex items-center gap-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#c1581f]">
               Best value
-            </span>
+            </p>
             {hasDiscount && (
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600">
-                {savePercent}% off
+              <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600">
+                Save {savePercent}%
               </span>
             )}
           </div>
+
           <h3 className="font-display text-3xl font-bold leading-tight tracking-tight text-graphite sm:text-4xl">
             {bundle.title}
           </h3>
@@ -75,37 +75,38 @@ export function BundleCard({ bundle }: { bundle: Product }) {
             ))}
           </ul>
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-3">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-baseline gap-3">
-                {hasDiscount && (
-                  <span className="font-display text-xl font-semibold text-slate2 line-through decoration-slate2/50 decoration-2">
-                    {formatMoney(bundle.compareAtPrice!)}
-                  </span>
-                )}
-                <span className="font-display text-4xl font-bold text-graphite">
-                  {formatMoney(price)}
-                </span>
-              </div>
+          <div className="mt-2 flex flex-col gap-1">
+            <div className="flex items-baseline gap-3">
               {hasDiscount && (
-                <span className="text-sm font-medium text-emerald-600">
-                  You save{" "}
-                  {formatMoney({
-                    amount: saveAmount.toFixed(2),
-                    currencyCode: price.currencyCode,
-                  })}
+                <span className="font-display text-xl font-medium text-slate2 line-through decoration-slate2/40 decoration-2">
+                  {formatMoney(bundle.compareAtPrice!)}
                 </span>
               )}
+              <span className="font-display text-4xl font-bold text-graphite">
+                {formatMoney(price)}
+              </span>
             </div>
-            {variant && (
-              <MagneticButton
-                variant="grade"
-                onClick={() => addItem(variant.id, 1)}
-              >
-                {loading ? "Adding…" : "Get the bundle"}
-              </MagneticButton>
+            {hasDiscount && (
+              <span className="text-sm font-medium text-emerald-600">
+                You save{" "}
+                {formatMoney({
+                  amount: saveAmount.toFixed(2),
+                  currencyCode: price.currencyCode,
+                })}
+              </span>
             )}
           </div>
+
+          {variant && (
+            <button
+              type="button"
+              onClick={() => addItem(variant.id, 1)}
+              disabled={loading || !variant.availableForSale}
+              className="btn-grade mt-1 w-fit px-7 py-3 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? "Adding…" : "Get the bundle"}
+            </button>
+          )}
         </div>
       </div>
     </div>
