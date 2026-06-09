@@ -34,7 +34,7 @@ export function FilterPanel({
     (state.maxPrice != null ? 1 : 0);
 
   return (
-    <div className="lg:sticky lg:top-28">
+    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh_-_7rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
       {/* Mobile toggle */}
       <button
         type="button"
@@ -185,7 +185,7 @@ function FilterBody({
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate2">
             Tags
           </h3>
-          <ul className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+          <ul className="space-y-1.5">
             {facets.tags.map((tag) => {
               const checked = state.tags.includes(tag.value);
               return (
