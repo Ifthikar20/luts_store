@@ -73,6 +73,21 @@ export default async function HomePage() {
       <JsonLd data={organizationJsonLd} />
       <JsonLd data={websiteJsonLd} />
       <Hero />
+
+      {/* Bundle highlight — surfaced near the top for maximum value upfront */}
+      {bundle && (
+        <section className="container-xl py-12" id="bundles">
+          <SectionHeading
+            eyebrow="Maximum value"
+            title="Get every look"
+            align="center"
+          />
+          <Reveal className="mt-12">
+            <BundleCard bundle={bundle} />
+          </Reveal>
+        </section>
+      )}
+
       <LogoMarquee />
 
       {/* Looks in motion — video bento grid on a light-gray band */}
@@ -147,20 +162,6 @@ export default async function HomePage() {
         </div>
         <ProductGrid products={featured.slice(0, 3)} withVideoPreview />
       </section>
-
-      {/* Bundle highlight */}
-      {bundle && (
-        <section className="container-xl py-12" id="bundles">
-          <SectionHeading
-            eyebrow="Maximum value"
-            title="Get every look"
-            align="center"
-          />
-          <Reveal className="mt-12">
-            <BundleCard bundle={bundle} />
-          </Reveal>
-        </section>
-      )}
 
       {/* How it works — on a light-gray band */}
       <section className="bg-cloud py-24" id="how">
