@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 type Direction = "up" | "down" | "left" | "right" | "none";
 
-const offset = 28;
+const offset = 14;
 
 function variantsFor(dir: Direction, reduced: boolean): Variants {
   if (reduced) {
@@ -27,7 +27,7 @@ function variantsFor(dir: Direction, reduced: boolean): Variants {
       opacity: 1,
       x: 0,
       y: 0,
-      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+      transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] },
     },
   };
 }

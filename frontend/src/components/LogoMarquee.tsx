@@ -1,6 +1,8 @@
 // "Drops straight into your editor" — a simple, static strip of the apps the
 // LUTs drop into. Text logos keep the bundle lean and avoid shipping
 // third-party trademark assets.
+import { Reveal } from "./motion/Reveal";
+
 const apps = [
   "DaVinci Resolve",
   "Premiere Pro",
@@ -15,7 +17,7 @@ const apps = [
 export function LogoMarquee() {
   return (
     <div className="border-y border-hairline bg-paper py-14">
-      <div className="container-xl text-center">
+      <Reveal className="container-xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate2">
           Drops straight into your editor
         </p>
@@ -29,7 +31,7 @@ export function LogoMarquee() {
             </span>
           ))}
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }
