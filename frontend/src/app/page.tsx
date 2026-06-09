@@ -83,6 +83,7 @@ export default async function HomePage() {
               eyebrow="Watch the grade"
               title="Looks in motion."
               subtitle="Real cinematic grades, applied to motion — not just stills. Each clip plays automatically as it scrolls into view."
+              titleClassName="text-shine inline-block pb-1 font-display text-3xl font-bold leading-tight tracking-tightest sm:text-4xl md:text-5xl"
             />
             <Reveal direction="left">
               <Link
