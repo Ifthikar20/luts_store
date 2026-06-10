@@ -83,6 +83,10 @@ set_var CORS_ALLOWED_ORIGINS "$SITE_URL"
 set_var CSRF_TRUSTED_ORIGINS "$SITE_URL"
 set_var FRONTEND_URL "$SITE_URL"
 set_var API_BASE_URL "$API_BASE"
+# OAuth callbacks must match the deployment host (and be registered with the
+# provider). Auto-set them so login works the moment keys are added.
+set_var GOOGLE_REDIRECT_URI "${API_BASE}/api/auth/google/callback"
+set_var SHOPIFY_CUSTOMER_ACCOUNT_REDIRECT_URI "${API_BASE}/api/auth/shopify/callback"
 # Over plain HTTP (IP mode) cookies must NOT be Secure or sessions/CSRF break.
 set_var SESSION_COOKIE_SECURE "$SECURE"
 set_var CSRF_COOKIE_SECURE "$SECURE"
