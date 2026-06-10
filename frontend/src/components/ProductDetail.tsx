@@ -112,7 +112,14 @@ export function ProductDetail({ product }: { product: Product }) {
             {isFree ? "Free" : formatMoney(product.priceRange.min)}
           </p>
 
-          <p className="mt-6 leading-relaxed text-slate2">{product.description}</p>
+          <p className="mt-6 leading-relaxed text-slate2">
+            {product.bestFor && (
+              <span className="font-semibold text-graphite">
+                Best for {product.bestFor}.{" "}
+              </span>
+            )}
+            {product.description}
+          </p>
 
           {/* What's included */}
           <div className="mt-8 grid gap-3 rounded-[28px] border border-hairline bg-cloud p-6">

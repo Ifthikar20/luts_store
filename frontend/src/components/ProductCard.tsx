@@ -119,6 +119,16 @@ export function ProductCard({
         ))}
       </div>
 
+      {/* Apple-style caption: bold use-case lead + characteristics. */}
+      <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate2">
+        {product.bestFor && (
+          <span className="font-semibold text-graphite">
+            Best for {product.bestFor}.{" "}
+          </span>
+        )}
+        {product.description}
+      </p>
+
       <div className="mt-auto flex items-center justify-between gap-3 pt-6">
         <p className="text-sm text-slate2">
           {isFree ? (

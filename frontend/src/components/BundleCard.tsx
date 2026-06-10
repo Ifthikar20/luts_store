@@ -54,7 +54,14 @@ export function BundleCard({ bundle }: { bundle: Product }) {
           <h3 className="font-display text-3xl font-bold leading-tight tracking-tight text-graphite sm:text-4xl">
             {bundle.title}
           </h3>
-          <p className="leading-relaxed text-slate2">{bundle.description}</p>
+          <p className="leading-relaxed text-slate2">
+            {bundle.bestFor && (
+              <span className="font-semibold text-graphite">
+                Best for {bundle.bestFor}.{" "}
+              </span>
+            )}
+            {bundle.description}
+          </p>
 
           <div className="flex items-baseline gap-3">
             {hasDiscount && (

@@ -52,6 +52,8 @@ export interface Product {
   beforeImage?: string;
   afterImage?: string | null;
   previewVideo?: string | null;
+  // Concise use-case phrase ("Best for …") — the bold lead of card captions.
+  bestFor?: string;
   variants: Variant[];
   tags: string[];
   productType: string;

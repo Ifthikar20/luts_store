@@ -131,6 +131,8 @@ def _product(
         "title": title,
         "description": description,
         "descriptionHtml": f"<p>{description}</p>",
+        # Bold use-case lead for card captions ("Best for …"). See BEST_FOR.
+        "bestFor": BEST_FOR.get(handle, ""),
         "featuredImage": _image(image_url, alt),
         "images": [
             _image(image_url, alt),
@@ -163,6 +165,30 @@ def _product(
         product["compareAtPrice"] = _money(compare_at_price)
     return product
 
+
+# ---------------------------------------------------------------------------
+# "Best for …" — one concise use-case phrase per product, shown as the bold
+# lead of the card caption (Apple-style: bold lead + description). Keyed by
+# handle; products without an entry simply omit the lead.
+# ---------------------------------------------------------------------------
+BEST_FOR: dict[str, str] = {
+    "midnight-noir": "night exteriors, neon streets and dramatic interiors",
+    "golden-hour-drama": "sunset portraits and warm travel films",
+    "urban-blockbuster": "city action, cars and commercial work",
+    "aurora-skies": "crisp daylight b-roll and outdoor scenes",
+    "dji-aerial-vivid": "D-Log M aerials — coastlines, foliage and skies",
+    "dji-cinelike-natural": "natural color straight off the gimbal",
+    "mavic-sunset-skies": "golden-hour aerials and sunset skylines",
+    "capcut-clean-creator": "talking-head and lifestyle content in CapCut",
+    "capcut-moody-vlog": "moody vlogs and rainy-day b-roll",
+    "mobile-vibrant-pop": "reels and shorts that need to pop on small screens",
+    "kodak-2383-emulation": "the classic Hollywood print-film look",
+    "portra-400-still": "portraits with soft, true-to-life skin",
+    "vintage-super8": "retro home-movie and music-video looks",
+    "the-cinematic-bundle": "narrative shorts, commercials and story-driven work",
+    "dji-starter-pack": "a drone pilot's complete first grade kit",
+    "the-everything-bundle": "creators who grade everything, everywhere",
+}
 
 # ---------------------------------------------------------------------------
 # Individual LUT products (~12) + 3 bundles
