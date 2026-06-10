@@ -107,7 +107,7 @@ export default async function HomePage() {
             <Reveal direction="left">
               <Link
                 href="/collections/cinematic"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-sky transition-colors hover:text-sky-hover"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-slate2 transition-colors hover:text-graphite"
               >
                 Explore the looks <ArrowRight className="h-4 w-4" />
               </Link>
@@ -158,7 +158,7 @@ export default async function HomePage() {
           <Reveal direction="left">
             <Link
               href="/collections/cinematic"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-sky transition-colors hover:text-sky-hover"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-slate2 transition-colors hover:text-graphite"
             >
               View all looks <ArrowRight className="h-4 w-4" />
             </Link>

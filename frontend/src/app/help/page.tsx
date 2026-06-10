@@ -105,7 +105,7 @@ export default function HelpPage() {
 
       <div className="container-xl relative pt-36 sm:pt-44">
         <Reveal>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-sky">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate2">
             Help Center
           </p>
           <h1 className="max-w-3xl font-display text-4xl font-bold leading-tight tracking-tightest text-graphite sm:text-6xl">

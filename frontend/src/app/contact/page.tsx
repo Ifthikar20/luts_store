@@ -29,7 +29,7 @@ export default function ContactPage() {
       <div className="container-xl relative pt-36 sm:pt-44">
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr]">
           <Reveal>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-sky">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate2">
               Get in touch
             </p>
             <h1 className="font-display text-4xl font-bold leading-tight tracking-tightest text-graphite sm:text-5xl">

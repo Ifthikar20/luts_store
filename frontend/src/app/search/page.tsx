@@ -26,7 +26,7 @@ export default function SearchPage() {
 
       <div className="container-xl relative pt-36 sm:pt-44">
         <Reveal>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-sky">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate2">
             Discover
           </p>
           <h1 className="font-display text-4xl font-bold tracking-tightest text-graphite sm:text-6xl">

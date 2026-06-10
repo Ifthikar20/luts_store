@@ -30,7 +30,7 @@ export function Hero() {
           variants={reduced ? undefined : media}
           initial={reduced ? false : "hidden"}
           animate={reduced ? undefined : "visible"}
-          className="mx-auto max-w-5xl"
+          className="mx-auto max-w-6xl"
         >
           <HeroVideo src={HERO_VIDEO.src} poster={HERO_VIDEO.poster} />
         </motion.div>

@@ -101,7 +101,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
         {/* Info */}
         <Reveal direction="left">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate2">
             {product.productType} · {product.vendor}
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold tracking-tightest text-graphite sm:text-5xl">
