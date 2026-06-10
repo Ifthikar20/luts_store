@@ -1,40 +1,122 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Gift, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import type { SocialProvider } from "@/lib/types";
 
+// The OAuth redirect lands back here; this exact path must be registered as an
+// allowed redirect URI in the Google / Apple console.
+const CALLBACK_PATH = "/account/login";
+const OAUTH_KEY = "luts:oauth";
+
+function authorizeUrlClientId(provider: SocialProvider): string | undefined {
+  return provider === "google"
+    ? process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    : process.env.NEXT_PUBLIC_APPLE_CLIENT_ID;
+}
+
+function authorizeUrl(provider: SocialProvider, nextPath: string): string | null {
+  const clientId = authorizeUrlClientId(provider);
+  if (!clientId) return null;
+
+  const nonce =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : String(Math.random());
+  try {
+    sessionStorage.setItem(
+      OAUTH_KEY,
+      JSON.stringify({ provider, next: nextPath, nonce }),
+    );
+  } catch {
+    /* storage blocked — sign-in can still proceed, just no post-redirect route */
+  }
+
+  const redirectUri = window.location.origin + CALLBACK_PATH;
+  if (provider === "google") {
+    const p = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: "id_token",
+      scope: "openid email profile",
+      nonce,
+      prompt: "select_account",
+    });
+    return `https://accounts.google.com/o/oauth2/v2/auth?${p}`;
+  }
+  // Apple
+  const p = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "id_token",
+    response_mode: "fragment",
+    scope: "email",
+    nonce,
+  });
+  return `https://appleid.apple.com/auth/authorize?${p}`;
+}
+
 /**
- * Google / Apple sign-in panel. When NEXT_PUBLIC_GOOGLE_CLIENT_ID /
- * NEXT_PUBLIC_APPLE_CLIENT_ID are configured the real provider SDKs are wired
- * in (TODO); until then a dev fallback collects an email and signs in with a
- * "mock:<email>" token, which the backend accepts only when the provider isn't
- * configured. Either way, signing in opts into deals + the biweekly free LUT.
+ * Google / Apple sign-in panel.
+ *
+ * - Configured (NEXT_PUBLIC_*_CLIENT_ID set): the button redirects straight to
+ *   the provider's hosted sign-in; on return, the id_token in the URL fragment
+ *   is read here and exchanged for a session.
+ * - Not configured: a dev fallback collects an email and signs in with a
+ *   "mock:<email>" token (the backend only trusts it when unconfigured).
+ *
+ * Either way, signing in opts into deals + the biweekly free LUT.
  */
 export function SignInPanel({ onDone }: { onDone?: () => void }) {
   const reduced = useReducedMotion() ?? false;
+  const router = useRouter();
   const { signIn } = useAuth();
   const [pending, setPending] = useState<SocialProvider | null>(null);
   const [email, setEmail] = useState("");
   const [needEmail, setNeedEmail] = useState<SocialProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const configured = (p: SocialProvider) =>
-    p === "google"
-      ? Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)
-      : Boolean(process.env.NEXT_PUBLIC_APPLE_CLIENT_ID);
+  const configured = (p: SocialProvider) => Boolean(authorizeUrlClientId(p));
 
-  async function start(provider: SocialProvider) {
+  // Handle the provider redirect: read the id_token from the URL fragment.
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.location.hash) return;
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    const idToken = hash.get("id_token");
+    if (!idToken) return;
+    let stored: { provider?: SocialProvider; next?: string } = {};
+    try {
+      stored = JSON.parse(sessionStorage.getItem(OAUTH_KEY) || "{}");
+      sessionStorage.removeItem(OAUTH_KEY);
+    } catch {
+      /* ignore */
+    }
+    // Clear the token from the address bar immediately.
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+    const provider = stored.provider ?? "google";
+    setPending(provider);
+    signIn(provider, idToken)
+      .then(() => (stored.next ? router.replace(stored.next) : onDone?.()))
+      .catch(() => {
+        setError("Sign-in failed. Please try again.");
+        setPending(null);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function start(provider: SocialProvider) {
     setError(null);
-    // Real SDK path (configured) would obtain a provider credential here.
-    // Dev fallback: ask for an email and use a mock token.
-    if (!configured(provider)) {
-      setNeedEmail(provider);
+    const url = authorizeUrl(provider, window.location.pathname);
+    if (url) {
+      // Configured -> go straight to the provider's hosted sign-in.
+      window.location.assign(url);
       return;
     }
-    setNeedEmail(provider); // placeholder until the real SDKs are wired
+    // Dev fallback: collect an email and use a mock token.
+    setNeedEmail(provider);
   }
 
   async function complete(e: React.FormEvent) {
