@@ -242,3 +242,14 @@ def test_product_preview_fields_exposed(client):
     assert p["afterImage"] and p["beforeImage"]
     assert p["previewVideo"].endswith(".mp4")
     assert "file_key" not in p
+
+
+def test_included_luts_listed_per_pack(client):
+    """Every pack lists its LUTs by name+tone, count matching lutCount."""
+    p = client.get("/api/products/midnight-noir").json()
+    luts = p["includedLuts"]
+    assert len(luts) == p["metafields"]["lutCount"] == 8
+    assert all(l["name"] and l["tone"] for l in luts)
+    # Bundles list their member packs instead.
+    b = client.get("/api/products/the-cinematic-bundle").json()
+    assert any("Midnight Noir" in l["name"] for l in b["includedLuts"])

@@ -155,6 +155,33 @@ export function ProductDetail({ product }: { product: Product }) {
             </div>
           </div>
 
+          {/* Inside the pack — every LUT by name with its coloring note. */}
+          {product.includedLuts && product.includedLuts.length > 0 && (
+            <div className="mt-6 rounded-[28px] border border-hairline bg-white p-6">
+              <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-slate2">
+                {product.productType === "Bundle"
+                  ? "Inside the bundle"
+                  : "Inside the pack"}
+              </h2>
+              <ul className="mt-4 grid gap-x-6 gap-y-2.5 sm:grid-cols-2">
+                {product.includedLuts.map((lut) => (
+                  <li key={lut.name} className="flex items-start gap-2.5 text-sm">
+                    <span
+                      aria-hidden
+                      className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-gradient-to-br from-sky to-[#8e5cff]"
+                    />
+                    <span className="text-slate2">
+                      <span className="font-semibold text-graphite">
+                        {lut.name}
+                      </span>{" "}
+                      — {lut.tone}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Claim (free) or add to cart (paid) */}
           {isFree ? (
             <div className="mt-8 rounded-[28px] border border-hairline bg-cloud p-6">

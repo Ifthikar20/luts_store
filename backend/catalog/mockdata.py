@@ -133,6 +133,10 @@ def _product(
         "descriptionHtml": f"<p>{description}</p>",
         # Bold use-case lead for card captions ("Best for …"). See BEST_FOR.
         "bestFor": BEST_FOR.get(handle, ""),
+        # The named LUTs (or member packs, for bundles) inside this product.
+        "includedLuts": [
+            {"name": n, "tone": t} for n, t in INCLUDED_LUTS.get(handle, [])
+        ],
         "featuredImage": _image(image_url, alt),
         "images": [
             _image(image_url, alt),
@@ -188,6 +192,154 @@ BEST_FOR: dict[str, str] = {
     "the-cinematic-bundle": "narrative shorts, commercials and story-driven work",
     "dji-starter-pack": "a drone pilot's complete first grade kit",
     "the-everything-bundle": "creators who grade everything, everywhere",
+}
+
+# ---------------------------------------------------------------------------
+# The LUTs inside each pack — (name, coloring note) per LUT, list length
+# matching the pack's lutCount. Shown as the "Inside the pack" section on the
+# product page. Bundles list their member packs instead.
+# ---------------------------------------------------------------------------
+INCLUDED_LUTS: dict[str, list[tuple[str, str]]] = {
+    "midnight-noir": [
+        ("Noir Teal", "cool teal shadows over crushed blacks"),
+        ("Noir Steel", "desaturated steel-blue midtones"),
+        ("Neon Night", "magenta neon highlights for city signs"),
+        ("Moon Wash", "silver-blue moonlight wash"),
+        ("Deep Velvet", "inky blacks with soft red accents"),
+        ("Midnight Fog", "lifted, hazy shadow detail"),
+        ("Street Sodium", "warm sodium-lamp orange contrast"),
+        ("Noir Mono", "high-contrast black & white"),
+    ],
+    "golden-hour-drama": [
+        ("Amber Glow", "warm amber midtones"),
+        ("Honey Light", "soft golden highlight rolloff"),
+        ("Sunfire", "intense orange-red sunset push"),
+        ("Golden Skin", "flattering warm skin tones"),
+        ("Dusk Rose", "pink-gold dusk blend"),
+        ("Last Light", "muted late-dusk warmth"),
+    ],
+    "urban-blockbuster": [
+        ("Teal & Orange Classic", "the signature blockbuster split-tone"),
+        ("Teal & Orange Hard", "aggressive contrast version"),
+        ("City Steel", "cold steel-blue streets"),
+        ("Action Crunch", "crushed-contrast punch"),
+        ("Concrete", "desaturated urban grit"),
+        ("Night Chase", "dark teal night action"),
+        ("Chrome", "metallic high-key sheen"),
+        ("Smog", "warm hazy atmosphere"),
+        ("Blockbuster Skin", "split-tone with protected skin"),
+        ("Trailer Grade", "heavy cinematic trailer look"),
+    ],
+    "aurora-skies": [
+        ("Crisp Day", "clean, neutral daylight"),
+        ("Polar Blue", "cool crisp sky blue"),
+        ("Northern Soft", "soft pastel lift"),
+    ],
+    "dji-aerial-vivid": [
+        ("D-Log Punch", "vivid D-Log M base conversion"),
+        ("Coastline", "turquoise water boost"),
+        ("Forest Green", "saturated foliage"),
+        ("Sky High", "deep blue skies"),
+        ("Desert Warm", "warm earth tones"),
+        ("Vivid Clean", "balanced vivid daily driver"),
+        ("Horizon Pop", "extra contrast across the horizon"),
+    ],
+    "dji-cinelike-natural": [
+        ("Natural Rec.709", "faithful D-Cinelike conversion"),
+        ("Soft Natural", "gentle contrast curve"),
+        ("True Green", "accurate foliage rendering"),
+        ("Clean Sky", "neutral sky gradation"),
+        ("Daily Natural", "all-rounder for any scene"),
+    ],
+    "mavic-sunset-skies": [
+        ("Sunset Core", "golden-hour aerial base"),
+        ("Magenta Dusk", "magenta-violet dusk skies"),
+        ("Sky Fire", "red-orange cloud bloom"),
+        ("Afterglow", "post-sunset pastels"),
+        ("Silhouette", "dark foreground contrast"),
+        ("Warm Horizon", "soft warm gradient at the horizon"),
+    ],
+    "capcut-clean-creator": [
+        ("Creator Clean", "neutral, true-to-life base"),
+        ("Bright Studio", "airy high-key brightness"),
+        ("Soft Skin", "gentle skin smoothing tone"),
+        ("Daylight Fix", "corrects harsh phone daylight"),
+        ("Indoor Warm", "cozy tungsten balance"),
+        ("Cool Office", "clean fluorescent correction"),
+        ("Punch Mini", "small tasteful contrast pop"),
+        ("Matte Soft", "lifted matte blacks"),
+        ("True Color", "accurate color for products"),
+        ("Vlog Base", "flattering everyday vlog look"),
+    ],
+    "capcut-moody-vlog": [
+        ("Moody Base", "low-saturation moody starting point"),
+        ("Rain Day", "cool overcast blue-grey"),
+        ("Faded Tea", "warm faded film tint"),
+        ("Olive Shadow", "olive-green shadow tone"),
+        ("Slate Blue", "muted slate-blue cast"),
+        ("Coffee Tone", "rich brown warmth"),
+        ("Grey Film", "soft grey filmic wash"),
+        ("Night Mood", "dim, intimate night feel"),
+    ],
+    "mobile-vibrant-pop": [
+        ("Pop Punch", "max contrast + saturation"),
+        ("Candy", "playful pink-leaning brights"),
+        ("Tropical", "saturated greens and aquas"),
+        ("Citrus", "zesty orange-yellow energy"),
+        ("Hot Pink", "bold magenta accent push"),
+        ("Electric Blue", "vivid electric blues"),
+        ("Lime Snap", "punchy lime greens"),
+        ("Sunset Pop", "vibrant warm sunset tones"),
+        ("Berry", "deep berry reds"),
+        ("Aqua", "clean aqua waters"),
+        ("Golden Pop", "bright golden warmth"),
+        ("Max Saturate", "everything turned up"),
+    ],
+    "kodak-2383-emulation": [
+        ("2383 Base", "faithful print-stock emulation"),
+        ("2383 Warm", "warmer print bias"),
+        ("2383 Cool", "cooler print bias"),
+        ("2383 Low Con", "softer, low-contrast print"),
+        ("2383 High Con", "punchy theatrical contrast"),
+        ("2383 Night", "tuned for night scenes"),
+        ("2383 Skin", "skin-priority balance"),
+        ("2383 Fade", "aged, faded print look"),
+        ("2383 Grain+Halation", "grain response & halation baked in"),
+    ],
+    "portra-400-still": [
+        ("Portra Base", "the classic neutral Portra look"),
+        ("Portra +1", "overexposed pastel softness"),
+        ("Portra Soft", "low-contrast portrait tone"),
+        ("Portra Warm", "golden warm bias"),
+        ("Portra Studio", "controlled studio balance"),
+        ("Portra Outdoor", "daylight-balanced version"),
+        ("Portra Fade", "gently faded archival feel"),
+    ],
+    "vintage-super8": [
+        ("Super8 Base", "authentic 8mm color response"),
+        ("Kodachrome 8", "punchy vintage chrome tones"),
+        ("Faded Reel", "sun-bleached archive fade"),
+        ("Warm Projector", "warm projected-film glow"),
+        ("Home Movie", "nostalgic family-reel look"),
+        ("Burnt Frame", "amber edge-burn character"),
+    ],
+    # Bundles list the packs they contain.
+    "the-cinematic-bundle": [
+        ("Nocturne — 8 LUTs", "teal & orange night looks"),
+        ("Ember — 8 LUTs", "filmic warmth and natural skin"),
+        ("Midnight Noir — 8 LUTs", "crushed-black noir grades"),
+    ],
+    "dji-starter-pack": [
+        ("DJI Aerial Vivid — 7 LUTs", "vivid D-Log M aerials"),
+        ("DJI Cinelike Natural — 5 LUTs", "faithful natural conversions"),
+        ("Mavic Sunset Skies — 6 LUTs", "golden-hour aerials"),
+    ],
+    "the-everything-bundle": [
+        ("All Cinematic packs", "night, golden hour and blockbuster looks"),
+        ("All Drone / DJI packs", "D-Log, Cinelike and sunset aerials"),
+        ("All Mobile / CapCut packs", "clean, moody and vibrant phone looks"),
+        ("All Film Emulation packs", "Kodak 2383, Portra 400 and Super 8"),
+    ],
 }
 
 # ---------------------------------------------------------------------------

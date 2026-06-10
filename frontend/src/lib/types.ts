@@ -54,6 +54,9 @@ export interface Product {
   previewVideo?: string | null;
   // Concise use-case phrase ("Best for …") — the bold lead of card captions.
   bestFor?: string;
+  // The named LUTs inside a pack (or member packs, for bundles): each has a
+  // coloring name + a short tone note. Drives the "Inside the pack" section.
+  includedLuts?: { name: string; tone: string }[];
   variants: Variant[];
   tags: string[];
   productType: string;
