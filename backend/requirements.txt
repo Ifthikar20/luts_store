@@ -14,6 +14,8 @@ boto3>=1.34
 stripe>=9.0
 # Redis client — backs shared DRF rate-limit counters (active when REDIS_URL set).
 redis>=5.0
+# Error monitoring — initialized only when SENTRY_DSN is set (see settings).
+sentry-sdk[django]>=2.0
 
 # Test dependencies
 pytest>=8.0

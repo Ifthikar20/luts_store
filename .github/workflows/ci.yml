@@ -78,3 +78,38 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  security:
+    name: Security scans (deps + secrets)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so the secret scan can diff commits
+
+      # Dependency advisories are informative (continue-on-error) so a freshly
+      # published transitive CVE doesn't block unrelated PRs — review the logs.
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: pip-audit (Python deps)
+        continue-on-error: true
+        run: |
+          python -m pip install --upgrade pip pip-audit
+          pip-audit -r backend/requirements.txt
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: npm audit (Node deps, high+)
+        continue-on-error: true
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
+      # Secret scanning DOES block: a committed credential must fail the build.
+      - name: Gitleaks (secret scan)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

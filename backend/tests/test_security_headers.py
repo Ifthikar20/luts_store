@@ -30,3 +30,14 @@ def test_baseline_security_headers(client):
     assert resp["X-Content-Type-Options"] == "nosniff"
     assert resp["X-Frame-Options"] == "DENY"
     assert resp["Referrer-Policy"] == "strict-origin-when-cross-origin"
+
+
+def test_admin_ip_allowlist_blocks_when_set(client, settings):
+    # No allowlist -> admin reachable (redirects to login, not 404).
+    assert client.get("/admin/").status_code != 404
+    # With an allowlist that excludes the test client -> 404 (hidden).
+    settings.ADMIN_IP_ALLOWLIST = ["10.0.0.1"]
+    assert client.get("/admin/").status_code == 404
+    # A request from an allowed IP passes.
+    ok = client.get("/admin/", HTTP_X_FORWARDED_FOR="10.0.0.1")
+    assert ok.status_code != 404

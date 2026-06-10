@@ -228,6 +228,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Optional /admin/ IP allowlist (no-op unless ADMIN_IP_ALLOWLIST is set).
+    "common.admin_guard.AdminIPAllowlistMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -354,6 +356,14 @@ CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = "Lax"
 
+# Optional /admin/ IP allowlist. Comma-separated IPs; when set, the admin is
+# 404'd for any other client (see common.admin_guard). Empty = no restriction.
+ADMIN_IP_ALLOWLIST = [
+    ip.strip()
+    for ip in config("ADMIN_IP_ALLOWLIST", default="").split(",")
+    if ip.strip()
+]
+
 # ---------------------------------------------------------------------------
 # Django REST Framework (throttling enabled with sane defaults)
 # ---------------------------------------------------------------------------
@@ -407,3 +417,25 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+
+# ---------------------------------------------------------------------------
+# Error monitoring (Sentry) — OPTIONAL, active only when SENTRY_DSN is set.
+# Captures unhandled exceptions + performance traces. PII is NOT sent.
+# ---------------------------------------------------------------------------
+SENTRY_DSN = config("SENTRY_DSN", default="")
+if SENTRY_DSN:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.django import DjangoIntegration
+
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            integrations=[DjangoIntegration()],
+            environment=config("SENTRY_ENVIRONMENT", default="production"),
+            traces_sample_rate=config(
+                "SENTRY_TRACES_SAMPLE_RATE", default=0.1, cast=float
+            ),
+            send_default_pii=False,  # never ship emails/IPs to Sentry
+        )
+    except ImportError:  # pragma: no cover - sentry-sdk not installed
+        pass
