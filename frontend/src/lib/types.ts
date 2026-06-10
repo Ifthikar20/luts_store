@@ -160,6 +160,9 @@ export interface User {
   email: string;
 }
 
+// Social sign-in providers (login required to buy).
+export type SocialProvider = "google" | "apple";
+
 export interface AuthResponse {
   token: string;
   user: User;

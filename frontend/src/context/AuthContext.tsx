@@ -9,32 +9,19 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  getSession,
-  mockCompleteLogin,
-  shopifyLogin,
-  shopifyLogout,
-} from "@/lib/api";
-import type { Customer, ShopifyLoginResponse } from "@/lib/types";
+import { getMe, logout as apiLogout, socialLogin } from "@/lib/api";
+import type { Customer, SocialProvider } from "@/lib/types";
 
-// Session-based auth for the OPTIONAL Shopify Customer Accounts portal.
-//
-// This context holds NO token. The logged-in state lives in a server-side
-// Django session (httpOnly cookie); we hydrate it on mount via /api/auth/session
-// and mutate it through the BFF endpoints. Guest checkout and the login-free
-// downloads do not depend on any of this.
+// Token-based auth for Google / Apple sign-in. The token (from /api/auth/<provider>)
+// is stored by the api layer; on mount we hydrate the account via /api/auth/me.
 interface AuthContextValue {
   customer: Customer | null;
   authenticated: boolean;
-  // True while we hydrate the session from the cookie on first load.
   loading: boolean;
-  // Begin login. REAL mode redirects the browser to hosted Shopify login;
-  // MOCK mode returns {mode:"mock"} so the caller can show the demo email step.
-  login: (returnTo?: string) => Promise<ShopifyLoginResponse>;
-  // MOCK-only: complete the demo sign-in for an email and refresh the session.
-  completeMockLogin: (email: string) => Promise<void>;
+  // Sign in with a verified provider credential (Google ID token / Apple
+  // identity token; in dev a "mock:<email>" token).
+  signIn: (provider: SocialProvider, credential: string) => Promise<void>;
   logout: () => Promise<void>;
-  // Re-read /api/auth/session (e.g. after returning from the OAuth redirect).
   refresh: () => Promise<void>;
 }
 
@@ -46,15 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
-      const session = await getSession();
-      setCustomer(session.authenticated ? session.customer : null);
+      const user = await getMe();
+      setCustomer(user ? { email: user.email } : null);
     } catch {
-      // Network/backend hiccup -> treat as logged out (non-fatal).
       setCustomer(null);
     }
   }, []);
 
-  // Hydrate the session from the httpOnly cookie on mount.
   useEffect(() => {
     let active = true;
     (async () => {
@@ -66,30 +51,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [refresh]);
 
-  // Start the login flow. In REAL (shopify) mode we hand off the browser to the
-  // hosted Shopify login page; in MOCK mode we return the response so the caller
-  // can show the demo email step. The returned value lets the login page branch.
-  const login = useCallback(
-    async (returnTo = "/account"): Promise<ShopifyLoginResponse> => {
-      const res = await shopifyLogin(returnTo);
-      if (res.mode === "shopify" && res.authorizeUrl) {
-        window.location.assign(res.authorizeUrl);
-      }
-      return res;
-    },
-    [],
-  );
-
-  const completeMockLogin = useCallback(
-    async (email: string) => {
-      const res = await mockCompleteLogin(email);
-      setCustomer(res.customer);
+  const signIn = useCallback(
+    async (provider: SocialProvider, credential: string) => {
+      const user = await socialLogin(provider, credential);
+      setCustomer({ email: user.email });
     },
     [],
   );
 
   const logout = useCallback(async () => {
-    await shopifyLogout();
+    await apiLogout();
     setCustomer(null);
   }, []);
 
@@ -98,12 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       customer,
       authenticated: customer !== null,
       loading,
-      login,
-      completeMockLogin,
+      signIn,
       logout,
       refresh,
     }),
-    [customer, loading, login, completeMockLogin, logout, refresh],
+    [customer, loading, signIn, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

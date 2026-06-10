@@ -29,6 +29,7 @@ import type {
   ProductsResponse,
   ResendDownloadsResponse,
   ShopifyLoginResponse,
+  SocialProvider,
   User,
 } from "./types";
 import {
@@ -49,7 +50,7 @@ export const API_ORIGIN = API_URL.replace(/\/api\/?$/, "");
 
 const TIMEOUT_MS = 4000;
 
-class ApiError extends Error {
+export class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
     super(message);
@@ -447,6 +448,20 @@ export async function login(
   });
   setAuthToken(res.token);
   return res;
+}
+
+// Sign in with Google/Apple. `credential` is the provider identity token (or a
+// "mock:<email>" token in dev). Stores the returned token and returns the user.
+export async function socialLogin(
+  provider: SocialProvider,
+  credential: string,
+): Promise<User> {
+  const res = await request<AuthResponse>(`/auth/${provider}`, {
+    method: "POST",
+    body: JSON.stringify({ credential }),
+  });
+  setAuthToken(res.token);
+  return res.user;
 }
 
 export async function logout(): Promise<void> {

@@ -6,26 +6,41 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowLeft, Lock, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { createCheckout } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { ApiError, createCheckout } from "@/lib/api";
 import { track } from "@/lib/analytics";
 import { formatMoney } from "@/lib/format";
 import { Reveal } from "@/components/motion/Reveal";
+import { SignInPanel } from "@/components/SignInPanel";
 
 export default function CartPage() {
   const router = useRouter();
   const { cart, updateItem, removeItem, loading } = useCart();
+  const { authenticated } = useAuth();
   const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needSignIn, setNeedSignIn] = useState(false);
   const lines = cart?.lines ?? [];
 
   // Checkout: the BFF decides the mode and owns the authoritative checkout.
   // - "stripe"/"shopify": full-page redirect to the hosted checkout (absolute URL).
   // - "mock":             in-app demo checkout ("/checkout?cart=...") via the router.
   // We never compute prices or build a checkout on the client.
-  async function checkout() {
+  // Begin checkout, gating on sign-in first (buying requires an account).
+  function checkout() {
+    if (!authenticated) {
+      setNeedSignIn(true);
+      return;
+    }
+    void startCheckout();
+  }
+
+  // The authoritative checkout call (BFF decides mode). Called after sign-in too.
+  async function startCheckout() {
     if (!cart?.id || redirecting) return;
     setRedirecting(true);
     setError(null);
+    setNeedSignIn(false);
     track("begin_checkout", { path: "/cart" });
     try {
       const { mode, checkoutUrl } = await createCheckout(cart.id);
@@ -34,8 +49,13 @@ export default function CartPage() {
       } else {
         window.location.assign(checkoutUrl);
       }
-    } catch {
-      setError("We couldn't start checkout just now. Please try again.");
+    } catch (err) {
+      // Defense in depth: the server also gates checkout (401 login_required).
+      if (err instanceof ApiError && err.status === 401) {
+        setNeedSignIn(true);
+      } else {
+        setError("We couldn't start checkout just now. Please try again.");
+      }
       setRedirecting(false);
     }
   }
@@ -163,24 +183,32 @@ export default function CartPage() {
                 </div>
               </dl>
 
-              <button
-                type="button"
-                onClick={checkout}
-                disabled={redirecting || loading}
-                className="btn-grade mt-6 w-full disabled:opacity-60"
-              >
-                <Lock className="h-4 w-4" />
-                {redirecting ? "Starting checkout…" : "Proceed to checkout"}
-              </button>
-              {error && (
-                <p className="mt-3 text-center text-sm text-red-600" role="alert">
-                  {error}
-                </p>
+              {needSignIn && !authenticated ? (
+                <div className="mt-6">
+                  <SignInPanel onDone={startCheckout} />
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={checkout}
+                    disabled={redirecting || loading}
+                    className="btn-grade mt-6 w-full disabled:opacity-60"
+                  >
+                    <Lock className="h-4 w-4" />
+                    {redirecting ? "Starting checkout…" : "Proceed to checkout"}
+                  </button>
+                  {error && (
+                    <p className="mt-3 text-center text-sm text-red-600" role="alert">
+                      {error}
+                    </p>
+                  )}
+                  <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-slate2">
+                    <Lock className="h-3 w-3" />
+                    Secure checkout. Prices confirmed server-side.
+                  </p>
+                </>
               )}
-              <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-slate2">
-                <Lock className="h-3 w-3" />
-                Secure checkout. Prices confirmed server-side. No account needed.
-              </p>
             </div>
           </div>
         </div>
