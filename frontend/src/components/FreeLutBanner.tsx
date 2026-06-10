@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Gift, X } from "lucide-react";
@@ -48,17 +48,45 @@ export function FreeLutBanner() {
     }
   };
 
+  // While the banner occupies the top strip, push the floating nav down via a
+  // CSS variable (the nav's `top` reads --promo-h). Measured from the real
+  // element (it can wrap to two lines on mobile); reset on hide/unmount so the
+  // header springs back up.
+  const visible = Boolean(lut && !dismissed && revealed);
+  const barRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!visible) {
+      root.style.setProperty("--promo-h", "0px");
+      return;
+    }
+    const el = barRef.current;
+    const apply = () =>
+      root.style.setProperty("--promo-h", `${el?.offsetHeight ?? 44}px`);
+    apply();
+    const ro =
+      el && typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(apply)
+        : null;
+    if (el && ro) ro.observe(el);
+    return () => {
+      ro?.disconnect();
+      root.style.setProperty("--promo-h", "0px");
+    };
+  }, [visible]);
+
   return (
     <AnimatePresence>
       {lut && !dismissed && revealed && (
         <motion.div
+          ref={barRef}
           initial={reduced ? { opacity: 0 } : { y: -72, opacity: 0 }}
           animate={reduced ? { opacity: 1 } : { y: 0, opacity: 1 }}
           exit={reduced ? { opacity: 0 } : { y: -72, opacity: 0 }}
           transition={{ type: "spring", stiffness: 260, damping: 24 }}
-          // Pops over everything at the very top of the viewport (above the
-          // floating nav, z-50) 5s after landing.
-          className="fixed inset-x-0 top-0 z-[60] overflow-hidden border-b border-hairline bg-white/90 shadow-soft backdrop-blur-xl"
+          // Owns the very top strip; the floating nav reads --promo-h and
+          // shifts down below it while visible (set in the effect above).
+          className="fixed inset-x-0 top-0 z-[60] overflow-hidden border-b border-hairline bg-white/95 shadow-soft backdrop-blur-xl"
         >
           <div
             aria-hidden

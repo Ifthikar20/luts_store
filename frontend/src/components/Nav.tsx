@@ -55,7 +55,10 @@ export function Nav() {
       initial={reduced ? false : { y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4"
+      className="fixed inset-x-0 z-50 px-3 pt-3 transition-[top] duration-300 ease-out sm:px-5 sm:pt-4"
+      // Sits below the free-LUT promo banner when it's visible (--promo-h is
+      // set by FreeLutBanner; 0px otherwise).
+      style={{ top: "var(--promo-h, 0px)" }}
     >
       <nav
         className={cn(
