@@ -17,6 +17,10 @@ class Order(models.Model):
     # email delivery idempotent: we never send a second confirmation for the
     # same order (webhook retries / re-ingest are safe no-ops).
     confirmation_email_sent_at = models.DateTimeField(null=True, blank=True)
+    # Set when the order is refunded (Stripe charge.refunded webhook or the
+    # `refund_order` management command). Refunding revokes the order's
+    # download grants; the timestamp makes refunds idempotent.
+    refunded_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self) -> str:  # pragma: no cover - repr only
         return f"Order({self.shopify_order_id}, {self.email})"

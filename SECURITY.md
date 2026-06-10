@@ -58,9 +58,11 @@ verified (constant-time compare) and idempotent by order id.
 
 These are honest gaps — none block launch, but you should know them:
 
-1. **Refunds don't revoke downloads.** We don't yet listen to
-   `charge.refunded` / `refund.created`; a refunded customer's grants (24 h
-   links, library access) keep working. *TODO: webhook → deactivate grants.*
+1. ~~**Refunds don't revoke downloads.**~~ **Fixed:** the Stripe
+   `charge.refunded` webhook (and `manage.py refund_order <id>`) revokes the
+   order's grants — downloads 403, library/confirmation hide them, buyer is
+   notified. Residual: refunds made entirely outside Stripe (e.g. a manual bank
+   transfer) still require running the management command.
 2. **Digital goods fraud is a business risk, not a code bug.** Stolen-card
    purchases + instant download = unrecoverable product. Enable **Stripe
    Radar**, and consider delaying high-value bundle delivery emails by a few

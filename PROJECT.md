@@ -69,16 +69,24 @@ These are **operator inputs** (keys/files), not code:
 
 ## TODO — recommended next (code, in priority order)
 
-1. **Refund handling** — listen to Stripe `charge.refunded` and revoke the
-   order's DownloadGrants (see SECURITY.md §5.1). ~half-day.
-2. **Redis cache in production** — accurate global rate limits across gunicorn
+1. **Redis cache in production** — accurate global rate limits across gunicorn
    workers (currently per-process LocMem). ~1 hour.
-3. **Server-side paid-lines snapshot** — replace the 500-char Stripe-metadata
+2. **Server-side paid-lines snapshot** — replace the 500-char Stripe-metadata
    snapshot with a DB row keyed by session id; removes the oversized-cart
    fallback. ~half-day.
-4. **Ops hygiene** — error tracking (Sentry), uptime checks, DB backups,
+3. **Ops hygiene** — error tracking (Sentry), uptime checks, DB backups,
    `pip-audit`/`npm audit` in CI.
-5. **Admin hardening** — IP-allowlist `/admin/`, or disable it publicly.
+4. **Admin hardening** — IP-allowlist `/admin/`, or disable it publicly.
+
+✅ ~~Refund handling~~ — done: Stripe `charge.refunded` (and a manual
+`manage.py refund_order <id>` command) marks the order refunded, revokes its
+DownloadGrants (download 403s, hidden from library/confirmation) and emails
+the buyer. Idempotent.
+
+✅ ~~Analytics~~ — done: first-party, PII-free funnel tracking (`page_view`,
+`add_to_cart`, `begin_checkout`, `purchase`) via `POST /api/events`
+(allowlisted + throttled), with a staff-only 30-day report at
+`GET /api/analytics/summary` (totals, unique sessions, top products/pages).
 
 ## TODO — nice-to-have / product ideas
 

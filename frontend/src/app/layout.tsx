@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
@@ -71,6 +72,7 @@ export default function RootLayout({
     <html lang="en" className={sans.variable}>
       <body className="bg-paper font-sans text-graphite antialiased">
         <Providers>
+          <AnalyticsTracker />
           <Nav />
           <CartDrawer />
           <main className="relative z-[2] min-h-screen">

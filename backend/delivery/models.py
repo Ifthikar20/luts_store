@@ -30,6 +30,9 @@ class DownloadGrant(models.Model):
     email = models.EmailField(blank=True)
     product_handle = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Set when the grant is revoked (e.g. the order was refunded). A revoked
+    # grant fails the download endpoint and is hidden from libraries/emails.
+    revoked_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self) -> str:  # pragma: no cover - repr only
         return f"DownloadGrant({self.product_handle}, {self.email})"

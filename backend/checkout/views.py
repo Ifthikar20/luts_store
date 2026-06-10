@@ -116,17 +116,60 @@ def stripe_webhook(request):
         return Response({"detail": "Invalid signature."}, status=400)
 
     event_type = event["type"] if isinstance(event, dict) else event.type
+    obj = (
+        event["data"]["object"] if isinstance(event, dict) else event.data.object
+    )
+
     if event_type == "checkout.session.completed":
-        session = (
-            event["data"]["object"]
-            if isinstance(event, dict)
-            else event.data.object
-        )
         try:
-            stripe_gateway.ingest_session(session)
+            stripe_gateway.ingest_session(obj)
         except stripe_gateway.StripeError as exc:
             # Don't ask Stripe to retry forever on a bad/unresolvable session.
             return Response({"detail": str(exc)}, status=400)
 
+    elif event_type == "charge.refunded":
+        _handle_refund(obj)
+
     # Acknowledge all other event types without action.
     return Response({"status": "ok"}, status=200)
+
+
+def _handle_refund(charge) -> None:
+    """Revoke download grants for a refunded Stripe charge (best-effort).
+
+    Resolves charge -> payment intent -> Checkout Session -> our Order
+    (``stripe-<session_id>``) and runs the idempotent refund pipeline. Missing
+    pieces are logged and skipped — a refund webhook must always 200 so Stripe
+    doesn't retry forever.
+    """
+    import logging
+
+    from . import stripe_gateway
+    from orders.models import Order
+    from orders.services import refund_order
+
+    logger = logging.getLogger(__name__)
+
+    pi = (
+        charge.get("payment_intent")
+        if isinstance(charge, dict)
+        else getattr(charge, "payment_intent", None)
+    )
+    if not pi:
+        return
+    try:
+        session_id = stripe_gateway.find_session_id_for_payment_intent(str(pi))
+    except stripe_gateway.StripeError:
+        logger.exception("Refund: session lookup failed for %s", pi)
+        return
+    if not session_id:
+        logger.warning("Refund: no checkout session for payment intent %s", pi)
+        return
+
+    order = Order.objects.filter(
+        shopify_order_id=stripe_gateway.order_id_for_session(session_id)
+    ).first()
+    if order is None:
+        logger.warning("Refund: no order for session %s", session_id)
+        return
+    refund_order(order)

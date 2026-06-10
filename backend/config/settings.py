@@ -209,6 +209,7 @@ INSTALLED_APPS = [
     "accounts",
     "customer_auth",
     "engagement",
+    "analytics",
 ]
 
 MIDDLEWARE = [
@@ -340,6 +341,8 @@ REST_FRAMEWORK = {
         # Dedicated bucket for the public, login-free download endpoint to deter
         # scraping/enumeration of signed links (60 requests/min per client IP).
         "download": "60/min",
+        # Public analytics-event ingestion (batched, allowlisted, PII-free).
+        "events": "120/min",
     },
     # Two auth schemes run side by side:
     #  * SessionAuthentication — the PREFERRED path. The Shopify Customer

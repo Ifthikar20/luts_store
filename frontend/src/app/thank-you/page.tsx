@@ -13,6 +13,7 @@ import {
   PartyPopper,
 } from "lucide-react";
 import { confirmOrder, resendDownloads, resolveDownloadUrl } from "@/lib/api";
+import { track } from "@/lib/analytics";
 import { formatMoney } from "@/lib/format";
 import type { OrderConfirmation } from "@/lib/types";
 import { Reveal } from "@/components/motion/Reveal";
@@ -50,6 +51,16 @@ function ThankYouContent() {
       try {
         const data = await confirmOrder(lookupId);
         if (active) setConfirmation(data);
+        // Count the purchase once per order, even across page refreshes.
+        try {
+          const key = `luts:purchase-tracked:${data.orderId}`;
+          if (!window.sessionStorage.getItem(key)) {
+            window.sessionStorage.setItem(key, "1");
+            track("purchase", { path: "/thank-you" });
+          }
+        } catch {
+          /* storage unavailable — skip dedupe, don't break the page */
+        }
       } catch {
         if (active) setError("We couldn't find that order.");
       }

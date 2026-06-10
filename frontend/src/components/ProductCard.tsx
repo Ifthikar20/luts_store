@@ -8,6 +8,7 @@ import { Layers } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
 import { useCart } from "@/context/CartContext";
+import { track } from "@/lib/analytics";
 
 export function ProductCard({
   product,
@@ -43,7 +44,9 @@ export function ProductCard({
   }, [showPreview, hovering, loadVideo]);
 
   async function onAdd() {
-    if (variant) await addItem(variant.id, 1);
+    if (!variant) return;
+    track("add_to_cart", { handle: product.handle });
+    await addItem(variant.id, 1);
   }
 
   return (

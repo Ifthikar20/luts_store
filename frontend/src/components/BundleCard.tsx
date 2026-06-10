@@ -5,6 +5,7 @@ import { Check, Sparkles } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
 import { useCart } from "@/context/CartContext";
+import { track } from "@/lib/analytics";
 import { BundleMosaic } from "./BundleMosaic";
 
 export function BundleCard({ bundle }: { bundle: Product }) {
@@ -115,7 +116,10 @@ export function BundleCard({ bundle }: { bundle: Product }) {
           {variant && (
             <button
               type="button"
-              onClick={() => addItem(variant.id, 1)}
+              onClick={() => {
+                track("add_to_cart", { handle: bundle.handle });
+                void addItem(variant.id, 1);
+              }}
               disabled={loading || !variant.availableForSale}
               className="btn-grade mt-1 w-fit px-7 py-3 disabled:cursor-not-allowed disabled:opacity-50"
             >

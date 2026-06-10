@@ -78,8 +78,13 @@ def placeholder_cube(product_handle: str) -> str:
 
 
 def downloads_for_user(user: User) -> list[dict[str, Any]]:
-    """All download items for a user, newest first, de-duplicated by handle."""
-    grants = DownloadGrant.objects.filter(user=user).order_by("-created_at")
+    """All download items for a user, newest first, de-duplicated by handle.
+
+    Revoked grants (refunded orders) are excluded from the library.
+    """
+    grants = DownloadGrant.objects.filter(
+        user=user, revoked_at__isnull=True
+    ).order_by("-created_at")
     seen: set[str] = set()
     items: list[dict[str, Any]] = []
     for grant in grants:

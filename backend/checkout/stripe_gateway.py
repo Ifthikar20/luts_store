@@ -133,6 +133,28 @@ def construct_event(payload: bytes, sig_header: str | None) -> Any:
         raise StripeError(f"Invalid Stripe webhook: {exc}") from exc
 
 
+def find_session_id_for_payment_intent(payment_intent_id: str) -> str | None:
+    """Resolve a payment intent to its Checkout Session id (for refunds).
+
+    Stripe's refund events reference the charge/payment intent, not the
+    session; the session id is what our Order ids are keyed on.
+    """
+    _client()
+    try:
+        sessions = stripe.checkout.Session.list(
+            payment_intent=payment_intent_id, limit=1
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise StripeError(
+            f"Could not look up session for {payment_intent_id}: {exc}"
+        ) from exc
+    data = sessions.get("data") if isinstance(sessions, dict) else sessions.data
+    if not data:
+        return None
+    first = data[0]
+    return first.get("id") if isinstance(first, dict) else first.id
+
+
 def retrieve_session(session_id: str) -> Any:
     """Fetch a Checkout Session from Stripe (used by the thank-you fallback)."""
     _client()

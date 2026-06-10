@@ -8,6 +8,7 @@ import { Check, ChevronRight, Layers, MonitorPlay, Package } from "lucide-react"
 import type { Product } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
 import { useCart } from "@/context/CartContext";
+import { track } from "@/lib/analytics";
 import { MagneticButton } from "./motion/MagneticButton";
 import { Reveal } from "./motion/Reveal";
 
@@ -21,6 +22,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
   async function onAdd() {
     if (!variant) return;
+    track("add_to_cart", { handle: product.handle });
     await addItem(variant.id, 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);

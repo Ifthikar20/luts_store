@@ -85,6 +85,13 @@ def download(request, token: str):
     if grant is None or grant.product_handle != product_handle:
         return Response({"detail": "Download grant not found."}, status=404)
 
+    # 2b. Revoked grants (refunded orders) no longer download, even while the
+    #     signed token itself is within its validity window.
+    if grant.revoked_at is not None:
+        return Response(
+            {"detail": "This download is no longer available."}, status=403
+        )
+
     # 3. Derive the S3 object key SERVER-SIDE from the validated handle. Never
     #    from anything in the token/request -> no traversal, no IDOR.
     key = catalog_services.file_key_for_handle(product_handle)

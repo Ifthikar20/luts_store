@@ -7,6 +7,7 @@ import { useState } from "react";
 import { ArrowLeft, Lock, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { createCheckout } from "@/lib/api";
+import { track } from "@/lib/analytics";
 import { formatMoney } from "@/lib/format";
 import { Reveal } from "@/components/motion/Reveal";
 
@@ -25,6 +26,7 @@ export default function CartPage() {
     if (!cart?.id || redirecting) return;
     setRedirecting(true);
     setError(null);
+    track("begin_checkout", { path: "/cart" });
     try {
       const { mode, checkoutUrl } = await createCheckout(cart.id);
       if (mode === "mock") {

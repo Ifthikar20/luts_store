@@ -47,7 +47,7 @@ def _confirmation_context(order) -> dict[str, Any]:
     from delivery.services import serialize_grant
 
     downloads = []
-    for grant in order.download_grants.all():
+    for grant in order.download_grants.filter(revoked_at__isnull=True):
         item = serialize_grant(grant)
         downloads.append(
             {

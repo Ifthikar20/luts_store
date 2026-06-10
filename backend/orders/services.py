@@ -176,7 +176,9 @@ def _confirm_from_order(order: Order) -> dict[str, Any]:
         {"title": p.title, "quantity": p.quantity}
         for p in order.purchases.all()
     ]
-    downloads = _confirmation_downloads(order.download_grants.all())
+    downloads = _confirmation_downloads(
+        order.download_grants.filter(revoked_at__isnull=True)
+    )
     return {
         "orderId": order.shopify_order_id,
         "email": order.email,
@@ -294,6 +296,58 @@ def _ensure_stripe_order(order_id: str) -> Order | None:
     except stripe_gateway.StripeError:
         return None
     return order
+
+
+# ---------------------------------------------------------------------------
+# Refunds
+# ---------------------------------------------------------------------------
+@transaction.atomic
+def refund_order(order: Order) -> bool:
+    """Mark an order refunded and revoke its download grants, idempotently.
+
+    Returns True if this call performed the refund, False if the order was
+    already refunded (webhook replays / repeated commands are safe no-ops).
+    A best-effort notice email is sent after commit; mail failures never break
+    the refund itself.
+    """
+    # Lock the row so a concurrent webhook replay can't double-process.
+    locked = Order.objects.select_for_update().get(pk=order.pk)
+    if locked.refunded_at is not None:
+        return False
+
+    now = timezone.now()
+    Order.objects.filter(pk=locked.pk).update(refunded_at=now)
+    locked.download_grants.filter(revoked_at__isnull=True).update(revoked_at=now)
+
+    transaction.on_commit(lambda: _send_refund_notice(locked.id))
+    return True
+
+
+def _send_refund_notice(order_id: int) -> None:
+    """Best-effort 'your refund was processed' email (never raises)."""
+    from django.core.mail import send_mail
+
+    order = Order.objects.filter(id=order_id).first()
+    if order is None or not order.email:
+        return
+    titles = ", ".join(p.title for p in order.purchases.all()) or "your purchase"
+    try:
+        send_mail(
+            subject=f"Your refund for order {order.shopify_order_id}",
+            message=(
+                f"Hi,\n\nYour refund for {titles} has been processed. "
+                "The download links for this order are no longer active.\n\n"
+                "If you have any questions, just reply to this email.\n\n"
+                f"— {settings.DEFAULT_FROM_EMAIL}"
+            ),
+            from_email=None,  # DEFAULT_FROM_EMAIL
+            recipient_list=[order.email],
+            fail_silently=True,
+        )
+    except Exception:  # noqa: BLE001 - never let mail break a refund
+        logger.exception(
+            "Failed to send refund notice for order %s", order.shopify_order_id
+        )
 
 
 def resend_downloads(email: str) -> bool:
