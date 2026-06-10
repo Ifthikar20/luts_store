@@ -16,6 +16,8 @@ export function FreeLutBanner() {
   const reduced = useReducedMotion() ?? false;
   const [lut, setLut] = useState<Product | null>(null);
   const [dismissed, setDismissed] = useState(true);
+  // Pops in 5 seconds after landing (not immediately).
+  const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -29,8 +31,10 @@ export function FreeLutBanner() {
         setDismissed(false);
       }
     });
+    const timer = setTimeout(() => setRevealed(true), 5000);
     return () => {
       active = false;
+      clearTimeout(timer);
     };
   }, []);
 
@@ -46,14 +50,20 @@ export function FreeLutBanner() {
 
   return (
     <AnimatePresence>
-      {lut && !dismissed && (
+      {lut && !dismissed && revealed && (
         <motion.div
-          initial={reduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
-          animate={reduced ? { opacity: 1 } : { height: "auto", opacity: 1 }}
-          exit={reduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="relative overflow-hidden border-b border-hairline bg-gradient-to-r from-sky/10 via-[#8e5cff]/10 to-[#ff5e7e]/10"
+          initial={reduced ? { opacity: 0 } : { y: -72, opacity: 0 }}
+          animate={reduced ? { opacity: 1 } : { y: 0, opacity: 1 }}
+          exit={reduced ? { opacity: 0 } : { y: -72, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 260, damping: 24 }}
+          // Pops over everything at the very top of the viewport (above the
+          // floating nav, z-50) 5s after landing.
+          className="fixed inset-x-0 top-0 z-[60] overflow-hidden border-b border-hairline bg-white/90 shadow-soft backdrop-blur-xl"
         >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-sky/10 via-[#8e5cff]/10 to-[#ff5e7e]/10"
+          />
           {/* Sheen: a soft highlight that sweeps across the strip on a loop. */}
           {!reduced && (
             <motion.div

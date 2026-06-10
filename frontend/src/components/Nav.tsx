@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
@@ -12,15 +12,16 @@ import { cn } from "@/lib/format";
 
 const links = [
   { href: "/collections/cinematic", label: "Cinematic" },
-  { href: "/collections/drone-dji", label: "Drone / DJI" },
+  { href: "/collections/drone-dji", label: "Drone" },
   { href: "/collections/mobile-capcut", label: "Mobile / CapCut" },
-  { href: "/collections/film-emulation", label: "Film" },
+  { href: "/collections/dji-osmo", label: "DJI / OSMO" },
   { href: "/collections/bundles", label: "Bundles" },
 ];
 
 export function Nav() {
   const reduced = useReducedMotion() ?? false;
   const router = useRouter();
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -68,16 +69,27 @@ export function Nav() {
           <Logo />
         </Link>
 
-        <div className="hidden items-center gap-1 md:flex">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="rounded-full px-4 py-2 text-sm font-medium text-slate2 transition-colors hover:bg-cloud hover:text-graphite"
-            >
-              {l.label}
-            </Link>
-          ))}
+        <div className="hidden items-center gap-2 md:flex">
+          {/* Apple-style pill links: bordered light pills; the active route is
+              a solid black pill with white text. */}
+          {links.map((l) => {
+            const active = pathname === l.href;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-graphite text-white"
+                    : "border border-hairline bg-haze/60 text-graphite hover:bg-cloud",
+                )}
+              >
+                {l.label}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-2 pr-1">

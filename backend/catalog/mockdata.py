@@ -36,6 +36,13 @@ COLLECTIONS: list[dict[str, Any]] = [
         "image": "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=1200&q=80",
     },
     {
+        "handle": "dji-osmo",
+        "title": "DJI / OSMO",
+        "description": "Looks tuned for DJI OSMO Pocket and Action footage — "
+        "clean skin tones and punchy color straight off the gimbal.",
+        "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
+    },
+    {
         "handle": "mobile-capcut",
         "title": "Mobile / CapCut",
         "description": "One-tap looks built for phone footage and CapCut creators. "
@@ -242,7 +249,7 @@ PRODUCTS: list[dict[str, Any]] = [
         extra_image_url="https://images.unsplash.com/photo-1542224566-6e85f2e6772f?w=1200&q=80",
         tags=["drone", "dji", "d-log", "aerial"],
         product_type="LUT Pack",
-        collections=["drone-dji"],
+        collections=["drone-dji", "dji-osmo"],
         lut_count=7,
         featured=True,
     ),
@@ -257,7 +264,7 @@ PRODUCTS: list[dict[str, Any]] = [
         extra_image_url="https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=1200&q=80",
         tags=["drone", "dji", "d-cinelike", "natural"],
         product_type="LUT Pack",
-        collections=["drone-dji"],
+        collections=["drone-dji", "dji-osmo"],
         lut_count=5,
     ),
     _product(
@@ -271,7 +278,7 @@ PRODUCTS: list[dict[str, Any]] = [
         extra_image_url="https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1200&q=80",
         tags=["drone", "dji", "sunset"],
         product_type="LUT Pack",
-        collections=["drone-dji"],
+        collections=["drone-dji", "dji-osmo"],
         lut_count=6,
     ),
     # --- Mobile / CapCut ---
