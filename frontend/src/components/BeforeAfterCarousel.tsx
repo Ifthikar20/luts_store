@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Pause, Play } from "lucide-react";
 import { cn } from "@/lib/format";
 import { BeforeAfterSlider } from "./BeforeAfterSlider";
@@ -12,10 +12,13 @@ export interface BeforeAfterExample {
   image: string;
 }
 
+const GAP = 20;
+
 /**
- * Single-panel before/after carousel: shows one comparison at a time, full
- * width, with a pager (elongated active dot) and a play/pause control that
- * auto-advances through the examples. Apple-style. Respects reduced motion.
+ * Peek-style before/after slider: the active comparison sits centered with the
+ * neighbouring slides bleeding in at the edges; advancing slides the track
+ * horizontally. Click a peeking slide (or a pager dot) to focus it, and the
+ * play/pause control auto-advances. Apple-style; reduced-motion aware.
  */
 export function BeforeAfterCarousel({
   examples,
@@ -25,6 +28,19 @@ export function BeforeAfterCarousel({
   const reduced = useReducedMotion() ?? false;
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
+
+  // Measure the viewport so we can center one slide and let neighbours peek.
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    ro.observe(el);
+    setWidth(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
 
   const next = useCallback(
     () => setIndex((i) => (i + 1) % examples.length),
@@ -38,25 +54,63 @@ export function BeforeAfterCarousel({
   }, [playing, reduced, next]);
 
   if (examples.length === 0) return null;
-  const active = examples[index];
+
+  // On phones the active slide is near full-width; on larger screens it's
+  // narrower so the previous/next slides peek in on each side.
+  const peek = width >= 768;
+  const slideWidth = width ? width * (peek ? 0.82 : 0.94) : 0;
+  const centerOffset = width ? (width - slideWidth) / 2 : 0;
+  const trackX = centerOffset - index * (slideWidth + GAP);
 
   return (
-    <div className="mx-auto mt-12 max-w-5xl">
-      <AnimatePresence mode="wait">
+    <div className="mt-12">
+      <div ref={viewportRef} className="overflow-hidden">
         <motion.div
-          key={active.label}
-          initial={reduced ? false : { opacity: 0, scale: 0.985 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.985 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="flex"
+          style={{ gap: GAP }}
+          animate={{ x: width ? trackX : 0 }}
+          transition={
+            reduced
+              ? { duration: 0 }
+              : { type: "spring", stiffness: 260, damping: 32 }
+          }
         >
-          <BeforeAfterSlider
-            image={active.image}
-            alt={active.alt}
-            label={active.label}
-          />
+          {examples.map((ex, i) => {
+            const active = i === index;
+            return (
+              <motion.div
+                key={ex.label}
+                className="shrink-0"
+                style={{ width: slideWidth ? `${slideWidth}px` : "100%" }}
+                animate={{
+                  scale: reduced || active ? 1 : 0.92,
+                  opacity: active ? 1 : 0.45,
+                }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                aria-hidden={!active}
+              >
+                <div
+                  className={cn(!active && "pointer-events-none")}
+                  onClickCapture={(e) => {
+                    // Clicking a peeking slide focuses it (instead of dragging).
+                    if (!active) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIndex(i);
+                    }
+                  }}
+                >
+                  <BeforeAfterSlider
+                    image={ex.image}
+                    alt={ex.alt}
+                    label={ex.label}
+                  />
+                </div>
+              </motion.div>
+            );
+          })}
         </motion.div>
-      </AnimatePresence>
+      </div>
 
       {/* Pager + play/pause control */}
       <div className="mt-6 flex items-center justify-center gap-3">
@@ -92,9 +146,9 @@ export function BeforeAfterCarousel({
         </button>
       </div>
 
-      {/* Caption of the current example, for context. */}
       <p className="mt-4 text-center text-sm text-slate2">
-        Shot on <span className="font-medium text-graphite">{active.label}</span>
+        Shot on{" "}
+        <span className="font-medium text-graphite">{examples[index].label}</span>
       </p>
     </div>
   );
