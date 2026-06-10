@@ -51,9 +51,9 @@ const GRADES = [
   "hue-rotate(160deg) saturate(0.7) contrast(1.1)",
 ];
 
-// 54 tiles (9×6): every source frame appears under different grades, so the
+// 55 tiles (11×5): every source frame appears under different grades, so the
 // wall reads as 50+ distinct looks.
-const TILE_COUNT = 54;
+const TILE_COUNT = 55;
 const TILES = Array.from({ length: TILE_COUNT }, (_, i) => ({
   src: PHOTOS[i % PHOTOS.length],
   filter: GRADES[(i * 7 + Math.floor(i / PHOTOS.length) * 5) % GRADES.length],
@@ -99,7 +99,7 @@ export function BundleMosaic() {
         hidden: {},
         visible: { transition: { staggerChildren: reduced ? 0 : 0.02 } },
       }}
-      className="grid h-full min-h-[340px] w-full grid-cols-9 grid-rows-6 gap-1 p-1.5"
+      className="grid h-full min-h-[340px] w-full grid-cols-11 grid-rows-5 gap-1 p-1.5"
     >
       {TILES.map((tile, i) => (
         <motion.div
@@ -112,7 +112,7 @@ export function BundleMosaic() {
             src={tile.src}
             alt=""
             fill
-            sizes="(max-width: 768px) 11vw, 6vw"
+            sizes="(max-width: 768px) 9vw, 5vw"
             className="object-cover"
             style={tile.filter === "none" ? undefined : { filter: tile.filter }}
           />

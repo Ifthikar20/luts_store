@@ -6,6 +6,7 @@ import { formatMoney } from "@/lib/format";
 import { useCart } from "@/context/CartContext";
 import { track } from "@/lib/analytics";
 import { BundleMosaic } from "./BundleMosaic";
+import { CountUp } from "./CountUp";
 
 export function BundleCard({ bundle }: { bundle: Product }) {
   const reduced = useReducedMotion() ?? false;
@@ -37,6 +38,15 @@ export function BundleCard({ bundle }: { bundle: Product }) {
       <div className="grid items-stretch gap-0 md:grid-cols-2">
         <div className="relative bg-cloud">
           <BundleMosaic />
+          <div className="pointer-events-none absolute bottom-4 left-4 flex items-baseline gap-1.5 rounded-full bg-white/85 px-4 py-2 shadow-lift ring-1 ring-black/5 backdrop-blur">
+            <CountUp
+              to={55}
+              className="font-display text-2xl font-bold leading-none text-graphite"
+            />
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate2">
+              looks
+            </span>
+          </div>
         </div>
 
         <div className="flex flex-col justify-center gap-5 p-8 sm:p-10">
