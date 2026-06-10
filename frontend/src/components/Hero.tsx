@@ -25,15 +25,19 @@ export function Hero() {
       />
 
       <div className="relative">
-        {/* Large rounded media showcase — full-bleed to the viewport so it's
-            the dominant hero centrepiece. */}
+        {/* Large rounded media showcase. Centered full-bleed: w-screen with
+            left-1/2 + -translate-x-1/2 (NO max-width — a cap breaks the
+            translate centering and pushes it off-screen). The inner max-w caps
+            the actual card so it stays a sensible size on ultrawide screens. */}
         <motion.div
           variants={reduced ? undefined : media}
           initial={reduced ? false : "hidden"}
           animate={reduced ? undefined : "visible"}
-          className="relative left-1/2 w-screen max-w-[1800px] -translate-x-1/2 px-4 sm:px-6"
+          className="relative left-1/2 w-screen -translate-x-1/2 px-4 sm:px-6"
         >
-          <HeroVideo sources={HERO_VIDEO.sources} poster={HERO_VIDEO.poster} />
+          <div className="mx-auto max-w-[1600px]">
+            <HeroVideo sources={HERO_VIDEO.sources} poster={HERO_VIDEO.poster} />
+          </div>
         </motion.div>
       </div>
     </section>
