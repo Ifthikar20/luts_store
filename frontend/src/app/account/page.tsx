@@ -57,7 +57,7 @@ export default function AccountPage() {
     );
   }
 
-  // Not signed in -> prompt to log in (login is OPTIONAL).
+  // Not signed in -> prompt to log in (Google / Apple).
   if (!authenticated) {
     return (
       <div className="container-xl pt-36 pb-28 sm:pt-44">
@@ -71,12 +71,12 @@ export default function AccountPage() {
                 Your download library
               </h1>
               <p className="mt-2 text-sm text-slate2">
-                Sign in with your Shopify account to access every LUT
-                you&apos;ve purchased. Signing in is optional.
+                Sign in with Google or Apple to access every LUT you&apos;ve
+                purchased — plus the best deals and a free LUT every two weeks.
               </p>
             </div>
             <Link href="/account/login?next=/account" className="btn-grade">
-              Continue with Shopify
+              Sign in
             </Link>
           </div>
 

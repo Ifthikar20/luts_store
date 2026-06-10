@@ -43,9 +43,17 @@ function resolveMedia(envKey: string, fallback: string): string {
   return (typeof fromEnv === "string" && fromEnv.length > 0 ? fromEnv : fallback) as string;
 }
 
-// The full-bleed hero background clip + its poster fallback.
+// The full-bleed hero clip + its poster fallback. `sources` are tried IN ORDER
+// by the <video> element (a failing source automatically falls through to the
+// next): 1) explicit env override, 2) a self-hosted /hero.mp4 — just drop your
+// clip at frontend/public/hero.mp4 — 3) the remote sample placeholder.
+const heroOverride = process.env.NEXT_PUBLIC_HERO_VIDEO_URL;
 export const HERO_VIDEO = {
-  src: resolveMedia("NEXT_PUBLIC_HERO_VIDEO_URL", CLIPS.blazes),
+  sources: [
+    ...(heroOverride ? [heroOverride] : []),
+    "/hero.mp4",
+    CLIPS.blazes,
+  ],
   poster: resolveMedia(
     "NEXT_PUBLIC_HERO_POSTER_URL",
     "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1920&q=80",

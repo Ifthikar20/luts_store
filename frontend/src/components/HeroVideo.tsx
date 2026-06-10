@@ -10,19 +10,24 @@ import { Play } from "lucide-react";
  *
  * Behaviour:
  *  - Renders the poster image immediately (also the LCP-friendly fallback).
+ *  - `sources` are tried in order by the browser — a 404/failing source falls
+ *    through to the next, so a self-hosted /hero.mp4 wins when present and the
+ *    remote sample is only the last resort.
  *  - The muted clip plays even under prefers-reduced-motion (it's content, not
  *    decorative motion); it is PAUSED when scrolled out of view to save CPU.
  *  - If a browser blocks autoplay (data-saver, etc.) a tap-to-play button shows.
+ *  - If EVERY source fails to load, the poster simply stays — no broken UI.
  */
 export function HeroVideo({
-  src,
+  sources,
   poster,
 }: {
-  src: string;
+  sources: readonly string[];
   poster: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [needsTap, setNeedsTap] = useState(false);
 
   // Pause when offscreen, resume when visible (perf).
@@ -31,6 +36,7 @@ export function HeroVideo({
     if (!v || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
       ([entry]) => {
+        if (failed) return;
         if (entry.isIntersecting)
           void v.play().then(() => setNeedsTap(false)).catch(() => setNeedsTap(true));
         else v.pause();
@@ -39,7 +45,7 @@ export function HeroVideo({
     );
     io.observe(v);
     return () => io.disconnect();
-  }, []);
+  }, [failed]);
 
   const tapToPlay = () => {
     void videoRef.current
@@ -50,7 +56,7 @@ export function HeroVideo({
 
   return (
     <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[28px] bg-cloud shadow-lift sm:rounded-[40px]">
-      {/* Poster — immediate paint + autoplay-blocked fallback. */}
+      {/* Poster — immediate paint + autoplay-blocked / all-sources-failed fallback. */}
       <Image
         src={poster}
         alt=""
@@ -58,7 +64,7 @@ export function HeroVideo({
         priority
         sizes="(max-width: 1024px) 100vw, 1100px"
         className={`object-cover transition-opacity duration-1000 ${
-          ready ? "opacity-0" : "opacity-100"
+          ready && !failed ? "opacity-0" : "opacity-100"
         }`}
       />
 
@@ -71,14 +77,19 @@ export function HeroVideo({
         preload="auto"
         poster={poster}
         onLoadedData={() => setReady(true)}
+        // Fires on the <video> only after ALL <source> candidates fail.
+        onError={() => setFailed(true)}
         className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-          ready ? "opacity-100" : "opacity-0"
+          ready && !failed ? "opacity-100" : "opacity-0"
         }`}
       >
-        <source src={src} type="video/mp4" />
+        {sources.map((src) => (
+          // A failing source automatically falls through to the next sibling.
+          <source key={src} src={src} type="video/mp4" onError={() => {}} />
+        ))}
       </video>
 
-      {needsTap && (
+      {needsTap && !failed && (
         <button
           type="button"
           onClick={tapToPlay}

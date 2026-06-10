@@ -33,7 +33,7 @@ export function Hero() {
           animate={reduced ? undefined : "visible"}
           className="relative left-1/2 w-screen max-w-[1800px] -translate-x-1/2 px-4 sm:px-6"
         >
-          <HeroVideo src={HERO_VIDEO.src} poster={HERO_VIDEO.poster} />
+          <HeroVideo sources={HERO_VIDEO.sources} poster={HERO_VIDEO.poster} />
         </motion.div>
       </div>
     </section>

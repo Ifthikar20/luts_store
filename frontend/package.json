@@ -4,7 +4,9 @@
   "private": true,
   "description": "Framer-style storefront for The Looks Lab — a LUTs (video color-grading) e-commerce store.",
   "scripts": {
+    "predev": "node scripts/sync-logo.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/sync-logo.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
