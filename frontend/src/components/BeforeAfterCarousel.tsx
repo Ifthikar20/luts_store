@@ -56,14 +56,15 @@ export function BeforeAfterCarousel({
   if (examples.length === 0) return null;
 
   // On phones the active slide is near full-width; on larger screens it's
-  // narrower so the previous/next slides peek in on each side.
+  // clearly narrower so the previous/next slides peek in on each side.
   const peek = width >= 768;
-  const slideWidth = width ? width * (peek ? 0.82 : 0.94) : 0;
+  const slideWidth = width ? width * (peek ? 0.66 : 0.86) : 0;
   const centerOffset = width ? (width - slideWidth) / 2 : 0;
   const trackX = centerOffset - index * (slideWidth + GAP);
 
   return (
-    <div className="mt-12">
+    // Full-bleed to the viewport so the neighbouring slides show at the edges.
+    <div className="relative left-1/2 mt-12 w-screen -translate-x-1/2">
       <div ref={viewportRef} className="overflow-hidden">
         <motion.div
           className="flex"
