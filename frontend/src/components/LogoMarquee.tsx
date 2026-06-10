@@ -19,7 +19,7 @@ export function LogoMarquee() {
     <div className="border-y border-hairline bg-paper py-14">
       <Reveal className="container-xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate2">
-          Drops straight into your editor
+          Works on all apps
         </p>
         <div className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center justify-center gap-x-10 gap-y-4">
           {apps.map((app) => (

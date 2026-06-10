@@ -82,7 +82,6 @@ export default async function HomePage() {
       {bundle && (
         <section className="container-xl py-12" id="bundles">
           <SectionHeading
-            eyebrow="Maximum value"
             title="Get every look"
             align="center"
           />
@@ -99,7 +98,6 @@ export default async function HomePage() {
         <div className="container-xl">
           <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
             <SectionHeading
-              eyebrow="Watch the grade"
               title="Looks in motion."
               subtitle="Real cinematic grades, applied to motion — not just stills. Each clip plays automatically as it scrolls into view."
               titleClassName="text-shine inline-block pb-1 font-display text-3xl font-bold leading-tight tracking-tightest sm:text-4xl md:text-5xl"
@@ -120,7 +118,6 @@ export default async function HomePage() {
       {/* Before / After — moved up; multiple camera examples */}
       <section className="container-xl py-24" id="before-after">
         <SectionHeading
-          eyebrow="See the difference"
           title={
             <>
               One LUT. <span className="text-grade-teal">Instant cinema.</span>
@@ -139,7 +136,6 @@ export default async function HomePage() {
       <section className="container-xl py-24" id="featured">
         <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
           <SectionHeading
-            eyebrow="Signature looks"
             title="Featured LUT packs"
             subtitle="Hand-built grades our community reaches for again and again. Hover a card to preview the look in motion."
             titleClassName="font-serif text-4xl font-normal leading-[1.05] tracking-tight text-graphite sm:text-5xl md:text-6xl"
@@ -160,7 +156,6 @@ export default async function HomePage() {
       <section className="bg-cloud py-24" id="how">
         <div className="container-xl">
           <SectionHeading
-            eyebrow="Dead simple"
             title="How it works"
             subtitle="From checkout to graded footage in under two minutes."
             align="center"
@@ -174,7 +169,6 @@ export default async function HomePage() {
       {/* FAQ */}
       <section className="container-xl py-12" id="faq">
         <SectionHeading
-          eyebrow="Good to know"
           title="Frequently asked"
           align="center"
         />
