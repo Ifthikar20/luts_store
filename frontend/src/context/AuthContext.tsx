@@ -9,11 +9,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { getMe, logout as apiLogout, socialLogin } from "@/lib/api";
+import { getSession, logout as apiLogout, socialLogin } from "@/lib/api";
 import type { Customer, SocialProvider } from "@/lib/types";
 
-// Token-based auth for Google / Apple sign-in. The token (from /api/auth/<provider>)
-// is stored by the api layer; on mount we hydrate the account via /api/auth/me.
+// Auth is owned by the Django backend: signing in (Google redirect flow, Apple,
+// or the dev mock) establishes an httpOnly SESSION cookie server-side. This
+// context is pure UI state — on mount we hydrate via GET /api/auth/session.
 interface AuthContextValue {
   customer: Customer | null;
   authenticated: boolean;
@@ -33,8 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
-      const user = await getMe();
-      setCustomer(user ? { email: user.email } : null);
+      const session = await getSession();
+      setCustomer(session.customer ? { email: session.customer.email } : null);
     } catch {
       setCustomer(null);
     }

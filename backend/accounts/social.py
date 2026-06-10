@@ -94,7 +94,15 @@ def social_login(provider: str, token: str) -> User:
         email = _email_from_apple(token)
     else:
         raise SocialAuthError("Unknown sign-in provider.")
+    return user_from_email(email)
 
+
+@transaction.atomic
+def user_from_email(email: str) -> User:
+    """Resolve a VERIFIED provider email to the local ``User`` (created on
+    first sign-in), with the newsletter opt-in and mock-library seeding that
+    every social sign-in gets. Callers must have verified the email already.
+    """
     email = email.strip().lower()
     user, created = User.objects.get_or_create(
         username=email, defaults={"email": email}

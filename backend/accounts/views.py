@@ -1,12 +1,19 @@
 """
-Customer account API (token auth).
+Customer account API.
 
 Base path: ``/api/auth``
 
-* POST /register  {email, password} -> {token, user:{id, email}}
-* POST /login     {email, password} -> {token, user:{id, email}}
-* POST /logout    (auth) -> {status: "ok"}; deletes the caller's token
-* GET  /me        (auth) -> {id, email}
+AUTH IS OWNED BY DJANGO: every successful sign-in (email/password, Google,
+Apple) establishes a server-side Django SESSION (httpOnly cookie) via
+``django.contrib.auth.login``. The legacy DRF token is still returned in JSON
+for back-compat, but the frontend is pure UI and relies on the session.
+
+* POST /register        {email, password} -> {token, user:{id, email}} + session
+* POST /login           {email, password} -> {token, user:{id, email}} + session
+* POST /logout          (auth) -> {status: "ok"}; deletes the caller's token
+* GET  /me              (auth) -> {id, email}
+* GET  /google/login    ?returnTo=/cart -> {mode:"google", authorizeUrl} | {mode:"mock"}
+* GET  /google/callback ?code=&state=   -> 302 to FRONTEND_URL + returnTo (session set)
 
 SECURITY:
 * register/login are rate-limited by a dedicated scoped throttle (``auth``,
@@ -20,9 +27,18 @@ SECURITY:
 """
 from __future__ import annotations
 
+import logging
+import secrets
+from urllib.parse import urlencode
+
+import requests
+from django.conf import settings
+from django.contrib.auth import login as session_login
+from django.shortcuts import redirect
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import (
     api_view,
+    authentication_classes,
     permission_classes,
     throttle_classes,
 )
@@ -30,7 +46,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, SimpleRateThrottle
 
-from . import services, social
+from . import google_oauth, services, social
+
+logger = logging.getLogger(__name__)
+
+# Session keys for the values remembered between /google/login and /callback.
+GOOGLE_SESSION_STATE = "google_oauth_state"
+GOOGLE_SESSION_NONCE = "google_oauth_nonce"
+GOOGLE_SESSION_VERIFIER = "google_oauth_code_verifier"
+GOOGLE_SESSION_RETURN_TO = "google_oauth_return_to"
 
 
 class AuthScopedThrottle(SimpleRateThrottle):
@@ -68,6 +92,7 @@ def register(request):
         user = services.register(email, password)
     except services.AuthError as exc:
         return _bad_request(str(exc))
+    session_login(request, user)  # httpOnly session cookie — Django owns auth
     token, _ = Token.objects.get_or_create(user=user)
     return Response(
         {"token": token.key, "user": services.serialize_user(user)},
@@ -89,6 +114,7 @@ def login(request):
         user = services.login(email, password)
     except services.AuthError as exc:
         return _bad_request(str(exc))
+    session_login(request, user)  # httpOnly session cookie — Django owns auth
     token, _ = Token.objects.get_or_create(user=user)
     return Response({"token": token.key, "user": services.serialize_user(user)})
 
@@ -96,8 +122,12 @@ def login(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def logout(request):
-    # Delete the caller's token so it can no longer be used.
+    from django.contrib.auth import logout as session_logout
+
+    # Delete the caller's token AND clear the Django session so a sign-out is
+    # total no matter which credential authenticated this request.
     Token.objects.filter(user=request.user).delete()
+    session_logout(request)
     return Response({"status": "ok"})
 
 
@@ -114,8 +144,6 @@ def _social(request, provider: str):
     the biweekly free LUT, and returns ``{token, user}`` while also logging the
     browser in via session.
     """
-    from django.contrib.auth import login as session_login
-
     data = request.data if isinstance(request.data, dict) else {}
     token = data.get("credential") or data.get("token") or data.get("identityToken")
     if not token:
@@ -142,3 +170,145 @@ def social_google(request):
 @throttle_classes([AnonRateThrottle, AuthScopedThrottle])
 def social_apple(request):
     return _social(request, "apple")
+
+
+# ---------------------------------------------------------------------------
+# Backend-owned Google OAuth (authorization-code flow + Django session).
+#
+# The frontend is pure UI here: it calls GET /auth/google/login, navigates the
+# browser to the returned Google sign-in URL, and the user lands back on the
+# storefront already logged in (httpOnly session cookie). Mirrors the Shopify
+# Customer Accounts BFF in ``customer_auth``.
+# ---------------------------------------------------------------------------
+def _safe_return_to(value: str | None) -> str:
+    """Only allow a relative, same-app path as the post-login destination.
+
+    Prevents open-redirect: a returnTo of ``https://evil.example`` (or
+    ``//evil``) is rejected and we fall back to ``/account``.
+    """
+    if not value or not value.startswith("/") or value.startswith("//"):
+        return "/account"
+    return value
+
+
+def _google_error_redirect(reason: str):
+    """302 back to the SPA login page with a generic ?error= code."""
+    qs = urlencode({"error": reason})
+    return redirect(f"{settings.FRONTEND_URL}/account/login?{qs}")
+
+
+@api_view(["GET"])
+@authentication_classes([])
+@permission_classes([])
+@throttle_classes([AnonRateThrottle])
+def google_login(request):
+    """Start Google sign-in.
+
+    REAL mode (GOOGLE_OAUTH_ENABLED): build the Google authorize URL (code flow,
+    PKCE S256), stash state/nonce/verifier/returnTo in the session, and return
+    ``{"mode":"google","authorizeUrl":...}`` for the SPA to navigate to. MOCK
+    mode: ``{"mode":"mock"}`` so the SPA shows the demo email form instead.
+    """
+    return_to = _safe_return_to(request.GET.get("returnTo"))
+
+    if not settings.GOOGLE_OAUTH_ENABLED:
+        request.session[GOOGLE_SESSION_RETURN_TO] = return_to
+        return Response({"mode": "mock"})
+
+    auth_req = google_oauth.build_authorize_url(
+        client_id=settings.GOOGLE_CLIENT_ID,
+        redirect_uri=settings.GOOGLE_REDIRECT_URI,
+    )
+    request.session[GOOGLE_SESSION_STATE] = auth_req.state
+    request.session[GOOGLE_SESSION_NONCE] = auth_req.nonce
+    request.session[GOOGLE_SESSION_VERIFIER] = auth_req.code_verifier
+    request.session[GOOGLE_SESSION_RETURN_TO] = return_to
+
+    return Response({"mode": "google", "authorizeUrl": auth_req.authorize_url})
+
+
+@api_view(["GET"])
+@authentication_classes([])
+@permission_classes([])
+@throttle_classes([AnonRateThrottle])
+def google_callback(request):
+    """Finish the Google code flow and establish a Django session.
+
+    Disabled (404) in MOCK mode — there is no real Google to call back from.
+    Any failure 302s to FRONTEND_URL + /account/login?error=<code> so the user
+    always lands back on the UI.
+    """
+    if not settings.GOOGLE_OAUTH_ENABLED:
+        return Response({"detail": "Not found."}, status=404)
+
+    # 1. Validate the OAuth state against the session (constant-time).
+    returned_state = request.GET.get("state", "")
+    session_state = request.session.get(GOOGLE_SESSION_STATE, "")
+    if not session_state or not secrets.compare_digest(
+        str(returned_state), str(session_state)
+    ):
+        return _google_error_redirect("state_mismatch")
+
+    code = request.GET.get("code")
+    if not code:
+        return _google_error_redirect("missing_code")
+
+    code_verifier = request.session.get(GOOGLE_SESSION_VERIFIER, "")
+    expected_nonce = request.session.get(GOOGLE_SESSION_NONCE, "")
+    return_to = _safe_return_to(request.session.get(GOOGLE_SESSION_RETURN_TO))
+
+    # 2. Exchange the authorization code for tokens, server-to-server.
+    token_body = google_oauth.build_token_request(
+        code=code,
+        client_id=settings.GOOGLE_CLIENT_ID,
+        client_secret=settings.GOOGLE_CLIENT_SECRET,
+        redirect_uri=settings.GOOGLE_REDIRECT_URI,
+        code_verifier=code_verifier,
+    )
+    try:
+        resp = requests.post(
+            google_oauth.GOOGLE_TOKEN_ENDPOINT,
+            data=token_body,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            timeout=10,
+        )
+    except requests.RequestException:
+        logger.exception("Google token exchange request failed")
+        return _google_error_redirect("token_exchange_failed")
+
+    if resp.status_code != 200:
+        logger.warning("Google token endpoint returned %s", resp.status_code)
+        return _google_error_redirect("token_exchange_failed")
+
+    try:
+        tokens = resp.json()
+    except ValueError:
+        return _google_error_redirect("token_exchange_failed")
+
+    id_token = tokens.get("id_token")
+    if not id_token:
+        return _google_error_redirect("missing_id_token")
+
+    # 3. Verify iss/aud/nonce/exp/email_verified and extract the email.
+    try:
+        email = google_oauth.email_from_id_token(
+            id_token,
+            client_id=settings.GOOGLE_CLIENT_ID,
+            expected_nonce=expected_nonce,
+        )
+    except google_oauth.OAuthError:
+        logger.warning("Google id_token verification failed", exc_info=True)
+        return _google_error_redirect("invalid_id_token")
+
+    # 4. Resolve the local user (newsletter opt-in etc.) and log the session in.
+    user = social.user_from_email(email)
+    for key in (
+        GOOGLE_SESSION_STATE,
+        GOOGLE_SESSION_NONCE,
+        GOOGLE_SESSION_VERIFIER,
+        GOOGLE_SESSION_RETURN_TO,
+    ):
+        request.session.pop(key, None)
+    session_login(request, user)
+
+    return redirect(f"{settings.FRONTEND_URL}{return_to}")

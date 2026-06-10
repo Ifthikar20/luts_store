@@ -5,21 +5,17 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Gift, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { googleLogin } from "@/lib/api";
 import type { SocialProvider } from "@/lib/types";
 
-// The OAuth redirect lands back here; this exact path must be registered as an
-// allowed redirect URI in the Google / Apple console.
+// The Apple redirect lands back here; this exact path must be registered as an
+// allowed redirect URI in the Apple console. (Google sign-in is fully owned by
+// the Django backend and never comes through here.)
 const CALLBACK_PATH = "/account/login";
 const OAUTH_KEY = "luts:oauth";
 
-function authorizeUrlClientId(provider: SocialProvider): string | undefined {
-  return provider === "google"
-    ? process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-    : process.env.NEXT_PUBLIC_APPLE_CLIENT_ID;
-}
-
-function authorizeUrl(provider: SocialProvider, nextPath: string): string | null {
-  const clientId = authorizeUrlClientId(provider);
+function appleAuthorizeUrl(nextPath: string): string | null {
+  const clientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID;
   if (!clientId) return null;
 
   const nonce =
@@ -29,28 +25,15 @@ function authorizeUrl(provider: SocialProvider, nextPath: string): string | null
   try {
     sessionStorage.setItem(
       OAUTH_KEY,
-      JSON.stringify({ provider, next: nextPath, nonce }),
+      JSON.stringify({ provider: "apple", next: nextPath, nonce }),
     );
   } catch {
     /* storage blocked — sign-in can still proceed, just no post-redirect route */
   }
 
-  const redirectUri = window.location.origin + CALLBACK_PATH;
-  if (provider === "google") {
-    const p = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      response_type: "id_token",
-      scope: "openid email profile",
-      nonce,
-      prompt: "select_account",
-    });
-    return `https://accounts.google.com/o/oauth2/v2/auth?${p}`;
-  }
-  // Apple
   const p = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: redirectUri,
+    redirect_uri: window.location.origin + CALLBACK_PATH,
     response_type: "id_token",
     response_mode: "fragment",
     scope: "email",
@@ -60,11 +43,15 @@ function authorizeUrl(provider: SocialProvider, nextPath: string): string | null
 }
 
 /**
- * Google / Apple sign-in panel.
+ * Google / Apple sign-in panel. The UI is intentionally thin — auth itself is
+ * owned by the Django backend.
  *
- * - Configured (NEXT_PUBLIC_*_CLIENT_ID set): the button redirects straight to
- *   the provider's hosted sign-in; on return, the id_token in the URL fragment
- *   is read here and exchanged for a session.
+ * - Google: one click navigates to /api/auth/google/login on the backend, which
+ *   sends the browser straight to Google's sign-in screen. Django completes the
+ *   OAuth exchange, sets the httpOnly session cookie, and redirects back here.
+ * - Apple (NEXT_PUBLIC_APPLE_CLIENT_ID set): redirects to Apple's hosted
+ *   sign-in; the returned identity token is handed to the backend to verify
+ *   and establish the same session.
  * - Not configured: a dev fallback collects an email and signs in with a
  *   "mock:<email>" token (the backend only trusts it when unconfigured).
  *
@@ -79,9 +66,23 @@ export function SignInPanel({ onDone }: { onDone?: () => void }) {
   const [needEmail, setNeedEmail] = useState<SocialProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const configured = (p: SocialProvider) => Boolean(authorizeUrlClientId(p));
+  // Surface a failed backend OAuth round-trip (?error=... on the login page).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get("error")) return;
+    setError("Sign-in failed. Please try again.");
+    params.delete("error");
+    const qs = params.toString();
+    history.replaceState(
+      null,
+      "",
+      window.location.pathname + (qs ? `?${qs}` : ""),
+    );
+  }, []);
 
-  // Handle the provider redirect: read the id_token from the URL fragment.
+  // Handle the Apple redirect: read the id_token from the URL fragment and
+  // hand it to the backend to verify + establish the session.
   useEffect(() => {
     if (typeof window === "undefined" || !window.location.hash) return;
     const hash = new URLSearchParams(window.location.hash.slice(1));
@@ -96,7 +97,7 @@ export function SignInPanel({ onDone }: { onDone?: () => void }) {
     }
     // Clear the token from the address bar immediately.
     history.replaceState(null, "", window.location.pathname + window.location.search);
-    const provider = stored.provider ?? "google";
+    const provider = stored.provider ?? "apple";
     setPending(provider);
     signIn(provider, idToken)
       .then(() => (stored.next ? router.replace(stored.next) : onDone?.()))
@@ -107,16 +108,35 @@ export function SignInPanel({ onDone }: { onDone?: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function start(provider: SocialProvider) {
+  async function startGoogle() {
     setError(null);
-    const url = authorizeUrl(provider, window.location.pathname);
+    setPending("google");
+    try {
+      const res = await googleLogin(window.location.pathname);
+      if (res.mode === "google" && res.authorizeUrl) {
+        // Seamless: straight to Google's account screen. Django handles the
+        // callback and drops the user back on this page, signed in.
+        window.location.assign(res.authorizeUrl);
+        return;
+      }
+      // Backend not configured for Google -> dev fallback email form.
+      setPending(null);
+      setNeedEmail("google");
+    } catch {
+      setError("Sign-in is unavailable right now. Please try again.");
+      setPending(null);
+    }
+  }
+
+  function startApple() {
+    setError(null);
+    const url = appleAuthorizeUrl(window.location.pathname);
     if (url) {
-      // Configured -> go straight to the provider's hosted sign-in.
       window.location.assign(url);
       return;
     }
     // Dev fallback: collect an email and use a mock token.
-    setNeedEmail(provider);
+    setNeedEmail("apple");
   }
 
   async function complete(e: React.FormEvent) {
@@ -164,15 +184,22 @@ export function SignInPanel({ onDone }: { onDone?: () => void }) {
         <div className="mt-6 space-y-3">
           <button
             type="button"
-            onClick={() => start("google")}
-            className="flex w-full items-center justify-center gap-3 rounded-full border border-hairline bg-white px-6 py-3 text-sm font-semibold text-graphite shadow-soft transition-colors hover:bg-cloud"
+            onClick={startGoogle}
+            disabled={pending !== null}
+            className="flex w-full items-center justify-center gap-3 rounded-full border border-hairline bg-white px-6 py-3 text-sm font-semibold text-graphite shadow-soft transition-colors hover:bg-cloud disabled:opacity-60"
           >
-            <GoogleGlyph /> Continue with Google
+            {pending === "google" ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <GoogleGlyph />
+            )}{" "}
+            Continue with Google
           </button>
           <button
             type="button"
-            onClick={() => start("apple")}
-            className="flex w-full items-center justify-center gap-2.5 rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            onClick={startApple}
+            disabled={pending !== null}
+            className="flex w-full items-center justify-center gap-2.5 rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             <AppleGlyph /> Continue with Apple
           </button>
@@ -180,9 +207,7 @@ export function SignInPanel({ onDone }: { onDone?: () => void }) {
       ) : (
         <form onSubmit={complete} className="mt-6 space-y-3">
           <p className="rounded-2xl border border-hairline bg-cloud px-4 py-3 text-xs text-slate2">
-            {configured(needEmail)
-              ? "Confirm the email for your account."
-              : `Demo mode — ${needEmail} isn't configured. Enter any email to sign in locally.`}
+            {`Demo mode — ${needEmail} isn't configured. Enter any email to sign in locally.`}
           </p>
           <input
             type="email"

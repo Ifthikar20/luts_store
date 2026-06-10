@@ -173,6 +173,15 @@ export interface AuthResponse {
   user: User;
 }
 
+// Response from GET /api/auth/google/login.
+// - mode "google": navigate the browser to `authorizeUrl` (Google's hosted
+//   sign-in screen; the Django backend owns the whole OAuth flow + session).
+// - mode "mock": Google isn't configured — the SPA shows the demo email field.
+export interface GoogleLoginResponse {
+  mode: "google" | "mock";
+  authorizeUrl?: string;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Shopify Customer Accounts portal (session-based, OPTIONAL login)           */
 /* -------------------------------------------------------------------------- */

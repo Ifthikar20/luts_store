@@ -21,7 +21,23 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, SimpleRateThrottle
 
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+
 from . import services
+
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    """Session auth WITHOUT DRF's CSRF check, for the SPA checkout POST.
+
+    The storefront runs on a different origin and our CSRF cookie is httpOnly,
+    so the SPA cannot echo a CSRF token. The residual cross-site risk is low:
+    ``SameSite=Lax`` already blocks cross-site POST cookies in modern browsers,
+    the request needs the victim's unguessable ``cartId`` to do anything, and
+    starting a checkout for the user's own cart is not a damaging state change.
+    """
+
+    def enforce_csrf(self, request):
+        return  # CSRF intentionally skipped — see class docstring.
 
 
 class SensitiveScopedThrottle(SimpleRateThrottle):
@@ -42,12 +58,15 @@ class SensitiveScopedThrottle(SimpleRateThrottle):
 
 
 @api_view(["POST"])
+@authentication_classes([CsrfExemptSessionAuthentication, TokenAuthentication])
 @throttle_classes([AnonRateThrottle, SensitiveScopedThrottle])
 def checkout(request):
     """Begin checkout for a cart. Returns ``{mode, checkoutUrl}``.
 
     Buying requires a signed-in account (Google/Apple). Anonymous callers get a
     401 with ``code: "login_required"`` so the storefront can prompt sign-in.
+    The Django session cookie (set by any sign-in) is the primary credential;
+    a legacy DRF token still works.
     """
     if not request.user or not request.user.is_authenticated:
         return Response(

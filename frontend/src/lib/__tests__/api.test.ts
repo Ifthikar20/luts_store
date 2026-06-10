@@ -8,8 +8,11 @@ import {
   getMyDownloads,
   getProducts,
   getSession,
+  googleLogin,
   login,
+  logout,
   mockCompleteLogin,
+  socialLogin,
   resendDownloads,
   setAuthToken,
   shopifyLogin,
@@ -152,6 +155,8 @@ describe("checkout endpoints (guest, login-free)", () => {
     expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/checkout`);
     const init = lastFetchInit(fetchSpy);
     expect(init.method).toBe("POST");
+    // The Django session cookie is the checkout credential.
+    expect(init.credentials).toBe("include");
     expect(decodeBody(init.body)).toEqual({ cartId: "c1" });
   });
 
@@ -184,6 +189,48 @@ describe("checkout endpoints (guest, login-free)", () => {
       jsonResponse({ detail: "Cart is empty." }, 400),
     );
     await expect(createCheckout("c1")).rejects.toThrow("Cart is empty.");
+  });
+});
+
+describe("backend-owned auth (Django session, credentials:include)", () => {
+  it("googleLogin GETs /auth/google/login with returnTo and sends cookies", async () => {
+    fetchSpy.mockResolvedValue(
+      jsonResponse({ mode: "google", authorizeUrl: "https://accounts.google.com/x" }),
+    );
+    const res = await googleLogin("/cart");
+    expect(res).toEqual({
+      mode: "google",
+      authorizeUrl: "https://accounts.google.com/x",
+    });
+    const url = new URL(lastFetchUrl(fetchSpy));
+    expect(url.pathname).toBe("/api/auth/google/login");
+    expect(url.searchParams.get("returnTo")).toBe("/cart");
+    expect(lastFetchInit(fetchSpy).credentials).toBe("include");
+  });
+
+  it("socialLogin POSTs the credential with cookies and stores NO token", async () => {
+    fetchSpy.mockResolvedValue(
+      jsonResponse({ token: "tok-xyz", user: { id: 1, email: "a@b.com" } }),
+    );
+    const user = await socialLogin("google", "mock:a@b.com");
+    expect(user).toEqual({ id: 1, email: "a@b.com" });
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/auth/google`);
+    const init = lastFetchInit(fetchSpy);
+    expect(init.method).toBe("POST");
+    expect(init.credentials).toBe("include");
+    // Auth is the httpOnly session — no JS-readable token is persisted.
+    expect(getAuthToken()).toBeNull();
+  });
+
+  it("logout POSTs /auth/session/logout with cookies and clears any token", async () => {
+    setAuthToken("legacy-token");
+    fetchSpy.mockResolvedValue(jsonResponse({ ok: true }));
+    await logout();
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/auth/session/logout`);
+    const init = lastFetchInit(fetchSpy);
+    expect(init.method).toBe("POST");
+    expect(init.credentials).toBe("include");
+    expect(getAuthToken()).toBeNull();
   });
 });
 

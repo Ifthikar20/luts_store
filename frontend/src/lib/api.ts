@@ -22,6 +22,7 @@ import type {
   DownloadItem,
   EngagementResponse,
   Facets,
+  GoogleLoginResponse,
   MockCompleteResponse,
   OrderConfirmation,
   Product,
@@ -59,12 +60,12 @@ export class ApiError extends Error {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Auth token storage (in-memory + localStorage)                              */
+/* LEGACY auth token storage (in-memory + localStorage)                       */
 /* -------------------------------------------------------------------------- */
-// The token is held in a module-level variable for synchronous header
-// injection and mirrored to localStorage so it survives reloads.
-// PRODUCTION NOTE: a token readable by JS is vulnerable to XSS theft; prefer
-// httpOnly cookies or Shopify Customer Accounts in production.
+// LEGACY back-compat only. Auth is owned by the Django backend via an httpOnly
+// SESSION cookie (credentials:'include'); new sign-ins no longer store a
+// JS-readable token. This plumbing remains so an existing stored token keeps
+// working and gets cleared on logout.
 const TOKEN_KEY = "looks-lab:authToken";
 let authToken: string | null = null;
 
@@ -403,8 +404,12 @@ export async function createCheckout(
   cartId: string,
   email?: string,
 ): Promise<CheckoutResponse> {
+  // session:true — checkout requires sign-in and the httpOnly Django session
+  // cookie is the credential (the backend also accepts a legacy token).
   return request<CheckoutResponse>("/checkout", {
     method: "POST",
+    session: true,
+    auth: true,
     body: JSON.stringify(email ? { cartId, email } : { cartId }),
   });
 }
@@ -450,28 +455,45 @@ export async function login(
   return res;
 }
 
+// Begin Google sign-in. The DJANGO BACKEND owns the whole OAuth flow: mode
+// "google" -> navigate the browser to `authorizeUrl` (Google's sign-in screen;
+// the backend callback sets the httpOnly session and bounces back to
+// `returnTo`). mode "mock" -> the SPA shows the demo email field instead.
+// session:true so the state stashed by the backend rides the session cookie.
+export async function googleLogin(
+  returnTo = "/account",
+): Promise<GoogleLoginResponse> {
+  return request<GoogleLoginResponse>(
+    `/auth/google/login?returnTo=${encodeURIComponent(returnTo)}`,
+    { method: "GET", session: true },
+  );
+}
+
 // Sign in with Google/Apple. `credential` is the provider identity token (or a
-// "mock:<email>" token in dev). Stores the returned token and returns the user.
+// "mock:<email>" token in dev). The backend verifies it and establishes the
+// httpOnly Django session (session:true persists the cookie); no JS-readable
+// token is stored.
 export async function socialLogin(
   provider: SocialProvider,
   credential: string,
 ): Promise<User> {
   const res = await request<AuthResponse>(`/auth/${provider}`, {
     method: "POST",
+    session: true,
     body: JSON.stringify({ credential }),
   });
-  setAuthToken(res.token);
   return res.user;
 }
 
 export async function logout(): Promise<void> {
   try {
-    await request<{ status: string }>("/auth/logout", {
+    // Clears the httpOnly Django session, however the user signed in.
+    await request<{ ok: boolean }>("/auth/session/logout", {
       method: "POST",
-      auth: true,
+      session: true,
     });
   } finally {
-    // Always clear the local token, even if the server call fails.
+    // Drop any legacy localStorage token too, even if the server call fails.
     setAuthToken(null);
   }
 }

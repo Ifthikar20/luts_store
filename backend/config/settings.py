@@ -77,8 +77,24 @@ STRIPE_ENABLED = bool(STRIPE_SECRET_KEY.strip())
 # "mock:<email>" token is accepted so local/test sign-in works with no creds
 # (mirrors the Stripe/Shopify mock pattern).
 # ---------------------------------------------------------------------------
-GOOGLE_CLIENT_ID = config("GOOGLE_CLIENT_ID", default="")
+GOOGLE_CLIENT_ID = config("GOOGLE_CLIENT_ID", default="").strip()
 APPLE_CLIENT_ID = config("APPLE_CLIENT_ID", default="")  # Apple "Services ID"
+
+# Server-side Google OAuth (authorization-code flow). The backend owns the whole
+# flow — it redirects the browser to Google's sign-in screen, receives the
+# callback, exchanges the code, verifies the id_token, and establishes a Django
+# SESSION (httpOnly cookie). The frontend is pure UI: it just navigates to
+# /api/auth/google/login. Requires a "Web application" OAuth client in
+# console.cloud.google.com with GOOGLE_REDIRECT_URI registered as an authorized
+# redirect URI.
+GOOGLE_CLIENT_SECRET = config("GOOGLE_CLIENT_SECRET", default="").strip()
+GOOGLE_REDIRECT_URI = config(
+    "GOOGLE_REDIRECT_URI",
+    default="http://localhost:8000/api/auth/google/callback",
+)
+# Enabled only when BOTH the client id and secret are configured. When disabled
+# the login endpoint reports MOCK mode so local dev keeps the demo email form.
+GOOGLE_OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 
 # ---------------------------------------------------------------------------
 # Shopify Customer Accounts (OAuth 2.0 / OpenID Connect, PKCE) — OPTIONAL login
