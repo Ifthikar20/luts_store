@@ -52,6 +52,10 @@ run_step() { # returns 0 = ok (mark done), 10 = intentionally skipped
 
 breakpoint_after() { # pause after 03 so DNS can be pointed at the EIP
   [ "$1" = "03" ] || return 0
+  if [ "${USE_IP:-0}" = "1" ]; then
+    say "USE_IP=1 — skipping DNS breakpoint; deploying on http://${EIP}"
+    return 0
+  fi
   done_flag 04 && return 0
   echo
   warn "BREAKPOINT — before step 04, create two DNS A records pointing at the Elastic IP:"

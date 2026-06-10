@@ -50,6 +50,23 @@ cp production-secrets.env.example production-secrets.env   # fill in Stripe + SM
 Done. The storefront is at `https://<DOMAIN>`, the API at
 `https://<API_DOMAIN>/api/health`.
 
+### Going live on the IP first, domain later
+
+No domain yet? Set `USE_IP=1` in `config.env` and deploy on the Elastic IP over
+plain HTTP — the storefront serves on `http://<EIP>/` and the API on
+`http://<EIP>/api`. `deploy-all.sh` skips the DNS breakpoint in this mode.
+
+When your domain is ready: set `USE_IP=0`, fill in `DOMAIN`/`API_DOMAIN`, point
+the two A records at the EIP, then re-run just the app step:
+
+```bash
+./deploy-all.sh --only 4      # rewrites env + Caddy for HTTPS, redeploys
+```
+
+Caddy issues TLS automatically once DNS resolves. (IP mode is HTTP-only — fine
+for testing, but don't put real Stripe live keys behind it; switch to the domain
+first so traffic is encrypted.)
+
 ### Reusing a key you already have (e.g. `fynda-deploy.pem`)
 
 By default 03 creates a fresh key pair and saves `aws/<KEY_NAME>.pem`. To use a
