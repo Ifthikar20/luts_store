@@ -52,8 +52,15 @@ def begin_checkout(cart_id: str, email: str | None = None) -> dict[str, Any]:
 
     if settings.MOCK_MODE:
         # Relative path -> the frontend renders a demo checkout page. The cart id
-        # is echoed so the demo can call /api/checkout/complete next.
-        return {"mode": "mock", "checkoutUrl": f"/checkout?cart={cart_id}"}
+        # is echoed so the demo can call /api/checkout/complete next; the resolved
+        # receipt email is echoed so the demo page can prefill it (mirrors
+        # Stripe's customer_email prefill on the hosted page).
+        from urllib.parse import urlencode
+
+        params = {"cart": cart_id}
+        if email:
+            params["email"] = email
+        return {"mode": "mock", "checkoutUrl": f"/checkout?{urlencode(params)}"}
 
     # Real mode: hand off to Shopify's hosted checkout. The Storefront cart
     # already exposes a checkoutUrl; return it directly.

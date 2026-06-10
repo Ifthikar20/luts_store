@@ -5,14 +5,15 @@ import Link from "next/link";
 import { Suspense, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { SignInPanel } from "@/components/SignInPanel";
+import { SignInPanel, safeNextPath } from "@/components/SignInPanel";
 import { Reveal } from "@/components/motion/Reveal";
 
 function AccountAuthForm() {
   const router = useRouter();
   const params = useSearchParams();
   const { authenticated } = useAuth();
-  const next = params.get("next") || "/account";
+  // Open-redirect guard: only a relative same-app path is honored.
+  const next = safeNextPath(params.get("next")) ?? "/account";
 
   // Already signed in -> bounce to the intended destination.
   useEffect(() => {

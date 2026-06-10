@@ -19,10 +19,13 @@ function CheckoutContent() {
   const router = useRouter();
   const params = useSearchParams();
   const cartId = params.get("cart");
+  // The BFF echoes the resolved receipt email (account or guest) for prefill —
+  // mirrors Stripe's customer_email prefill on the hosted page.
+  const prefillEmail = params.get("email") ?? "";
 
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(prefillEmail);
   const [touched, setTouched] = useState(false);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -11,6 +11,8 @@ buy and download without an account.
 from __future__ import annotations
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import (
     api_view,
@@ -63,25 +65,50 @@ class SensitiveScopedThrottle(SimpleRateThrottle):
 def checkout(request):
     """Begin checkout for a cart. Returns ``{mode, checkoutUrl}``.
 
-    Buying requires a signed-in account (Google/Apple). Anonymous callers get a
-    401 with ``code: "login_required"`` so the storefront can prompt sign-in.
-    The Django session cookie (set by any sign-in) is the primary credential;
-    a legacy DRF token still works.
-    """
-    if not request.user or not request.user.is_authenticated:
-        return Response(
-            {
-                "detail": "Please sign in to complete your purchase.",
-                "code": "login_required",
-            },
-            status=401,
-        )
+    Sign-in is OPTIONAL. The receipt email is resolved server-side:
+    * Signed in (Django session cookie): their account email, unless the body
+      provides a different (valid) one.
+    * Guest: a valid ``email`` is REQUIRED so Stripe can send the receipt and
+      our webhook can deliver the download links. Missing/invalid -> 400 with
+      ``code: "email_required"`` / ``"email_invalid"`` so the storefront can
+      prompt for it (or offer sign-in).
 
+    The email is forwarded to Stripe as ``customer_email`` (prefilled on the
+    hosted Checkout page); order + downloads + receipts all key off it.
+    """
     data = request.data if isinstance(request.data, dict) else {}
     cart_id = data.get("cartId")
-    email = data.get("email")
     if not cart_id:
         return Response({"detail": "`cartId` is required."}, status=400)
+
+    raw_email = str(data.get("email") or "").strip().lower()
+    authenticated = bool(request.user and request.user.is_authenticated)
+
+    if raw_email:
+        try:
+            validate_email(raw_email)
+        except ValidationError:
+            return Response(
+                {
+                    "detail": "That email doesn't look right — please check it.",
+                    "code": "email_invalid",
+                },
+                status=400,
+            )
+        email = raw_email
+    elif authenticated and request.user.email:
+        email = request.user.email
+    else:
+        return Response(
+            {
+                "detail": (
+                    "Add your email to get your receipt and downloads, "
+                    "or sign in."
+                ),
+                "code": "email_required",
+            },
+            status=400,
+        )
 
     try:
         result = services.begin_checkout(str(cart_id), email)

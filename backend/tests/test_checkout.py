@@ -58,9 +58,10 @@ def test_mock_checkout_returns_relative_url(client):
     assert resp.status_code == 200
     body = resp.json()
     assert body["mode"] == "mock"
-    assert body["checkoutUrl"] == f"/checkout?cart={cart_id}"
-    # Relative path (frontend renders a demo checkout page).
-    assert body["checkoutUrl"].startswith("/")
+    # Relative path (frontend renders a demo checkout page); the signed-in
+    # account's email is resolved server-side and echoed for prefill.
+    assert body["checkoutUrl"].startswith(f"/checkout?cart={cart_id}")
+    assert "buyer%40example.com" in body["checkoutUrl"]
 
 
 def test_checkout_unknown_cart_404(client):
@@ -77,13 +78,37 @@ def test_checkout_requires_cart_id(client):
     assert resp.status_code == 400
 
 
-def test_checkout_requires_login(anon_client):
-    """Anonymous buyers are prompted to sign in (401, code login_required)."""
+def test_guest_checkout_requires_email(anon_client):
+    """Guests can buy WITHOUT an account, but must give a receipt email."""
     resp = anon_client.post(
         "/api/checkout", data={"cartId": "x"}, format="json"
     )
-    assert resp.status_code == 401
-    assert resp.json()["code"] == "login_required"
+    assert resp.status_code == 400
+    assert resp.json()["code"] == "email_required"
+
+
+def test_guest_checkout_rejects_bad_email(anon_client):
+    resp = anon_client.post(
+        "/api/checkout",
+        data={"cartId": "x", "email": "not-an-email"},
+        format="json",
+    )
+    assert resp.status_code == 400
+    assert resp.json()["code"] == "email_invalid"
+
+
+def test_guest_checkout_with_email_succeeds(anon_client):
+    cart_id, _ = _make_cart(anon_client)
+    resp = anon_client.post(
+        "/api/checkout",
+        data={"cartId": cart_id, "email": "Guest@Example.com"},
+        format="json",
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["mode"] == "mock"
+    # Email is normalized lowercase and carried to the checkout surface.
+    assert "guest%40example.com" in body["checkoutUrl"]
 
 
 # ---------------------------------------------------------------------------

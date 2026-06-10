@@ -14,6 +14,14 @@ import type { SocialProvider } from "@/lib/types";
 const CALLBACK_PATH = "/account/login";
 const OAUTH_KEY = "luts:oauth";
 
+// Client-side redirects only ever go to a relative, same-app path. Anything
+// else (absolute URLs, protocol-relative "//host") is discarded — mirrors the
+// backend's _safe_return_to open-redirect guard.
+export function safeNextPath(value: string | null | undefined): string | null {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+}
+
 function appleAuthorizeUrl(nextPath: string): string | null {
   const clientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID;
   if (!clientId) return null;
@@ -98,9 +106,10 @@ export function SignInPanel({ onDone }: { onDone?: () => void }) {
     // Clear the token from the address bar immediately.
     history.replaceState(null, "", window.location.pathname + window.location.search);
     const provider = stored.provider ?? "apple";
+    const next = safeNextPath(stored.next);
     setPending(provider);
     signIn(provider, idToken)
-      .then(() => (stored.next ? router.replace(stored.next) : onDone?.()))
+      .then(() => (next ? router.replace(next) : onDone?.()))
       .catch(() => {
         setError("Sign-in failed. Please try again.");
         setPending(null);
@@ -113,9 +122,13 @@ export function SignInPanel({ onDone }: { onDone?: () => void }) {
     setPending("google");
     try {
       const res = await googleLogin(window.location.pathname);
-      if (res.mode === "google" && res.authorizeUrl) {
+      if (
+        res.mode === "google" &&
+        res.authorizeUrl?.startsWith("https://accounts.google.com/")
+      ) {
         // Seamless: straight to Google's account screen. Django handles the
-        // callback and drops the user back on this page, signed in.
+        // callback and drops the user back on this page, signed in. The URL is
+        // backend-built; the origin pin above is defense in depth.
         window.location.assign(res.authorizeUrl);
         return;
       }
@@ -159,9 +172,10 @@ export function SignInPanel({ onDone }: { onDone?: () => void }) {
       <div className="flex items-start gap-3 rounded-2xl bg-sky/5 p-4">
         <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-sky" />
         <p className="text-sm text-slate2">
-          Sign in to buy — and get the{" "}
-          <span className="font-semibold text-graphite">best deals</span> plus a{" "}
-          <span className="font-semibold text-graphite">free LUT every two weeks</span>,
+          Sign in to keep every purchase in your{" "}
+          <span className="font-semibold text-graphite">download library</span> — and
+          get the <span className="font-semibold text-graphite">best deals</span> plus
+          a <span className="font-semibold text-graphite">free LUT every two weeks</span>,
           straight to your inbox.
         </p>
       </div>

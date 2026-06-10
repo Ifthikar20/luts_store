@@ -13,46 +13,68 @@ import { formatMoney } from "@/lib/format";
 import { Reveal } from "@/components/motion/Reveal";
 import { SignInPanel } from "@/components/SignInPanel";
 
+// Lightweight email check — the API is authoritative, this is just UX.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function CartPage() {
   const router = useRouter();
   const { cart, updateItem, removeItem, loading } = useCart();
   const { authenticated } = useAuth();
   const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [needSignIn, setNeedSignIn] = useState(false);
+  const [chooseHow, setChooseHow] = useState(false);
+  const [guestEmail, setGuestEmail] = useState("");
   const lines = cart?.lines ?? [];
 
   // Checkout: the BFF decides the mode and owns the authoritative checkout.
   // - "stripe"/"shopify": full-page redirect to the hosted checkout (absolute URL).
   // - "mock":             in-app demo checkout ("/checkout?cart=...") via the router.
-  // We never compute prices or build a checkout on the client.
-  // Begin checkout, gating on sign-in first (buying requires an account).
+  // We never compute prices or build a checkout on the client. Sign-in is
+  // OPTIONAL: guests check out with just an email (for the Stripe receipt +
+  // download links); signing in additionally fills their library.
   function checkout() {
     if (!authenticated) {
-      setNeedSignIn(true);
+      setChooseHow(true);
       return;
     }
     void startCheckout();
   }
 
-  // The authoritative checkout call (BFF decides mode). Called after sign-in too.
-  async function startCheckout() {
+  function guestCheckout(e: React.FormEvent) {
+    e.preventDefault();
+    const email = guestEmail.trim();
+    if (!EMAIL_RE.test(email)) {
+      setError("Add a valid email so we can send your receipt and downloads.");
+      return;
+    }
+    void startCheckout(email);
+  }
+
+  // The authoritative checkout call (BFF resolves the receipt email: the
+  // signed-in account's, or the guest email passed here).
+  async function startCheckout(email?: string) {
     if (!cart?.id || redirecting) return;
     setRedirecting(true);
     setError(null);
-    setNeedSignIn(false);
     track("begin_checkout", { path: "/cart" });
     try {
-      const { mode, checkoutUrl } = await createCheckout(cart.id);
+      const { mode, checkoutUrl } = await createCheckout(cart.id, email);
+      setChooseHow(false);
       if (mode === "mock") {
         router.push(checkoutUrl);
-      } else {
+      } else if (/^https:\/\//.test(checkoutUrl)) {
+        // Hosted checkout (Stripe/Shopify) — only ever a https URL.
         window.location.assign(checkoutUrl);
+      } else {
+        setError("We couldn't start checkout just now. Please try again.");
+        setRedirecting(false);
       }
     } catch (err) {
-      // Defense in depth: the server also gates checkout (401 login_required).
-      if (err instanceof ApiError && err.status === 401) {
-        setNeedSignIn(true);
+      // The server is authoritative: it asks for an email (guest) or rejects
+      // a bad one. Surface its message and reopen the chooser.
+      if (err instanceof ApiError && (err.status === 400 || err.status === 401)) {
+        setError(err.message);
+        setChooseHow(true);
       } else {
         setError("We couldn't start checkout just now. Please try again.");
       }
@@ -183,9 +205,46 @@ export default function CartPage() {
                 </div>
               </dl>
 
-              {needSignIn && !authenticated ? (
+              {chooseHow && !authenticated ? (
                 <div className="mt-6">
-                  <SignInPanel onDone={startCheckout} />
+                  {/* Option 1 — sign in (library + deals), then checkout. */}
+                  <SignInPanel onDone={() => startCheckout()} />
+
+                  {/* Option 2 — guest checkout with just a receipt email. */}
+                  <div className="my-5 flex items-center gap-3">
+                    <span className="h-px flex-1 bg-hairline" />
+                    <span className="text-xs uppercase tracking-wide text-slate2">
+                      or check out as a guest
+                    </span>
+                    <span className="h-px flex-1 bg-hairline" />
+                  </div>
+                  <form onSubmit={guestCheckout} className="space-y-3">
+                    <input
+                      type="email"
+                      required
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      aria-label="Email for your receipt and downloads"
+                      className="w-full rounded-full border border-hairline bg-white px-5 py-3 text-sm text-graphite placeholder:text-slate2 outline-none focus:border-sky focus:ring-2 focus:ring-sky/30"
+                    />
+                    <button
+                      type="submit"
+                      disabled={redirecting || loading}
+                      className="btn-grade w-full disabled:opacity-60"
+                    >
+                      <Lock className="h-4 w-4" />
+                      {redirecting ? "Starting checkout…" : "Continue as guest"}
+                    </button>
+                    <p className="text-center text-xs text-slate2">
+                      Your receipt and download links go to this email.
+                    </p>
+                  </form>
+                  {error && (
+                    <p className="mt-3 text-center text-sm text-red-600" role="alert">
+                      {error}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <>
