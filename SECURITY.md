@@ -79,14 +79,43 @@ These are honest gaps — none block launch, but you should know them:
 4. **Token lifetime trade-off.** A forwarded confirmation email = working
    download links for 24 h (`DOWNLOAD_TOKEN_MAX_AGE`). That's a deliberate
    guest-UX choice; shorten it or require login if leakage matters more.
-5. **Throttling is per-process memory** (LocMemCache). Behind multiple gunicorn
-   workers/replicas the effective rate multiplies. Point Django's cache at
-   Redis in production for accurate global limits.
+5. ~~**Throttling is per-process memory.**~~ **Fixed:** set `REDIS_URL` and the
+   DRF rate-limit counters are shared across all workers/replicas, so limits are
+   enforced globally. Falls back to LocMem only when `REDIS_URL` is unset (dev).
+   The docker-compose stack wires Redis automatically.
 6. **Operational security is yours**: TLS/HSTS at the proxy, Postgres backups,
    dependency updates (`pip-audit` / `npm audit`), log monitoring, and keeping
    `/admin/` off the public internet (IP allowlist or separate host).
 7. **No `security.txt` / disclosure policy yet** — add one if the store gets
    real traffic.
+
+### Hardening already in place
+- **Security headers on every response** (`common/security_headers.py`):
+  locked-down `Content-Security-Policy` (`default-src 'none'`) on all JSON API
+  responses, plus `Permissions-Policy`, `Cross-Origin-Resource-Policy`,
+  `Referrer-Policy`, `Cross-Origin-Opener-Policy`, `X-Content-Type-Options`,
+  `X-Frame-Options: DENY`.
+- **Request-body size cap** (`DATA_UPLOAD_MAX_MEMORY_SIZE`, 1 MB) against
+  memory-exhaustion POSTs.
+
+## Recommended next security measures (not yet done)
+Roughly in priority order; none are blockers:
+1. **Dependency & secret scanning in CI** — `pip-audit`, `npm audit`, and a
+   secret scanner (gitleaks) on every PR; enable Dawnbot/Dependabot.
+2. **Edge protection** — put Cloudflare/WAF in front for DDoS absorption, bot
+   rules, and a second rate-limit layer before traffic reaches the app.
+3. **Admin hardening** — IP-allowlist `/admin/`, require staff 2FA
+   (`django-otp`), or disable admin on the public host entirely.
+4. **Error/abuse monitoring** — Sentry for exceptions + alerts on 401/403/429
+   spikes (early signal of credential stuffing / scraping).
+5. **Stripe Radar** for card-fraud rules on the digital goods (chargeback risk).
+6. **Encrypted, tested backups** — automated Postgres dumps with restore drills;
+   enable encryption at rest on the DB and S3 (S3 SSE is already on).
+7. **Account safety** — email verification, breach-password checks, and
+   lockout/backoff on repeated failed logins (beyond the 10/min throttle).
+8. **Log hygiene** — ensure secrets/tokens/PII are never logged; structured
+   request logging with correlation ids.
+9. **`security.txt`** + a coordinated-disclosure policy once you have traffic.
 
 ## 6. What an attacker *cannot* do (tested)
 

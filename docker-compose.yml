@@ -30,6 +30,17 @@ services:
     expose:
       - "5432"
 
+  redis:
+    image: redis:7-alpine
+    # Backs DRF rate-limit counters shared across backend workers.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    expose:
+      - "6379"
+
   backend:
     build: ./backend
     env_file:
@@ -38,10 +49,14 @@ services:
       # Override DATABASE_URL to point at the compose Postgres service. This
       # takes precedence over any value in backend/.env.
       DATABASE_URL: postgres://${POSTGRES_USER:-luts}:${POSTGRES_PASSWORD:-luts}@db:5432/${POSTGRES_DB:-luts}
+      # Shared cache for global rate limiting (overrides backend/.env).
+      REDIS_URL: redis://redis:6379/0
       # The frontend container talks to the backend over the compose network.
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     # Apply migrations, then start gunicorn (defined in backend/Dockerfile CMD).
     command: >

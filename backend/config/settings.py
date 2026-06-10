@@ -214,6 +214,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Attach CSP / Permissions-Policy / CORP to every response (see
+    # common/security_headers.py).
+    "common.security_headers.SecurityHeadersMiddleware",
     # CorsMiddleware must come as early as possible, before CommonMiddleware.
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -265,6 +268,26 @@ else:
     }
 
 # ---------------------------------------------------------------------------
+# Cache — backs DRF rate limiting. With REDIS_URL set, throttle counters are
+# SHARED across all gunicorn workers / replicas, so limits are enforced
+# globally (LocMem counts per-process, which multiplies the effective limit).
+# ---------------------------------------------------------------------------
+REDIS_URL = config("REDIS_URL", default="")
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
+
+# ---------------------------------------------------------------------------
 # Auth / i18n / static
 # ---------------------------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
@@ -305,6 +328,9 @@ CSRF_TRUSTED_ORIGINS = config(
 # ---------------------------------------------------------------------------
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
+# Don't leak full URLs to other origins; isolate the browsing context.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 
 SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
 SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=0, cast=int)
@@ -312,6 +338,13 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_HSTS_SECONDS > 0
 SECURE_HSTS_PRELOAD = SECURE_HSTS_SECONDS > 0
 # Honor the X-Forwarded-Proto header from a TLS-terminating proxy/CDN.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Cap request body size (bytes) to blunt memory-exhaustion POSTs. Our payloads
+# are tiny JSON; 1 MB is generous. File delivery is via S3 redirects, not uploads.
+DATA_UPLOAD_MAX_MEMORY_SIZE = config(
+    "DATA_UPLOAD_MAX_MEMORY_SIZE", default=1_048_576, cast=int
+)
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 200
 
 SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=False, cast=bool)
 SESSION_COOKIE_HTTPONLY = True
