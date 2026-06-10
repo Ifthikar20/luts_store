@@ -1,8 +1,8 @@
 import { cn } from "@/lib/format";
 
 /**
- * Wordmark logo: "Luts.shop" set in the app's bold sans (Inter) — a clean,
- * all-black geometric mark, no image asset required.
+ * Wordmark logo: "Luts.shop" set in the app's sans (Inter) at a slim medium
+ * weight — a clean, all-black geometric mark, no image asset required.
  */
 export function Logo({
   className,
@@ -15,7 +15,7 @@ export function Logo({
   return (
     <span
       className={cn(
-        "inline-flex items-center text-[22px] font-extrabold leading-none tracking-tight text-black sm:text-[24px]",
+        "inline-flex items-center text-[22px] font-medium leading-none tracking-tight text-black sm:text-[24px]",
         className,
       )}
     >
