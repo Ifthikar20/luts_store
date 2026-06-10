@@ -1,5 +1,5 @@
-# Coordinated vulnerability disclosure for Luts.store (RFC 9116)
-Contact: mailto:security@luts.store
+# Coordinated vulnerability disclosure for Luts.shop (RFC 9116)
+Contact: mailto:security@luts.shop
 Preferred-Languages: en
 Expires: 2027-06-09T00:00:00.000Z
-Canonical: https://luts.store/.well-known/security.txt
+Canonical: https://luts.shop/.well-known/security.txt

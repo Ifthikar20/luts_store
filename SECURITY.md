@@ -1,4 +1,4 @@
-# Security model — Luts.store
+# Security model — Luts.shop
 
 How the store defends the things that matter: **money** (nobody gets paid
 product without paying), **files** (nobody downloads without a grant), and

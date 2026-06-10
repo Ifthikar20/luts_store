@@ -199,7 +199,7 @@ grants by email), logs in the session, and 302s to `FRONTEND_URL + returnTo`.
 With New customer accounts, Shopify hands the whole login to **Shop** — its
 centralized buyer identity (the same account behind **Shop Pay** and the **Shop
 app**). So after "Continue with Shopify" the customer lands on a Shopify-hosted
-**"Sign in to Shop"** screen, not a Luts.store page. Expect:
+**"Sign in to Shop"** screen, not a Luts.shop page. Expect:
 
 - **Passwordless:** the customer enters their email and gets a **one-time code**,
   or signs in with a **passkey** (Face ID / fingerprint). There is no password
@@ -211,7 +211,7 @@ app**). So after "Continue with Shopify" the customer lands on a Shopify-hosted
   that uses it — returning customers are recognized instantly.
 
 **Branding note:** the sign-in screen is **Shopify-branded ("Shop")** and
-**cannot be fully white-labeled to Luts.store** on standard plans — the same
+**cannot be fully white-labeled to Luts.shop** on standard plans — the same
 constraint every Shopify store using new customer accounts lives with. Our
 `/account/login` page sets expectations with a "powered by Shop" note before the
 redirect. Login remains **optional**: guest checkout and login-free downloads

@@ -53,7 +53,7 @@ function makeProduct(p: {
     ],
     tags: p.tags,
     productType: p.productType,
-    vendor: "Luts.store",
+    vendor: "Luts.shop",
     collections: p.collections,
     metafields: {
       lutCount: p.lutCount,

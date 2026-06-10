@@ -1,4 +1,4 @@
-# Project overview & status — Luts.store
+# Project overview & status — Luts.shop
 
 A storefront for selling video color-grading **LUTs** (`.cube`/`.zip` digital
 downloads): browse → cart → pay → instant download links + email receipt, with

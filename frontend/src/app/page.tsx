@@ -100,7 +100,7 @@ export default async function HomePage() {
               <span className="text-shine inline-block pb-1">Instant cinema.</span>
             </>
           }
-          subtitle="Drag the handle to reveal what a single Luts.store grade does to raw footage from DJI Osmo, iPhone and mirrorless cameras — richer contrast, filmic color, glowing skin."
+          subtitle="Drag the handle to reveal what a single Luts.shop grade does to raw footage from DJI Osmo, iPhone and mirrorless cameras — richer contrast, filmic color, glowing skin."
           align="center"
         />
         {/* Single-panel carousel: one comparison at a time, with pager + play. */}

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="980" viewBox="0 0 1500 980" font-family="Georgia, 'Times New Roman', serif">
 <rect width="1500" height="980" fill="#F4F3EC"/>
 <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6e6e73"/></marker><marker id="arrSky" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0071e3"/></marker></defs>
-<text x="750.0" y="44" text-anchor="middle" font-size="30" font-weight="bold" font-style="normal" fill="#1d1d1f">Luts.store — User Navigation</text>
+<text x="750.0" y="44" text-anchor="middle" font-size="30" font-weight="bold" font-style="normal" fill="#1d1d1f">Luts.shop — User Navigation</text>
 <text x="750.0" y="70" text-anchor="middle" font-size="14" font-weight="normal" font-style="italic" fill="#6e6e73">purchase funnel (blue) · supporting pages (grey/green) — routes from src/app</text>
 <rect x="50" y="96" width="1400" height="56" rx="12" fill="#fff" stroke="#0071e3" stroke-width="1.5"/>
 <text x="750.0" y="130.0" text-anchor="middle" font-size="18" font-weight="bold" fill="#1d1d1f"></text>

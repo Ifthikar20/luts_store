@@ -29,11 +29,11 @@ const siteDescription =
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Luts.store — Cinematic LUTs",
-    template: "%s | Luts.store",
+    default: "Luts.shop — Cinematic LUTs",
+    template: "%s | Luts.shop",
   },
   description: siteDescription,
-  applicationName: "Luts.store",
+  applicationName: "Luts.shop",
   icons: { icon: "/favicon.svg" },
   keywords: [
     "LUTs",
@@ -47,14 +47,14 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     type: "website",
-    siteName: "Luts.store",
+    siteName: "Luts.shop",
     url: siteUrl,
-    title: "Luts.store — Cinematic LUTs",
+    title: "Luts.shop — Cinematic LUTs",
     description: "Color grade in one drag. Premium cinematic LUT packs.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Luts.store — Cinematic LUTs",
+    title: "Luts.shop — Cinematic LUTs",
     description: "Color grade in one drag. Premium cinematic LUT packs.",
   },
 };

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1640" height="1180" viewBox="0 0 1640 1180" font-family="Georgia,serif">
 <rect width="1640" height="1180" fill="#F4F3EC"/>
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6e6e73"/></marker><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0a8754"/></marker></defs>
-<text x="820.0" y="46" text-anchor="middle" font-size="30" font-weight="bold" fill="#1d1d1f">Luts.store — Architecture</text>
+<text x="820.0" y="46" text-anchor="middle" font-size="30" font-weight="bold" fill="#1d1d1f">Luts.shop — Architecture</text>
 <text x="820.0" y="72" text-anchor="middle" font-size="13.5" font-weight="normal" fill="#6e6e73">Next.js storefront  ·  Django BFF (camelCase contract)  ·  dual MOCK / LIVE mode  ·  green = purchase→download pipeline</text>
 <rect x="670.0" y="96" width="300" height="50" rx="12" fill="#fff" stroke="#1d1d1f" stroke-width="1.5"/>
 <text x="820.0" y="126.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#1d1d1f">User · Browser</text>

@@ -5,7 +5,7 @@ import { PolicyLayout, PolicySection } from "@/components/PolicyLayout";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "The terms and conditions governing your use of Luts.store store and the purchase of digital LUT products.",
+    "The terms and conditions governing your use of Luts.shop store and the purchase of digital LUT products.",
 };
 
 export default function TermsPage() {
@@ -13,7 +13,7 @@ export default function TermsPage() {
     <PolicyLayout
       title="Terms of Service"
       lastUpdated="June 6, 2026"
-      intro="These Terms of Service (“Terms”) govern your access to and use of Luts.store website and your purchase of our digital products. By using the site or buying a product, you agree to these Terms."
+      intro="These Terms of Service (“Terms”) govern your access to and use of Luts.shop website and your purchase of our digital products. By using the site or buying a product, you agree to these Terms."
     >
       <PolicySection heading="1. The products">
         <p>
@@ -101,10 +101,10 @@ export default function TermsPage() {
         <p>
           Questions about these Terms? Email{" "}
           <a
-            href="mailto:support@luts.store"
+            href="mailto:support@luts.shop"
             className="text-grade-teal underline-offset-4 hover:underline"
           >
-            support@luts.store
+            support@luts.shop
           </a>
           .
         </p>

@@ -37,7 +37,7 @@ export function Footer() {
       <div className="container-xl py-16">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <Link href="/" aria-label="Luts.store home">
+            <Link href="/" aria-label="Luts.shop home">
               <Logo />
             </Link>
             <p className="mt-4 max-w-xs text-sm text-slate2">
@@ -67,7 +67,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-hairline pt-6 text-xs text-slate2 sm:flex-row sm:items-center">
-          <p>© {new Date().getFullYear()} Luts.store. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Luts.shop. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <Link href="/policies/terms" className="transition-colors hover:text-graphite">
               Terms

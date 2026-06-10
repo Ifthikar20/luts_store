@@ -58,10 +58,10 @@ export default function RefundPage() {
         <p>
           Email{" "}
           <a
-            href="mailto:support@luts.store"
+            href="mailto:support@luts.shop"
             className="text-grade-teal underline-offset-4 hover:underline"
           >
-            support@luts.store
+            support@luts.shop
           </a>{" "}
           with your order number and a description of the problem. We aim to
           respond within one business day. Approved refunds are returned to your

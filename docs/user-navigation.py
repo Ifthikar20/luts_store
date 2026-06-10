@@ -72,7 +72,7 @@ def arrow(x1, y1, x2, y2, sky=False, dash=False):
 
 
 # ---- title ----
-label(W / 2, 44, "Luts.store — User Navigation", size=30, col=INK, weight="bold")
+label(W / 2, 44, "Luts.shop — User Navigation", size=30, col=INK, weight="bold")
 label(W / 2, 70, "purchase funnel (blue) · supporting pages (grey/green) — routes from src/app", size=14, style="italic")
 
 # ---- persistent header band ----

@@ -59,7 +59,7 @@ def band(x, y, w, h, label, col):
     p.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="18" fill="none" stroke="{col}" stroke-width="1.5" stroke-dasharray="2 5"/>')
     p.append(f'<text x="{x+16}" y="{y+24}" font-size="13" font-weight="bold" fill="{col}" letter-spacing="1">{esc(label)}</text>')
 
-lab(W/2, 46, "Luts.store — Architecture", 30, INK, "middle", "bold")
+lab(W/2, 46, "Luts.shop — Architecture", 30, INK, "middle", "bold")
 lab(W/2, 72, "Next.js storefront  ·  Django BFF (camelCase contract)  ·  dual MOCK / LIVE mode  ·  green = purchase→download pipeline", 13.5, SLATE)
 
 # Browser

@@ -9,9 +9,9 @@ import { Reveal } from "@/components/motion/Reveal";
 export const metadata: Metadata = {
   title: "Help Center",
   description:
-    "Install LUTs in Premiere, DaVinci Resolve, Final Cut and CapCut, learn about file formats, downloads and refunds. Everything you need from Luts.store.",
+    "Install LUTs in Premiere, DaVinci Resolve, Final Cut and CapCut, learn about file formats, downloads and refunds. Everything you need from Luts.shop.",
   openGraph: {
-    title: "Help Center | Luts.store",
+    title: "Help Center | Luts.shop",
     description:
       "Install guides, file formats, downloads and refunds — all in one place.",
   },

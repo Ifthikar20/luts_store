@@ -65,7 +65,7 @@ export function Nav() {
             : "bg-white/65 px-4 py-2.5 shadow-soft",
         )}
       >
-        <Link href="/" className="pl-2" aria-label="Luts.store home">
+        <Link href="/" className="pl-2" aria-label="Luts.shop home">
           <Logo />
         </Link>
 

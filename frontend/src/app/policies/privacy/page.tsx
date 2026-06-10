@@ -4,7 +4,7 @@ import { PolicyLayout, PolicySection } from "@/components/PolicyLayout";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "How Luts.store collects, uses and protects your personal information when you browse and buy cinematic LUT packs.",
+    "How Luts.shop collects, uses and protects your personal information when you browse and buy cinematic LUT packs.",
 };
 
 export default function PrivacyPage() {
@@ -12,7 +12,7 @@ export default function PrivacyPage() {
     <PolicyLayout
       title="Privacy Policy"
       lastUpdated="June 6, 2026"
-      intro="This Privacy Policy describes how Luts.store (“we”, “us”, “our”) collects, uses and shares information when you visit our store, create an account, or purchase a LUT pack."
+      intro="This Privacy Policy describes how Luts.shop (“we”, “us”, “our”) collects, uses and shares information when you visit our store, create an account, or purchase a LUT pack."
     >
       <PolicySection heading="1. Information we collect">
         <p>
@@ -84,10 +84,10 @@ export default function PrivacyPage() {
         <p>
           Questions about this policy? Email us at{" "}
           <a
-            href="mailto:support@luts.store"
+            href="mailto:support@luts.shop"
             className="text-grade-teal underline-offset-4 hover:underline"
           >
-            support@luts.store
+            support@luts.shop
           </a>
           .
         </p>

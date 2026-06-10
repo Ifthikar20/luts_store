@@ -52,7 +52,7 @@ const product: Product = {
   ],
   tags: ["cinematic"],
   productType: "LUT Pack",
-  vendor: "Luts.store",
+  vendor: "Luts.shop",
   collections: [{ handle: "cinematic", title: "Cinematic" }],
   metafields: { lutCount: 12, formats: ["CUBE", "3DL"], compatibleApps: [] },
   featured: false,

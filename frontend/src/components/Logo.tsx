@@ -37,7 +37,7 @@ export function Logo({
     <span className={cn("inline-flex items-center", className)}>
       <Image
         src="/main-logo.png"
-        alt="Luts.store"
+        alt="Luts.shop"
         width={180}
         height={40}
         priority

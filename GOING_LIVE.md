@@ -96,7 +96,7 @@ EMAIL_PORT=587
 EMAIL_HOST_USER=...
 EMAIL_HOST_PASSWORD=...
 EMAIL_USE_TLS=True
-DEFAULT_FROM_EMAIL=Luts.store <hello@luts.store>
+DEFAULT_FROM_EMAIL=Luts.shop <hello@luts.shop>
 API_BASE_URL=https://<your-api-host>   # makes download links in emails absolute
 ```
 
