@@ -8,7 +8,6 @@ import { SectionHeading } from "@/components/SectionHeading";
 import { ProductGrid } from "@/components/ProductGrid";
 import { BeforeAfterCarousel } from "@/components/BeforeAfterCarousel";
 import { BundleCard } from "@/components/BundleCard";
-import { LooksInMotion } from "@/components/LooksInMotion";
 import { FAQ } from "@/components/FAQ";
 import { Reveal } from "@/components/motion/Reveal";
 import { JsonLd } from "@/components/JsonLd";
@@ -91,28 +90,6 @@ export default async function HomePage() {
       )}
 
       <LogoMarquee />
-
-      {/* Looks in motion — video bento grid on a light-gray band */}
-      <section className="bg-cloud py-24" id="looks-in-motion">
-        <div className="container-xl">
-          <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
-            <SectionHeading
-              title="Looks in motion."
-              subtitle="Real cinematic grades, applied to motion — not just stills. Each clip plays automatically as it scrolls into view."
-              titleClassName="text-shine inline-block pb-1 font-display text-3xl font-bold leading-tight tracking-tightest sm:text-4xl md:text-5xl"
-            />
-            <Reveal direction="left">
-              <Link
-                href="/collections/cinematic"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-slate2 transition-colors hover:text-graphite"
-              >
-                Explore the looks <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Reveal>
-          </div>
-          <LooksInMotion />
-        </div>
-      </section>
 
       {/* Before / After — moved up; multiple camera examples */}
       <section className="container-xl py-24" id="before-after">
