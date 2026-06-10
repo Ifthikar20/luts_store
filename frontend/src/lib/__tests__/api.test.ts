@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { decodeEnvelope } from "../obfuscate";
 import {
   API_URL,
   completeCheckout,
@@ -34,6 +35,12 @@ function lastFetchUrl(spy: ReturnType<typeof vi.fn>): string {
 function lastFetchInit(spy: ReturnType<typeof vi.fn>): RequestInit {
   const call = spy.mock.calls.at(-1);
   return (call?.[1] ?? {}) as RequestInit;
+}
+
+// Request bodies are sent through the obfuscation envelope; decode before
+// asserting on the original payload.
+function decodeBody(body: BodyInit | null | undefined): unknown {
+  return JSON.parse(decodeEnvelope(String(body)));
 }
 
 let fetchSpy: ReturnType<typeof vi.fn>;
@@ -112,7 +119,7 @@ describe("auth token storage + header injection", () => {
 
     const init = lastFetchInit(fetchSpy);
     expect(init.method).toBe("POST");
-    expect(JSON.parse(String(init.body))).toEqual({
+    expect(decodeBody(init.body)).toEqual({
       email: "a@b.com",
       password: "pw",
     });
@@ -145,7 +152,7 @@ describe("checkout endpoints (guest, login-free)", () => {
     expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/checkout`);
     const init = lastFetchInit(fetchSpy);
     expect(init.method).toBe("POST");
-    expect(JSON.parse(String(init.body))).toEqual({ cartId: "c1" });
+    expect(decodeBody(init.body)).toEqual({ cartId: "c1" });
   });
 
   it("createCheckout includes the email only when provided", async () => {
@@ -153,7 +160,7 @@ describe("checkout endpoints (guest, login-free)", () => {
       jsonResponse({ mode: "shopify", checkoutUrl: "https://shop/checkout" }),
     );
     await createCheckout("c1", "guest@example.com");
-    expect(JSON.parse(String(lastFetchInit(fetchSpy).body))).toEqual({
+    expect(decodeBody(lastFetchInit(fetchSpy).body)).toEqual({
       cartId: "c1",
       email: "guest@example.com",
     });
@@ -166,7 +173,7 @@ describe("checkout endpoints (guest, login-free)", () => {
     expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/checkout/complete`);
     const init = lastFetchInit(fetchSpy);
     expect(init.method).toBe("POST");
-    expect(JSON.parse(String(init.body))).toEqual({
+    expect(decodeBody(init.body)).toEqual({
       cartId: "c1",
       email: "guest@example.com",
     });
@@ -217,7 +224,7 @@ describe("Shopify Customer Accounts portal (session-based, credentials:include)"
     const init = lastFetchInit(fetchSpy);
     expect(init.method).toBe("POST");
     expect(init.credentials).toBe("include");
-    expect(JSON.parse(String(init.body))).toEqual({ email: "demo@example.com" });
+    expect(decodeBody(init.body)).toEqual({ email: "demo@example.com" });
   });
 
   it("shopifyLogout POSTs /auth/shopify/logout with credentials include", async () => {
@@ -243,7 +250,7 @@ describe("engagement endpoints hit the right paths", () => {
     expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/newsletter`);
     const init = lastFetchInit(fetchSpy);
     expect(init.method).toBe("POST");
-    expect(JSON.parse(String(init.body))).toEqual({ email: "fan@example.com" });
+    expect(decodeBody(init.body)).toEqual({ email: "fan@example.com" });
   });
 
   it("resendDownloads POSTs to /orders/resend-downloads with the email", async () => {
@@ -252,7 +259,7 @@ describe("engagement endpoints hit the right paths", () => {
     expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/orders/resend-downloads`);
     const init = lastFetchInit(fetchSpy);
     expect(init.method).toBe("POST");
-    expect(JSON.parse(String(init.body))).toEqual({
+    expect(decodeBody(init.body)).toEqual({
       email: "buyer@example.com",
     });
   });

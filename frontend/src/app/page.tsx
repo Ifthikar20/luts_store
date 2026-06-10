@@ -6,12 +6,12 @@ import { FreeLutBanner } from "@/components/FreeLutBanner";
 import { LogoMarquee } from "@/components/LogoMarquee";
 import { SectionHeading } from "@/components/SectionHeading";
 import { ProductGrid } from "@/components/ProductGrid";
-import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
+import { BeforeAfterCarousel } from "@/components/BeforeAfterCarousel";
 import { BundleCard } from "@/components/BundleCard";
 import { HowItWorks } from "@/components/HowItWorks";
 import { LooksInMotion } from "@/components/LooksInMotion";
 import { FAQ } from "@/components/FAQ";
-import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
+import { Reveal } from "@/components/motion/Reveal";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 
@@ -129,21 +129,10 @@ export default async function HomePage() {
           subtitle="Drag the handle to reveal what a single Luts.store grade does to raw footage from DJI Osmo, iPhone and mirrorless cameras — richer contrast, filmic color, glowing skin."
           align="center"
         />
-        {/* Featured large comparison + two supporting examples below. */}
-        <Reveal className="mx-auto mt-12 max-w-5xl">
-          <BeforeAfterSlider
-            image={beforeAfterExamples[0].image}
-            alt={beforeAfterExamples[0].alt}
-            label={beforeAfterExamples[0].label}
-          />
+        {/* Single-panel carousel: one comparison at a time, with pager + play. */}
+        <Reveal>
+          <BeforeAfterCarousel examples={beforeAfterExamples} />
         </Reveal>
-        <StaggerGroup className="mx-auto mt-6 grid max-w-5xl gap-6 sm:grid-cols-2">
-          {beforeAfterExamples.slice(1).map((ex) => (
-            <StaggerItem key={ex.label}>
-              <BeforeAfterSlider image={ex.image} alt={ex.alt} label={ex.label} />
-            </StaggerItem>
-          ))}
-        </StaggerGroup>
       </section>
 
       {/* Featured LUTs */}

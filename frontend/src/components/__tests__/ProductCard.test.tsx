@@ -55,7 +55,7 @@ const product: Product = {
   vendor: "Luts.store",
   collections: [{ handle: "cinematic", title: "Cinematic" }],
   metafields: { lutCount: 12, formats: ["CUBE", "3DL"], compatibleApps: [] },
-  featured: true,
+  featured: false,
 };
 
 function renderCard(p: Product = product) {
@@ -82,10 +82,12 @@ describe("ProductCard", () => {
 
   it("links to the product detail page", () => {
     renderCard();
-    expect(screen.getByRole("link")).toHaveAttribute(
-      "href",
-      "/luts/teal-orange",
-    );
+    // The title and the image both link to the detail page.
+    const links = screen.getAllByRole("link");
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      expect(link).toHaveAttribute("href", "/luts/teal-orange");
+    }
   });
 
   it("renders the featured image with its alt text", () => {

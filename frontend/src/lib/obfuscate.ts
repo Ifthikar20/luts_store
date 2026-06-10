@@ -38,3 +38,30 @@ export function envelope(json: string): string {
     return json;
   }
 }
+
+function fromBase64(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/** Reverse of {@link envelope}. Returns the original JSON string; if the body
+ * isn't an `{_obf}` envelope it's returned unchanged. (Mainly for tests/debug;
+ * the real decode happens in the Django middleware.) */
+export function decodeEnvelope(body: string): string {
+  try {
+    const parsed = JSON.parse(body);
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      typeof parsed._obf === "string" &&
+      Object.keys(parsed).length === 1
+    ) {
+      return new TextDecoder().decode(xorBytes(fromBase64(parsed._obf)));
+    }
+  } catch {
+    /* not JSON / not an envelope — fall through */
+  }
+  return body;
+}
