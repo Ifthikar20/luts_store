@@ -1,5 +1,10 @@
 # Simple EC2 deployment
 
+> **Scripted version:** everything in this guide is automated by the numbered
+> scripts in [`aws/`](./aws/README.md) — `01-s3.sh` → `02-iam.sh` → `03-ec2.sh`
+> → `04-app.sh` → `05-secrets.sh`. This document remains the manual/reference
+> walkthrough of what those scripts do.
+
 The whole store on **one small EC2 instance** + a **private S3 bucket**.
 Nothing else — no load balancer, no ECS/Kubernetes, no RDS (Postgres runs in
 the compose stack on the instance with a data volume).

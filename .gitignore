@@ -30,3 +30,9 @@ yarn-error.log*
 
 # Logs
 *.log
+
+# AWS setup scripts — local config, state and secrets (see aws/README.md)
+aws/config.env
+aws/state.env
+aws/production-secrets.env
+aws/*.pem
