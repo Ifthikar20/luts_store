@@ -297,6 +297,24 @@ export async function getProduct(handle: string): Promise<Product | null> {
   }
 }
 
+// This week's free LUT (the product tagged "free"), or null if none published.
+export async function getFreeLut(): Promise<Product | null> {
+  try {
+    return await request<Product>("/free-lut");
+  } catch {
+    return null;
+  }
+}
+
+// Claim the weekly free LUT by email (no payment). Returns the order id, which
+// resolves on /thank-you?order=<id> exactly like a paid order. Errors propagate.
+export async function claimFreeLut(email: string): Promise<{ orderId: string }> {
+  return request<{ orderId: string }>("/free-lut/claim", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
 export async function getRelatedProducts(
   product: Product,
   limit = 3,

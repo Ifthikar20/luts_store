@@ -182,15 +182,17 @@ def test_facets_shape(client):
 def test_facets_counts_match_mockdata(client):
     data = client.get("/api/facets").json()
     type_counts = {t["value"]: t["count"] for t in data["productTypes"]}
-    # 3 bundles + 12 individual LUT packs in the fixture.
+    # 3 bundles + 13 individual LUT packs (incl. the weekly free LUT) in the fixture.
     assert type_counts.get("Bundle") == 3
-    assert type_counts.get("LUT Pack") == 12
+    assert type_counts.get("LUT Pack") == 13
 
     tag_counts = {t["value"]: t["count"] for t in data["tags"]}
     # Every bundle carries the "value" tag.
     assert tag_counts.get("value") == 3
-    # The price range spans the cheapest pack ($12) to the everything bundle.
-    assert data["priceRange"]["min"] == 12.0
+    # The weekly free LUT is tagged "free".
+    assert tag_counts.get("free") == 1
+    # The price range spans the free LUT ($0) to the everything bundle.
+    assert data["priceRange"]["min"] == 0.0
     assert data["priceRange"]["max"] == 129.0
 
 

@@ -80,3 +80,12 @@ def product_detail(request, handle: str):
     if data is None:
         return Response({"detail": "Product not found."}, status=404)
     return Response(data)
+
+
+@api_view(["GET"])
+def free_lut(request):
+    """The current weekly free LUT (or ``{detail}`` 404 if none is published)."""
+    data = services.free_lut()
+    if data is None:
+        return Response({"detail": "No free LUT this week."}, status=404)
+    return Response(data)

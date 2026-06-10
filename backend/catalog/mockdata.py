@@ -211,6 +211,25 @@ PRODUCTS: list[dict[str, Any]] = [
         lut_count=10,
         featured=True,
     ),
+    # --- Weekly free LUT -----------------------------------------------------
+    # The product tagged "free" (price 0.00) is THIS WEEK's free LUT. To rotate
+    # it, move the "free" tag + price to a different product (or edit this one).
+    # Free items are claimed by email (no payment) — see orders.claim_free_lut.
+    _product(
+        pid="1010",
+        handle="aurora-skies",
+        title="Aurora Skies",
+        description="This week's free LUT — a clean, cool daylight grade with "
+        "lifted shadows and crisp skies. Yours free, no purchase required.",
+        price="0.00",
+        image_url="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&q=80",
+        extra_image_url="https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1200&q=80",
+        tags=["free", "weekly", "cinematic"],
+        product_type="LUT Pack",
+        collections=["cinematic"],
+        lut_count=3,
+        featured=True,
+    ),
     # --- Drone / DJI ---
     _product(
         pid="2001",

@@ -24,6 +24,7 @@ export function ProductCard({
   const href = `/luts/${product.handle}`;
   const isRange =
     product.priceRange.min.amount !== product.priceRange.max.amount;
+  const isFree = Number.parseFloat(product.priceRange.min.amount) === 0;
 
   // Lazy hover-preview video: src is only attached after the first hover, and
   // never under prefers-reduced-motion.
@@ -120,19 +121,37 @@ export function ProductCard({
 
       <div className="mt-auto flex items-center justify-between gap-3 pt-6">
         <p className="text-sm text-slate2">
-          {isRange && "From "}
-          <span className="font-display text-lg font-semibold text-graphite">
-            {formatMoney(product.priceRange.min)}
-          </span>
+          {isFree ? (
+            <span className="font-display text-lg font-semibold text-emerald-600">
+              Free
+            </span>
+          ) : (
+            <>
+              {isRange && "From "}
+              <span className="font-display text-lg font-semibold text-graphite">
+                {formatMoney(product.priceRange.min)}
+              </span>
+            </>
+          )}
         </p>
-        <button
-          type="button"
-          onClick={onAdd}
-          disabled={loading || !variant?.availableForSale}
-          className="inline-flex items-center justify-center rounded-full bg-sky px-6 py-2.5 text-sm font-semibold text-white shadow-[0_2px_10px_rgba(0,113,227,0.25)] transition-colors hover:bg-sky-hover disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading ? "Adding…" : "Buy"}
-        </button>
+        {isFree ? (
+          // Free items skip the cart/Stripe — claim by email on the detail page.
+          <Link
+            href={href}
+            className="inline-flex items-center justify-center rounded-full bg-sky px-6 py-2.5 text-sm font-semibold text-white shadow-[0_2px_10px_rgba(0,113,227,0.25)] transition-colors hover:bg-sky-hover"
+          >
+            Get it free
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={onAdd}
+            disabled={loading || !variant?.availableForSale}
+            className="inline-flex items-center justify-center rounded-full bg-sky px-6 py-2.5 text-sm font-semibold text-white shadow-[0_2px_10px_rgba(0,113,227,0.25)] transition-colors hover:bg-sky-hover disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? "Adding…" : "Buy"}
+          </button>
+        )}
       </div>
     </motion.div>
   );

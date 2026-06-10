@@ -11,6 +11,8 @@ urlpatterns = [
     # Thank-you confirmation. POST /api/orders/confirm {token} is matched first;
     # GET /api/orders/<idOrToken> is the generic lookup.
     path("orders/confirm", views.order_confirm, name="order-confirm"),
+    # Claim the weekly free LUT by email (no payment).
+    path("free-lut/claim", views.claim_free_lut, name="free-lut-claim"),
     # Resend download links (non-enumerating, throttled). Must be declared
     # BEFORE the generic <id_or_token> catch-all so it isn't swallowed.
     path(

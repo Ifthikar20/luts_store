@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getProducts } from "@/lib/api";
 import { Hero } from "@/components/Hero";
+import { FreeLutBanner } from "@/components/FreeLutBanner";
 import { LogoMarquee } from "@/components/LogoMarquee";
 import { SectionHeading } from "@/components/SectionHeading";
 import { ProductGrid } from "@/components/ProductGrid";
@@ -73,6 +74,9 @@ export default async function HomePage() {
       <JsonLd data={organizationJsonLd} />
       <JsonLd data={websiteJsonLd} />
       <Hero />
+
+      {/* Weekly free LUT promo (renders only when one is published) */}
+      <FreeLutBanner />
 
       {/* Bundle highlight — surfaced near the top for maximum value upfront */}
       {bundle && (

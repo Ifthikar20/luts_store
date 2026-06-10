@@ -11,6 +11,7 @@ import { useCart } from "@/context/CartContext";
 import { track } from "@/lib/analytics";
 import { MagneticButton } from "./motion/MagneticButton";
 import { BeforeAfterSlider } from "./BeforeAfterSlider";
+import { ClaimFreeLut } from "./ClaimFreeLut";
 import { Reveal } from "./motion/Reveal";
 
 export function ProductDetail({ product }: { product: Product }) {
@@ -20,6 +21,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const [active, setActive] = useState(0);
   const [added, setAdded] = useState(false);
   const variant = product.variants[0];
+  const isFree = Number.parseFloat(product.priceRange.min.amount) === 0;
 
   async function onAdd() {
     if (!variant) return;
@@ -107,7 +109,7 @@ export function ProductDetail({ product }: { product: Product }) {
           </h1>
 
           <p className="mt-5 font-display text-3xl font-semibold text-graphite">
-            {formatMoney(product.priceRange.min)}
+            {isFree ? "Free" : formatMoney(product.priceRange.min)}
           </p>
 
           <p className="mt-6 leading-relaxed text-slate2">{product.description}</p>
@@ -146,30 +148,29 @@ export function ProductDetail({ product }: { product: Product }) {
             </div>
           </div>
 
-          {/* Add to cart */}
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <MagneticButton
-              variant="grade"
-              onClick={onAdd}
-            >
-              {added ? (
-                <>
-                  <Check className="h-4 w-4" /> Added
-                </>
-              ) : loading ? (
-                "Adding…"
-              ) : (
-                "Add to cart"
-              )}
-            </MagneticButton>
-            <button
-              type="button"
-              onClick={openCart}
-              className="btn-ghost"
-            >
-              View cart
-            </button>
-          </div>
+          {/* Claim (free) or add to cart (paid) */}
+          {isFree ? (
+            <div className="mt-8 rounded-[28px] border border-hairline bg-cloud p-6">
+              <ClaimFreeLut />
+            </div>
+          ) : (
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <MagneticButton variant="grade" onClick={onAdd}>
+                {added ? (
+                  <>
+                    <Check className="h-4 w-4" /> Added
+                  </>
+                ) : loading ? (
+                  "Adding…"
+                ) : (
+                  "Add to cart"
+                )}
+              </MagneticButton>
+              <button type="button" onClick={openCart} className="btn-ghost">
+                View cart
+              </button>
+            </div>
+          )}
           {variant && !variant.availableForSale && (
             <p className="mt-3 text-sm text-red-600">
               Currently unavailable.

@@ -299,6 +299,45 @@ def _ensure_stripe_order(order_id: str) -> Order | None:
 
 
 # ---------------------------------------------------------------------------
+# Weekly free LUT — claim by email, no payment
+# ---------------------------------------------------------------------------
+class FreeLutUnavailable(Exception):
+    """Raised when there is no free LUT to claim this week."""
+
+
+def claim_free_lut(email: str) -> Order:
+    """Grant the current free LUT to ``email`` (no payment). Idempotent.
+
+    Resolves the product tagged ``free`` and runs the shared ingest pipeline
+    with a 0.00 total, so the claimer gets a DownloadGrant + the same
+    confirmation/receipt email + thank-you page as a paid order. The order id
+    is keyed on the product + normalized email, so re-claiming is a no-op.
+    """
+    from catalog import services as catalog_services
+
+    normalized = (email or "").strip().lower()
+    if not normalized:
+        raise ValueError("An email is required to claim the free LUT.")
+
+    product = catalog_services.free_lut()
+    if product is None:
+        raise FreeLutUnavailable("No free LUT is available this week.")
+
+    handle = product["handle"]
+    payload = {
+        "id": f"free-{handle}-{normalized}",
+        "email": normalized,
+        "total_price": "0.00",
+        "currency": product["priceRange"]["min"].get("currencyCode", "USD"),
+        "line_items": [
+            {"title": product["title"], "handle": handle, "quantity": 1}
+        ],
+    }
+    order, _created = ingest_paid_order(payload)
+    return order
+
+
+# ---------------------------------------------------------------------------
 # Refunds
 # ---------------------------------------------------------------------------
 @transaction.atomic

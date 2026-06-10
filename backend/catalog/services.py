@@ -121,6 +121,29 @@ def get_product(handle: str) -> dict[str, Any] | None:
     return _live_get_product(handle)
 
 
+def free_lut() -> dict[str, Any] | None:
+    """Return the current weekly FREE LUT (the product tagged ``free``), or None.
+
+    In mock mode we scan the fixtures; in live mode we ask Shopify for products
+    carrying the ``free`` tag. Picks the first match.
+    """
+    if settings.MOCK_MODE:
+        for product in mockdata.all_products():
+            if "free" in (product.get("tags") or []):
+                return _public(product)
+        return None
+    matches = _live_list_products(
+        collection=None,
+        featured=None,
+        search=None,
+        sort=None,
+        min_price=None,
+        max_price=None,
+        tags=["free"],
+    )
+    return matches[0] if matches else None
+
+
 def file_key_for_handle(handle: str) -> str:
     """Resolve a product handle to its private S3 object key, server-side.
 

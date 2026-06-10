@@ -128,6 +128,30 @@ _RESEND_GENERIC = {
 @authentication_classes([])
 @permission_classes([])
 @throttle_classes([AnonRateThrottle, SensitiveScopedThrottle])
+def claim_free_lut(request):
+    """Claim this week's free LUT by email (no payment). Returns ``{orderId}``.
+
+    Idempotent per email; creates the DownloadGrant + sends the confirmation
+    email via the shared pipeline. Throttled (``sensitive``) since it creates
+    an order and sends mail.
+    """
+    data = request.data if isinstance(request.data, dict) else {}
+    email = data.get("email")
+    if not email:
+        return Response({"detail": "`email` is required."}, status=400)
+    try:
+        order = services.claim_free_lut(str(email))
+    except services.FreeLutUnavailable as exc:
+        return Response({"detail": str(exc)}, status=404)
+    except ValueError as exc:
+        return Response({"detail": str(exc)}, status=400)
+    return Response({"orderId": order.shopify_order_id}, status=200)
+
+
+@api_view(["POST"])
+@authentication_classes([])
+@permission_classes([])
+@throttle_classes([AnonRateThrottle, SensitiveScopedThrottle])
 def resend_downloads(request):
     """Re-send download links to a purchaser's email.
 
