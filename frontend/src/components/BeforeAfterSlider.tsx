@@ -5,21 +5,37 @@ import { useCallback, useId, useRef, useState } from "react";
 import { GripVertical } from "lucide-react";
 
 /**
- * Interactive before/after comparison. The "after" image is color-graded via a
- * CSS filter to simulate applying a LUT, so we only need one source image.
+ * Interactive before/after comparison.
+ *
+ * Two modes:
+ *  - Real grade: pass `afterImage` (the actual graded frame). Both images are
+ *    shown as-is — the truest preview for a real product upload.
+ *  - Simulated: omit `afterImage` and the single `image` is color-graded via a
+ *    CSS filter to *approximate* a LUT (used for landing-page demos).
+ *
  * Fully keyboard accessible via the range input. An optional `label` captions
- * the example (e.g. the camera the footage came from), and a unique input id
- * (useId) lets multiple sliders live on one page.
+ * the example, and a unique input id (useId) lets multiple sliders coexist.
  */
 export function BeforeAfterSlider({
   image,
+  afterImage,
   alt,
   label,
 }: {
   image: string;
+  /** The real graded frame. When given, no CSS filter is applied. */
+  afterImage?: string;
   alt: string;
   label?: string;
 }) {
+  const hasReal = Boolean(afterImage);
+  const afterSrc = afterImage || image;
+  const afterFilter = hasReal
+    ? undefined
+    : "contrast(1.15) saturate(1.25) brightness(1.02) sepia(0.12) hue-rotate(-6deg)";
+  const beforeFilter = hasReal
+    ? undefined
+    : "saturate(0.55) contrast(0.92) brightness(0.98)";
   const rangeId = useId();
   const [pos, setPos] = useState(55);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,15 +64,12 @@ export function BeforeAfterSlider({
     >
       {/* AFTER (graded) — full image underneath */}
       <Image
-        src={image}
+        src={afterSrc}
         alt={`${alt} — graded`}
         fill
         sizes="(max-width: 1024px) 100vw, 50vw"
         className="object-cover"
-        style={{
-          filter:
-            "contrast(1.15) saturate(1.25) brightness(1.02) sepia(0.12) hue-rotate(-6deg)",
-        }}
+        style={afterFilter ? { filter: afterFilter } : undefined}
         priority={false}
       />
       <span className="pointer-events-none absolute bottom-4 right-4 z-10 rounded-full bg-sky px-3 py-1 text-xs font-semibold text-white shadow-soft">
@@ -79,7 +92,7 @@ export function BeforeAfterSlider({
           fill
           sizes="(max-width: 1024px) 100vw, 50vw"
           className="object-cover"
-          style={{ filter: "saturate(0.55) contrast(0.92) brightness(0.98)" }}
+          style={beforeFilter ? { filter: beforeFilter } : undefined}
         />
         <span className="pointer-events-none absolute bottom-4 left-4 rounded-full bg-ink/70 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur">
           Before

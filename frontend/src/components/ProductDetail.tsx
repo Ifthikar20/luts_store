@@ -10,6 +10,7 @@ import { formatMoney } from "@/lib/format";
 import { useCart } from "@/context/CartContext";
 import { track } from "@/lib/analytics";
 import { MagneticButton } from "./motion/MagneticButton";
+import { BeforeAfterSlider } from "./BeforeAfterSlider";
 import { Reveal } from "./motion/Reveal";
 
 export function ProductDetail({ product }: { product: Product }) {
@@ -189,6 +190,42 @@ export function ProductDetail({ product }: { product: Product }) {
           )}
         </Reveal>
       </div>
+
+      {/* See the look — real before/after slider and/or a motion preview,
+          shown only when the product carries those assets. */}
+      {(product.afterImage || product.previewVideo) && (
+        <section className="mt-20">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-graphite sm:text-3xl">
+            See the look
+          </h2>
+          <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            {product.afterImage && (
+              <Reveal>
+                <BeforeAfterSlider
+                  image={product.beforeImage || product.featuredImage.url}
+                  afterImage={product.afterImage}
+                  alt={`${product.title} grade`}
+                  label="Drag to compare"
+                />
+              </Reveal>
+            )}
+            {product.previewVideo && (
+              <Reveal direction="left">
+                <video
+                  src={product.previewVideo}
+                  poster={product.featuredImage.url}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="none"
+                  className="aspect-[16/10] w-full rounded-[28px] border border-hairline object-cover shadow-soft"
+                />
+              </Reveal>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

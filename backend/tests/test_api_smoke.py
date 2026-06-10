@@ -234,3 +234,11 @@ def test_file_key_never_serialized_to_clients(client):
 
     coll = client.get("/api/collections/cinematic").json()
     assert all("file_key" not in p for p in coll["products"])
+
+
+def test_product_preview_fields_exposed(client):
+    """Per-product before/after + preview video are serialized (file_key isn't)."""
+    p = client.get("/api/products/midnight-noir").json()
+    assert p["afterImage"] and p["beforeImage"]
+    assert p["previewVideo"].endswith(".mp4")
+    assert "file_key" not in p

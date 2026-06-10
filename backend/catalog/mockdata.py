@@ -108,6 +108,9 @@ def _product(
     max_price: str | None = None,
     file_key: str | None = None,
     compare_at_price: str | None = None,
+    before_image: str | None = None,
+    after_image: str | None = None,
+    preview_video: str | None = None,
 ) -> dict[str, Any]:
     alt = f"{title} LUT preview"
     coll_map = {c["handle"]: c["title"] for c in COLLECTIONS}
@@ -126,6 +129,13 @@ def _product(
             _image(image_url, alt),
             _image(extra_image_url, f"{title} sample frame"),
         ],
+        # Per-product before/after preview. `beforeImage` defaults to the
+        # featured (ungraded) frame; `afterImage` is the graded result. When
+        # both are present the product page shows a real before/after slider.
+        "beforeImage": before_image or image_url,
+        "afterImage": after_image,
+        # Optional short, muted, looping preview clip of the look in motion.
+        "previewVideo": preview_video,
         "priceRange": {
             "min": _money(price),
             "max": _money(max_price or price),
@@ -161,6 +171,11 @@ PRODUCTS: list[dict[str, Any]] = [
         price="39.00",
         image_url="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1200&q=80",
         extra_image_url="https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=1200&q=80",
+        # Demo before/after + motion preview (swap for the product's real assets;
+        # see docs/ADDING_A_PRODUCT.md). before = ungraded frame, after = graded.
+        before_image="https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=1200&q=80",
+        after_image="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1200&q=80",
+        preview_video="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
         tags=["cinematic", "moody", "night"],
         product_type="LUT Pack",
         collections=["cinematic"],

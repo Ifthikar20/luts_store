@@ -46,6 +46,12 @@ export interface Product {
   // Optional "was" price — present on discounted items (e.g. bundles). When set
   // and higher than priceRange.min, the UI shows a strikethrough + savings.
   compareAtPrice?: Money;
+  // Per-product preview assets. `afterImage` (the graded frame) + `beforeImage`
+  // drive a real before/after slider on the product page; `previewVideo` is a
+  // short muted looping clip of the look in motion. All optional.
+  beforeImage?: string;
+  afterImage?: string | null;
+  previewVideo?: string | null;
   variants: Variant[];
   tags: string[];
   productType: string;
