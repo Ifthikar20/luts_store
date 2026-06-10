@@ -8,7 +8,6 @@ import { SectionHeading } from "@/components/SectionHeading";
 import { ProductGrid } from "@/components/ProductGrid";
 import { BeforeAfterCarousel } from "@/components/BeforeAfterCarousel";
 import { BundleCard } from "@/components/BundleCard";
-import { HowItWorks } from "@/components/HowItWorks";
 import { LooksInMotion } from "@/components/LooksInMotion";
 import { FAQ } from "@/components/FAQ";
 import { Reveal } from "@/components/motion/Reveal";
@@ -120,7 +119,8 @@ export default async function HomePage() {
         <SectionHeading
           title={
             <>
-              One LUT. <span className="text-grade-teal">Instant cinema.</span>
+              One LUT.{" "}
+              <span className="text-shine inline-block pb-1">Instant cinema.</span>
             </>
           }
           subtitle="Drag the handle to reveal what a single Luts.store grade does to raw footage from DJI Osmo, iPhone and mirrorless cameras — richer contrast, filmic color, glowing skin."
@@ -150,20 +150,6 @@ export default async function HomePage() {
           </Reveal>
         </div>
         <ProductGrid products={featured.slice(0, 3)} withVideoPreview />
-      </section>
-
-      {/* How it works — on a light-gray band */}
-      <section className="bg-cloud py-24" id="how">
-        <div className="container-xl">
-          <SectionHeading
-            title="How it works"
-            subtitle="From checkout to graded footage in under two minutes."
-            align="center"
-          />
-          <div className="mt-12">
-            <HowItWorks />
-          </div>
-        </div>
       </section>
 
       {/* FAQ */}
