@@ -10,7 +10,6 @@
 // production — prices and availability are always authoritative from the API.
 
 import type {
-  AuthResponse,
   Cart,
   CartLineInput,
   CheckoutCompleteResponse,
@@ -59,33 +58,17 @@ export class ApiError extends Error {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* LEGACY auth token storage (in-memory + localStorage)                       */
-/* -------------------------------------------------------------------------- */
-// LEGACY back-compat only. Auth is owned by the Django backend via an httpOnly
-// SESSION cookie (credentials:'include'); new sign-ins no longer store a
-// JS-readable token. This plumbing remains so an existing stored token keeps
-// working and gets cleared on logout.
-const TOKEN_KEY = "looks-lab:authToken";
-let authToken: string | null = null;
+// NO CLIENT-SIDE CREDENTIALS: auth is owned entirely by the Django backend via
+// an httpOnly SESSION cookie. The browser never sees or stores a token — calls
+// that need the signed-in user just send `session: true` (credentials:include).
+// One-time cleanup: drop the legacy localStorage token from older releases so
+// no stale credential lingers in the browser.
+const LEGACY_TOKEN_KEY = "looks-lab:authToken";
 
-export function getAuthToken(): string | null {
-  if (authToken) return authToken;
-  if (typeof window === "undefined") return null;
-  try {
-    authToken = window.localStorage.getItem(TOKEN_KEY);
-  } catch {
-    authToken = null;
-  }
-  return authToken;
-}
-
-export function setAuthToken(token: string | null) {
-  authToken = token;
+export function clearLegacyAuthToken(): void {
   if (typeof window === "undefined") return;
   try {
-    if (token) window.localStorage.setItem(TOKEN_KEY, token);
-    else window.localStorage.removeItem(TOKEN_KEY);
+    window.localStorage.removeItem(LEGACY_TOKEN_KEY);
   } catch {
     /* storage may be unavailable (private mode) — non-fatal */
   }
@@ -102,10 +85,9 @@ async function request<T>(
   path: string,
   init?: RequestInit & {
     timeoutMs?: number;
-    auth?: boolean;
     // session: send the httpOnly session cookie (credentials:'include') so the
-    // Shopify Customer Accounts BFF recognizes the logged-in browser. Used by
-    // the portal auth calls and the download library.
+    // Django backend recognizes the logged-in browser. Used by auth, checkout
+    // and the download library.
     session?: boolean;
   },
 ): Promise<T> {
@@ -118,10 +100,6 @@ async function request<T>(
     "Content-Type": "application/json",
     ...((init?.headers as Record<string, string>) ?? {}),
   };
-  if (init?.auth) {
-    const token = getAuthToken();
-    if (token) headers.Authorization = `Token ${token}`;
-  }
   // Obfuscate JSON request bodies (see lib/obfuscate.ts — DevTools deterrent,
   // not a security boundary; the backend unwraps transparently).
   const body =
@@ -199,58 +177,15 @@ export async function getProducts(params?: ProductQuery): Promise<Product[]> {
     );
     return data.products;
   } catch {
-    // DEV-ONLY fallback: mirror the API's filtering + sorting against the local
-    // mock catalog so the UI keeps working when the BFF is unreachable. Never
-    // authoritative — production always reflects the API response above.
-    return filterMockProducts(params);
+    // DEV-ONLY fallback so the UI renders standalone: the raw mock fixture
+    // list, deliberately UNFILTERED. All filtering/sorting/pricing is business
+    // logic that lives only in the backend — never reimplemented here.
+    return mockProducts;
   }
 }
 
-// DEV-ONLY: client-side reimplementation of the backend discovery pipeline.
-function filterMockProducts(params?: ProductQuery): Product[] {
-  const minAmount = (p: Product) => Number.parseFloat(p.priceRange.min.amount);
-  let list = mockProducts.slice();
-  if (params?.collection)
-    list = list.filter((p) =>
-      p.collections.some((c) => c.handle === params.collection),
-    );
-  if (params?.featured) list = list.filter((p) => p.featured);
-  if (params?.search) {
-    const q = params.search.toLowerCase();
-    list = list.filter(
-      (p) =>
-        p.title.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.productType.toLowerCase().includes(q) ||
-        p.tags.some((t) => t.toLowerCase().includes(q)),
-    );
-  }
-  if (params?.minPrice != null)
-    list = list.filter((p) => minAmount(p) >= params.minPrice!);
-  if (params?.maxPrice != null)
-    list = list.filter((p) => minAmount(p) <= params.maxPrice!);
-  if (params?.tags && params.tags.length) {
-    const wanted = new Set(params.tags.map((t) => t.toLowerCase()));
-    list = list.filter((p) => p.tags.some((t) => wanted.has(t.toLowerCase())));
-  }
-  switch (params?.sort) {
-    case "price-asc":
-      return list.sort((a, b) => minAmount(a) - minAmount(b));
-    case "price-desc":
-      return list.sort((a, b) => minAmount(b) - minAmount(a));
-    case "title-asc":
-      return list.sort((a, b) => a.title.localeCompare(b.title));
-    case "newest":
-      return list.sort((a, b) => b.id.localeCompare(a.id));
-    default:
-      return list.sort(
-        (a, b) => (a.featured ? 0 : 1) - (b.featured ? 0 : 1),
-      );
-  }
-}
-
-// GET /api/facets — optionally scoped to a collection. Falls back (dev-only) to
-// computing facets from the local mock catalog.
+// GET /api/facets — optionally scoped to a collection. Facets are computed only
+// by the backend; with it unreachable the filter rail just renders empty.
 export async function getFacets(collection?: string): Promise<Facets> {
   const query = collection
     ? `?collection=${encodeURIComponent(collection)}`
@@ -258,37 +193,8 @@ export async function getFacets(collection?: string): Promise<Facets> {
   try {
     return await request<Facets>(`/facets${query}`);
   } catch {
-    return computeMockFacets(collection);
+    return { priceRange: { min: 0, max: 0 }, tags: [], productTypes: [] };
   }
-}
-
-// DEV-ONLY: mirror the backend facets computation over the mock catalog.
-function computeMockFacets(collection?: string): Facets {
-  const scope = collection
-    ? mockProducts.filter((p) =>
-        p.collections.some((c) => c.handle === collection),
-      )
-    : mockProducts;
-  const prices = scope.map((p) => Number.parseFloat(p.priceRange.min.amount));
-  const tagCounts = new Map<string, number>();
-  const typeCounts = new Map<string, number>();
-  for (const p of scope) {
-    for (const t of p.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
-    if (p.productType)
-      typeCounts.set(p.productType, (typeCounts.get(p.productType) ?? 0) + 1);
-  }
-  const toSorted = (m: Map<string, number>) =>
-    [...m.entries()]
-      .map(([value, count]) => ({ value, count }))
-      .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
-  return {
-    priceRange: {
-      min: prices.length ? Math.min(...prices) : 0,
-      max: prices.length ? Math.max(...prices) : 0,
-    },
-    tags: toSorted(tagCounts),
-    productTypes: toSorted(typeCounts),
-  };
 }
 
 export async function getProduct(handle: string): Promise<Product | null> {
@@ -405,11 +311,10 @@ export async function createCheckout(
   email?: string,
 ): Promise<CheckoutResponse> {
   // session:true — checkout requires sign-in and the httpOnly Django session
-  // cookie is the credential (the backend also accepts a legacy token).
+  // cookie is the only credential the browser ever holds.
   return request<CheckoutResponse>("/checkout", {
     method: "POST",
     session: true,
-    auth: true,
     body: JSON.stringify(email ? { cartId, email } : { cartId }),
   });
 }
@@ -427,33 +332,9 @@ export async function completeCheckout(
 }
 
 /* -------------------------------------------------------------------------- */
-/* Auth — these surface REAL errors (no silent mock-success fallback).        */
+/* Auth — SESSION-ONLY. These surface REAL errors (no mock-success fallback). */
 /* The thrown Error's message is the API's generic, non-enumerating detail.   */
 /* -------------------------------------------------------------------------- */
-
-export async function register(
-  email: string,
-  password: string,
-): Promise<AuthResponse> {
-  const res = await request<AuthResponse>("/auth/register", {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-  });
-  setAuthToken(res.token);
-  return res;
-}
-
-export async function login(
-  email: string,
-  password: string,
-): Promise<AuthResponse> {
-  const res = await request<AuthResponse>("/auth/login", {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-  });
-  setAuthToken(res.token);
-  return res;
-}
 
 // Begin Google sign-in. The DJANGO BACKEND owns the whole OAuth flow: mode
 // "google" -> navigate the browser to `authorizeUrl` (Google's sign-in screen;
@@ -471,13 +352,13 @@ export async function googleLogin(
 
 // Sign in with Google/Apple. `credential` is the provider identity token (or a
 // "mock:<email>" token in dev). The backend verifies it and establishes the
-// httpOnly Django session (session:true persists the cookie); no JS-readable
-// token is stored.
+// httpOnly Django session (session:true persists the cookie); nothing
+// credential-like is ever stored client-side.
 export async function socialLogin(
   provider: SocialProvider,
   credential: string,
 ): Promise<User> {
-  const res = await request<AuthResponse>(`/auth/${provider}`, {
+  const res = await request<{ user: User }>(`/auth/${provider}`, {
     method: "POST",
     session: true,
     body: JSON.stringify({ credential }),
@@ -493,21 +374,8 @@ export async function logout(): Promise<void> {
       session: true,
     });
   } finally {
-    // Drop any legacy localStorage token too, even if the server call fails.
-    setAuthToken(null);
-  }
-}
-
-export async function getMe(): Promise<User | null> {
-  if (!getAuthToken()) return null;
-  try {
-    return await request<User>("/auth/me", { method: "GET", auth: true });
-  } catch (err) {
-    // An invalid/expired token -> drop it so the UI shows logged-out state.
-    if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
-      setAuthToken(null);
-    }
-    return null;
+    // Hygiene: drop the token older releases kept in localStorage.
+    clearLegacyAuthToken();
   }
 }
 
@@ -564,13 +432,11 @@ export async function shopifyLogout(): Promise<void> {
 /* Download library + order confirmation                                      */
 /* -------------------------------------------------------------------------- */
 
-// The download library now relies on the Shopify Customer Accounts SESSION
-// cookie (credentials:'include'). `auth:true` is also passed so a legacy token,
-// if present, still works — the backend accepts either (Session OR Token).
+// The download library relies on the httpOnly Django SESSION cookie
+// (credentials:'include') — the same credential as every signed-in call.
 export async function getMyDownloads(): Promise<DownloadItem[]> {
   return request<DownloadItem[]>("/me/downloads", {
     method: "GET",
-    auth: true,
     session: true,
   });
 }

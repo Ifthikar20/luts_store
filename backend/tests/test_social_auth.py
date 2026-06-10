@@ -20,13 +20,14 @@ def client():
     return APIClient()
 
 
-def test_google_signin_creates_user_token_and_optin(client):
+def test_google_signin_creates_user_session_and_optin(client):
     resp = client.post(
         "/api/auth/google", data={"credential": "mock:Fan@Example.com"}, format="json"
     )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["token"]
+    # The browser is NEVER handed a bearer token — the session is the credential.
+    assert "token" not in body
     assert body["user"]["email"] == "fan@example.com"
 
     from django.contrib.auth.models import User

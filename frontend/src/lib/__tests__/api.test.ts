@@ -4,17 +4,14 @@ import {
   API_URL,
   completeCheckout,
   createCheckout,
-  getAuthToken,
   getMyDownloads,
   getProducts,
   getSession,
   googleLogin,
-  login,
   logout,
   mockCompleteLogin,
   socialLogin,
   resendDownloads,
-  setAuthToken,
   shopifyLogin,
   shopifyLogout,
   subscribeNewsletter,
@@ -49,8 +46,7 @@ function decodeBody(body: BodyInit | null | undefined): unknown {
 let fetchSpy: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
-  // Reset the in-memory auth token between tests.
-  setAuthToken(null);
+  window.localStorage.clear();
   fetchSpy = vi.fn();
   vi.stubGlobal("fetch", fetchSpy);
 });
@@ -101,47 +97,15 @@ describe("getProducts querystring construction", () => {
   });
 });
 
-describe("auth token storage + header injection", () => {
-  it("persists the token to localStorage and reads it back", () => {
-    setAuthToken("abc123");
-    expect(getAuthToken()).toBe("abc123");
-    expect(window.localStorage.getItem("looks-lab:authToken")).toBe("abc123");
-
-    setAuthToken(null);
-    expect(getAuthToken()).toBeNull();
-    expect(window.localStorage.getItem("looks-lab:authToken")).toBeNull();
-  });
-
-  it("login stores the returned token", async () => {
-    fetchSpy.mockResolvedValue(
-      jsonResponse({ token: "tok-xyz", user: { id: 1, email: "a@b.com" } }),
-    );
-    const res = await login("a@b.com", "pw");
-    expect(res.token).toBe("tok-xyz");
-    expect(getAuthToken()).toBe("tok-xyz");
-
+describe("no client-side credentials", () => {
+  it("never injects an Authorization header — the session cookie is the credential", async () => {
+    fetchSpy.mockResolvedValue(jsonResponse([]));
+    await getMyDownloads();
     const init = lastFetchInit(fetchSpy);
-    expect(init.method).toBe("POST");
-    expect(decodeBody(init.body)).toEqual({
-      email: "a@b.com",
-      password: "pw",
-    });
-  });
-
-  it("injects the Authorization header on authed requests", async () => {
-    setAuthToken("tok-secret");
-    fetchSpy.mockResolvedValue(jsonResponse([]));
-    await getMyDownloads();
-    const headers = lastFetchInit(fetchSpy).headers as Record<string, string>;
-    expect(headers.Authorization).toBe("Token tok-secret");
-    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/me/downloads`);
-  });
-
-  it("omits the Authorization header when there is no token", async () => {
-    fetchSpy.mockResolvedValue(jsonResponse([]));
-    await getMyDownloads();
-    const headers = lastFetchInit(fetchSpy).headers as Record<string, string>;
+    const headers = init.headers as Record<string, string>;
     expect(headers.Authorization).toBeUndefined();
+    expect(init.credentials).toBe("include");
+    expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/me/downloads`);
   });
 });
 
@@ -208,9 +172,9 @@ describe("backend-owned auth (Django session, credentials:include)", () => {
     expect(lastFetchInit(fetchSpy).credentials).toBe("include");
   });
 
-  it("socialLogin POSTs the credential with cookies and stores NO token", async () => {
+  it("socialLogin POSTs the credential with cookies and stores nothing", async () => {
     fetchSpy.mockResolvedValue(
-      jsonResponse({ token: "tok-xyz", user: { id: 1, email: "a@b.com" } }),
+      jsonResponse({ user: { id: 1, email: "a@b.com" } }),
     );
     const user = await socialLogin("google", "mock:a@b.com");
     expect(user).toEqual({ id: 1, email: "a@b.com" });
@@ -218,19 +182,19 @@ describe("backend-owned auth (Django session, credentials:include)", () => {
     const init = lastFetchInit(fetchSpy);
     expect(init.method).toBe("POST");
     expect(init.credentials).toBe("include");
-    // Auth is the httpOnly session — no JS-readable token is persisted.
-    expect(getAuthToken()).toBeNull();
+    // Auth is the httpOnly session — nothing credential-like in localStorage.
+    expect(window.localStorage.getItem("looks-lab:authToken")).toBeNull();
   });
 
-  it("logout POSTs /auth/session/logout with cookies and clears any token", async () => {
-    setAuthToken("legacy-token");
+  it("logout POSTs /auth/session/logout with cookies and drops the legacy token", async () => {
+    window.localStorage.setItem("looks-lab:authToken", "legacy-token");
     fetchSpy.mockResolvedValue(jsonResponse({ ok: true }));
     await logout();
     expect(lastFetchUrl(fetchSpy)).toBe(`${API_URL}/auth/session/logout`);
     const init = lastFetchInit(fetchSpy);
     expect(init.method).toBe("POST");
     expect(init.credentials).toBe("include");
-    expect(getAuthToken()).toBeNull();
+    expect(window.localStorage.getItem("looks-lab:authToken")).toBeNull();
   });
 });
 

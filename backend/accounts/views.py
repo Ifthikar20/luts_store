@@ -5,13 +5,16 @@ Base path: ``/api/auth``
 
 AUTH IS OWNED BY DJANGO: every successful sign-in (email/password, Google,
 Apple) establishes a server-side Django SESSION (httpOnly cookie) via
-``django.contrib.auth.login``. The legacy DRF token is still returned in JSON
-for back-compat, but the frontend is pure UI and relies on the session.
+``django.contrib.auth.login``. The browser-facing social endpoints return NO
+bearer token — the cookie is the only credential the SPA ever has. The
+register/login endpoints still return a DRF token for LEGACY non-browser API
+clients only.
 
 * POST /register        {email, password} -> {token, user:{id, email}} + session
 * POST /login           {email, password} -> {token, user:{id, email}} + session
-* POST /logout          (auth) -> {status: "ok"}; deletes the caller's token
+* POST /logout          (auth) -> {status: "ok"}; deletes token + session
 * GET  /me              (auth) -> {id, email}
+* POST /google, /apple  {credential} -> {user:{id, email}} + session (no token)
 * GET  /google/login    ?returnTo=/cart -> {mode:"google", authorizeUrl} | {mode:"mock"}
 * GET  /google/callback ?code=&state=   -> 302 to FRONTEND_URL + returnTo (session set)
 
@@ -141,8 +144,9 @@ def _social(request, provider: str):
     """Sign in with Google/Apple. Body: ``{credential}`` (the provider token).
 
     Verifies the token, creates/links the account, opts the email into deals +
-    the biweekly free LUT, and returns ``{token, user}`` while also logging the
-    browser in via session.
+    the biweekly free LUT, and logs the browser in via the httpOnly Django
+    session. Returns ``{user}`` only — the browser is NEVER handed a bearer
+    token (nothing for XSS to exfiltrate; the session cookie is the credential).
     """
     data = request.data if isinstance(request.data, dict) else {}
     token = data.get("credential") or data.get("token") or data.get("identityToken")
@@ -154,8 +158,7 @@ def _social(request, provider: str):
         return Response({"detail": "Sign-in failed."}, status=401)
 
     session_login(request, user)  # httpOnly session cookie
-    drf_token, _ = Token.objects.get_or_create(user=user)
-    return Response({"token": drf_token.key, "user": services.serialize_user(user)})
+    return Response({"user": services.serialize_user(user)})
 
 
 @api_view(["POST"])

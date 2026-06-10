@@ -168,11 +168,6 @@ export interface User {
 // Social sign-in providers (login required to buy).
 export type SocialProvider = "google" | "apple";
 
-export interface AuthResponse {
-  token: string;
-  user: User;
-}
-
 // Response from GET /api/auth/google/login.
 // - mode "google": navigate the browser to `authorizeUrl` (Google's hosted
 //   sign-in screen; the Django backend owns the whole OAuth flow + session).
