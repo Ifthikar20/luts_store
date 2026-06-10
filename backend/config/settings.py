@@ -218,6 +218,9 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    # Unwrap the storefront's obfuscated JSON envelopes before any body parsing
+    # (obfuscation only — see common/obfuscation.py; plain JSON still works).
+    "common.obfuscation.ObfuscatedPayloadMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",

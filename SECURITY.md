@@ -43,6 +43,11 @@ verified (constant-time compare) and idempotent by order id.
 - Auth: DRF tokens (hashed Django passwords) or an httpOnly session cookie via
   Shopify OAuth + PKCE. No JWT in localStorage. CORS is locked to the exact
   frontend origin; CSRF/session cookies are `HttpOnly` + `SameSite=Lax`.
+- **Payload obfuscation (deterrent only):** the storefront wraps JSON POST
+  bodies in an encoded envelope that the backend unwraps transparently
+  (`common/obfuscation.py`), so payloads aren't casually readable in DevTools
+  or trivially replayed. The key ships in the JS bundle by necessity — this is
+  explicitly NOT a security boundary; TLS + server-side validation are.
 
 ## 4. Secrets & configuration
 

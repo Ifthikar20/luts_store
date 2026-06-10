@@ -38,6 +38,7 @@ import {
   mockProductByHandle,
   mockProducts,
 } from "./mock";
+import { envelope } from "./obfuscate";
 
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
@@ -119,9 +120,14 @@ async function request<T>(
     const token = getAuthToken();
     if (token) headers.Authorization = `Token ${token}`;
   }
+  // Obfuscate JSON request bodies (see lib/obfuscate.ts — DevTools deterrent,
+  // not a security boundary; the backend unwraps transparently).
+  const body =
+    typeof init?.body === "string" ? envelope(init.body) : init?.body;
   try {
     const res = await fetch(`${API_URL}${path}`, {
       ...init,
+      body,
       signal: controller.signal,
       headers,
       // Send cookies for session-based (Shopify Customer Accounts) requests.

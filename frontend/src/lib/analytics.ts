@@ -5,6 +5,7 @@
 // no cookies, no IP/user-agent storage, no third-party scripts. Fire-and-forget:
 // failures are swallowed so tracking can never break the storefront.
 import { API_URL } from "./api";
+import { envelope } from "./obfuscate";
 
 const SESSION_KEY = "luts:analytics-session";
 
@@ -39,7 +40,9 @@ export function track(
     void fetch(`${API_URL}/events`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session: sessionId(), events: [{ name, ...props }] }),
+      body: envelope(
+        JSON.stringify({ session: sessionId(), events: [{ name, ...props }] }),
+      ),
       // keepalive lets the request survive page navigations (e.g. the redirect
       // to Stripe right after begin_checkout).
       keepalive: true,
