@@ -16,6 +16,8 @@ stripe>=9.0
 redis>=5.0
 # Error monitoring — initialized only when SENTRY_DSN is set (see settings).
 sentry-sdk[django]>=2.0
+# Apple Sign In identity-token verification (only used when APPLE_CLIENT_ID set).
+pyjwt[crypto]>=2.8
 
 # Test dependencies
 pytest>=8.0

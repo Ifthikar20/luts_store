@@ -19,7 +19,18 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def client():
+def client(django_user_model):
+    # Buying requires a signed-in account; authenticate the test client.
+    user = django_user_model.objects.create_user(
+        username="buyer@example.com", email="buyer@example.com", password="pw12345!"
+    )
+    c = APIClient()
+    c.force_authenticate(user=user)
+    return c
+
+
+@pytest.fixture
+def anon_client():
     return APIClient()
 
 
@@ -64,6 +75,15 @@ def test_checkout_unknown_cart_404(client):
 def test_checkout_requires_cart_id(client):
     resp = client.post("/api/checkout", data={}, format="json")
     assert resp.status_code == 400
+
+
+def test_checkout_requires_login(anon_client):
+    """Anonymous buyers are prompted to sign in (401, code login_required)."""
+    resp = anon_client.post(
+        "/api/checkout", data={"cartId": "x"}, format="json"
+    )
+    assert resp.status_code == 401
+    assert resp.json()["code"] == "login_required"
 
 
 # ---------------------------------------------------------------------------

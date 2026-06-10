@@ -44,7 +44,20 @@ class SensitiveScopedThrottle(SimpleRateThrottle):
 @api_view(["POST"])
 @throttle_classes([AnonRateThrottle, SensitiveScopedThrottle])
 def checkout(request):
-    """Begin checkout for a cart. Returns ``{mode, checkoutUrl}``."""
+    """Begin checkout for a cart. Returns ``{mode, checkoutUrl}``.
+
+    Buying requires a signed-in account (Google/Apple). Anonymous callers get a
+    401 with ``code: "login_required"`` so the storefront can prompt sign-in.
+    """
+    if not request.user or not request.user.is_authenticated:
+        return Response(
+            {
+                "detail": "Please sign in to complete your purchase.",
+                "code": "login_required",
+            },
+            status=401,
+        )
+
     data = request.data if isinstance(request.data, dict) else {}
     cart_id = data.get("cartId")
     email = data.get("email")

@@ -72,6 +72,15 @@ STRIPE_PUBLISHABLE_KEY = config("STRIPE_PUBLISHABLE_KEY", default="")
 STRIPE_ENABLED = bool(STRIPE_SECRET_KEY.strip())
 
 # ---------------------------------------------------------------------------
+# Social sign-in (Google / Apple) — required to buy. When a provider's client
+# id is set, its identity token is verified for real; otherwise a DEV-ONLY
+# "mock:<email>" token is accepted so local/test sign-in works with no creds
+# (mirrors the Stripe/Shopify mock pattern).
+# ---------------------------------------------------------------------------
+GOOGLE_CLIENT_ID = config("GOOGLE_CLIENT_ID", default="")
+APPLE_CLIENT_ID = config("APPLE_CLIENT_ID", default="")  # Apple "Services ID"
+
+# ---------------------------------------------------------------------------
 # Shopify Customer Accounts (OAuth 2.0 / OpenID Connect, PKCE) — OPTIONAL login
 # ---------------------------------------------------------------------------
 # Powers the hosted-login account/library portal at account.<domain>, exactly
