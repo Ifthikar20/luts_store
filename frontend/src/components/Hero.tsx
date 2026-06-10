@@ -24,13 +24,14 @@ export function Hero() {
         className="pointer-events-none absolute inset-0 bg-wash-light opacity-70"
       />
 
-      <div className="container-xl relative">
-        {/* Large rounded media showcase — the Apple hero centrepiece. */}
+      <div className="relative">
+        {/* Large rounded media showcase — full-bleed to the viewport so it's
+            the dominant hero centrepiece. */}
         <motion.div
           variants={reduced ? undefined : media}
           initial={reduced ? false : "hidden"}
           animate={reduced ? undefined : "visible"}
-          className="mx-auto max-w-6xl"
+          className="relative left-1/2 w-screen max-w-[1800px] -translate-x-1/2 px-4 sm:px-6"
         >
           <HeroVideo src={HERO_VIDEO.src} poster={HERO_VIDEO.poster} />
         </motion.div>
