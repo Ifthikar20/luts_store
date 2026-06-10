@@ -24,20 +24,15 @@ export function Hero() {
         className="pointer-events-none absolute inset-0 bg-wash-light opacity-70"
       />
 
-      <div className="relative">
-        {/* Large rounded media showcase. Centered full-bleed: w-screen with
-            left-1/2 + -translate-x-1/2 (NO max-width — a cap breaks the
-            translate centering and pushes it off-screen). The inner max-w caps
-            the actual card so it stays a sensible size on ultrawide screens. */}
+      {/* Large rounded media showcase — centered in a wide container (no full-
+          bleed: 100vw includes the scrollbar and shifts it off-center). */}
+      <div className="relative mx-auto w-full max-w-[1500px] px-4 sm:px-6">
         <motion.div
           variants={reduced ? undefined : media}
           initial={reduced ? false : "hidden"}
           animate={reduced ? undefined : "visible"}
-          className="relative left-1/2 w-screen -translate-x-1/2 px-4 sm:px-6"
         >
-          <div className="mx-auto max-w-[1600px]">
-            <HeroVideo sources={HERO_VIDEO.sources} poster={HERO_VIDEO.poster} />
-          </div>
+          <HeroVideo sources={HERO_VIDEO.sources} poster={HERO_VIDEO.poster} />
         </motion.div>
       </div>
     </section>

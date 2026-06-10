@@ -21,9 +21,11 @@ const config: Config = {
         mist: "#fafafa",
         // Hairline border.
         hairline: "#d2d2d7",
-        // Text scale.
-        graphite: "#1d1d1f",
-        slate2: "#6e6e73",
+        // Text scale — all-black per brand (Instant cinema gradient is the only
+        // colored text). graphite = pure black; slate2 = near-black so it still
+        // reads as black while keeping input placeholders distinguishable.
+        graphite: "#000000",
+        slate2: "#1d1d1f",
         // Apple blue accents.
         sky: {
           DEFAULT: "#0071e3",
