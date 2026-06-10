@@ -139,14 +139,13 @@ S3_KEY_PREFIX = config("S3_KEY_PREFIX", default="luts")
 # fast. Distinct from DOWNLOAD_TOKEN_MAX_AGE (the signed-token / grant lifetime).
 DOWNLOAD_URL_TTL = config("DOWNLOAD_URL_TTL", default=60, cast=int)
 
-# Real S3 delivery is active only when keys AND a bucket are configured. Keep
-# this independent of MOCK_MODE: a store could run live Shopify but still demo
-# downloads, or vice-versa. The download view branches on this flag.
-S3_DELIVERY_ENABLED = bool(
-    AWS_ACCESS_KEY_ID.strip()
-    and AWS_SECRET_ACCESS_KEY.strip()
-    and AWS_S3_BUCKET.strip()
-)
+# Real S3 delivery is active whenever a bucket is configured. Credentials may
+# come from the explicit AWS_* keys OR from boto3's default chain (e.g. an EC2
+# instance role) — so on EC2 you can attach a least-privilege role and leave
+# the key vars blank. Keep this independent of MOCK_MODE: a store could run
+# live Shopify but still demo downloads, or vice-versa. The download view
+# branches on this flag.
+S3_DELIVERY_ENABLED = bool(AWS_S3_BUCKET.strip())
 
 # ---------------------------------------------------------------------------
 # Frontend / public site URL (used to build links inside emails)

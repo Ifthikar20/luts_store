@@ -23,6 +23,17 @@ from . import mockdata
 # ---------------------------------------------------------------------------
 # Public service functions
 # ---------------------------------------------------------------------------
+def _public(product: dict[str, Any]) -> dict[str, Any]:
+    """Strip server-only fields from a product before it leaves the API.
+
+    ``file_key`` is the private S3 object key used by the download endpoint; it
+    must never be serialized to clients (it is resolved server-side via
+    ``file_key_for_handle`` at download time).
+    """
+    product.pop("file_key", None)
+    return product
+
+
 def list_collections() -> list[dict[str, Any]]:
     """Return collections as ``[{handle,title,description,image,productCount}]``."""
     if settings.MOCK_MODE:
@@ -52,7 +63,9 @@ def get_collection(handle: str) -> dict[str, Any] | None:
             "handle": coll["handle"],
             "title": coll["title"],
             "description": coll["description"],
-            "products": mockdata.products_in_collection(handle),
+            "products": [
+                _public(p) for p in mockdata.products_in_collection(handle)
+            ],
         }
     return _live_get_collection(handle)
 
@@ -88,7 +101,7 @@ def list_products(
             needle = search.lower().strip()
             products = [p for p in products if _matches_search(p, needle)]
         products = _apply_filters(products, min_price, max_price, tags)
-        return _apply_sort(products, sort)
+        return [_public(p) for p in _apply_sort(products, sort)]
     return _live_list_products(
         collection=collection,
         featured=featured,
@@ -103,7 +116,8 @@ def list_products(
 def get_product(handle: str) -> dict[str, Any] | None:
     """Return a single Product or None."""
     if settings.MOCK_MODE:
-        return mockdata.get_product(handle)
+        product = mockdata.get_product(handle)
+        return _public(product) if product else None
     return _live_get_product(handle)
 
 

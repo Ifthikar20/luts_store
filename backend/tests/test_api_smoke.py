@@ -221,3 +221,16 @@ def test_download_token_endpoint(client):
 def test_download_token_invalid(client):
     resp = client.get("/api/download/not-a-real-token")
     assert resp.status_code == 403
+
+
+def test_file_key_never_serialized_to_clients(client):
+    """``file_key`` is the private S3 object key — it must never appear in any
+    catalog API response (it is resolved server-side at download time)."""
+    products = client.get("/api/products").json()["products"]
+    assert products and all("file_key" not in p for p in products)
+
+    detail = client.get("/api/products/midnight-noir").json()
+    assert "file_key" not in detail
+
+    coll = client.get("/api/collections/cinematic").json()
+    assert all("file_key" not in p for p in coll["products"])

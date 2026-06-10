@@ -19,18 +19,21 @@ from django.conf import settings
 
 
 def get_s3_client():
-    """Build a boto3 S3 client from env-provided credentials.
+    """Build a boto3 S3 client.
 
-    Uses SigV4 explicitly (required for presigned GET URLs to be valid against
-    all regions / S3-compatible endpoints). Honors an optional custom endpoint
-    for S3-compatible stores (MinIO, Cloudflare R2, Wasabi, ...).
+    Credentials: explicit env keys when set; otherwise boto3's default chain
+    (EC2/ECS instance role, ~/.aws, env) — so on EC2 you can attach an IAM role
+    and leave the key vars blank. Uses SigV4 explicitly (required for presigned
+    GET URLs to be valid against all regions / S3-compatible endpoints). Honors
+    an optional custom endpoint for S3-compatible stores (MinIO, R2, Wasabi...).
     """
     kwargs: dict = {
         "region_name": settings.AWS_S3_REGION,
-        "aws_access_key_id": settings.AWS_ACCESS_KEY_ID,
-        "aws_secret_access_key": settings.AWS_SECRET_ACCESS_KEY,
         "config": Config(signature_version="s3v4"),
     }
+    if settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY:
+        kwargs["aws_access_key_id"] = settings.AWS_ACCESS_KEY_ID
+        kwargs["aws_secret_access_key"] = settings.AWS_SECRET_ACCESS_KEY
     if settings.AWS_S3_ENDPOINT_URL:
         kwargs["endpoint_url"] = settings.AWS_S3_ENDPOINT_URL
     return boto3.client("s3", **kwargs)

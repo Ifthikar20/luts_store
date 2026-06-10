@@ -52,7 +52,7 @@ Browser ──► Next.js (storefront, :3000) ──► Django BFF (:8000) ─�
 | `STRIPE_PUBLISHABLE_KEY` | No | empty | Only needed for a custom client-side Stripe UI; unused by the hosted flow. |
 | `DOWNLOAD_TOKEN_MAX_AGE` | No | `86400` | Signed download-token (grant link) lifetime, seconds. |
 | `DOWNLOAD_S3_BASE_URL` | No | `https://example-bucket.s3.amazonaws.com` | Legacy base; presigned flow derives URLs via boto3 instead. |
-| `AWS_ACCESS_KEY_ID` | Real delivery | empty → mock | IAM access key for presigned S3 downloads. Setting keys+bucket enables real delivery. |
+| `AWS_ACCESS_KEY_ID` | Real delivery (optional) | empty | IAM access key for presigned S3 downloads. Leave blank to use boto3's default chain (e.g. an EC2 instance role). Real delivery activates when `AWS_S3_BUCKET` is set. |
 | `AWS_SECRET_ACCESS_KEY` | Real delivery | empty | IAM secret key. |
 | `AWS_S3_REGION` | Real delivery | `us-east-1` | Bucket region. |
 | `AWS_S3_BUCKET` | Real delivery | empty | **Private** bucket holding the LUT files. |
