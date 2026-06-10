@@ -10,8 +10,7 @@
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 [ -n "${EIP:-}" ] || die "no EIP in state — run ./03-ec2.sh first."
-PEM="$AWSDIR/$KEY_NAME.pem"
-[ -f "$PEM" ] || die "$PEM missing — needed to ssh."
+[ -f "$PEM" ] || die "$PEM missing — needed to ssh."   # $PEM resolved in lib.sh
 
 SSH=(ssh -i "$PEM" -o StrictHostKeyChecking=accept-new "ubuntu@$EIP")
 

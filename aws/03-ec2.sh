@@ -36,8 +36,22 @@ fi
 put_state SG_ID "$SG_ID"
 
 # --- key pair ----------------------------------------------------------------
-PEM="$AWSDIR/$KEY_NAME.pem"
-if aws ec2 describe-key-pairs --key-names "$KEY_NAME" >/dev/null 2>&1; then
+# $PEM is resolved in lib.sh: aws/$KEY_NAME.pem by default, or KEY_FILE if set.
+if [ -n "${KEY_FILE:-}" ]; then
+  # You brought your own key (e.g. fynda-deploy.pem). Never create or overwrite
+  # it — just make sure it's present locally and registered in this AWS region.
+  [ -f "$PEM" ] || die "KEY_FILE=$KEY_FILE not found — point it at your .pem."
+  chmod 400 "$PEM" 2>/dev/null || true
+  if aws ec2 describe-key-pairs --key-names "$KEY_NAME" >/dev/null 2>&1; then
+    ok "using your existing key pair '$KEY_NAME' ($PEM)"
+  else
+    die "key pair '$KEY_NAME' is not in AWS region $AWS_REGION.
+   Register the public half of your key once, then re-run:
+     ssh-keygen -y -f '$PEM' > '$PEM.pub'
+     aws ec2 import-key-pair --key-name '$KEY_NAME' \\
+       --public-key-material fileb://'$PEM.pub'"
+  fi
+elif aws ec2 describe-key-pairs --key-names "$KEY_NAME" >/dev/null 2>&1; then
   ok "key pair $KEY_NAME exists"
   [ -f "$PEM" ] || warn "but $PEM is not on this machine — you'll need the original to ssh."
 else
@@ -98,7 +112,7 @@ EIP=$(aws ec2 describe-addresses --allocation-ids "$EIP_ALLOC" --query 'Addresse
 put_state EIP "$EIP"
 
 echo
-ok "server is up:  ssh -i aws/$KEY_NAME.pem ubuntu@$EIP"
+ok "server is up:  ssh -i $PEM ubuntu@$EIP"
 echo
 echo "  NOW DO THIS (before ./04-app.sh):"
 echo "    Create two DNS A records pointing at $EIP:"

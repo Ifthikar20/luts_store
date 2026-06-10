@@ -8,8 +8,7 @@
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 [ -n "${EIP:-}" ] || die "no EIP in state — run ./03-ec2.sh first."
-PEM="$AWSDIR/$KEY_NAME.pem"
-[ -f "$PEM" ] || die "$PEM missing — needed to ssh."
+[ -f "$PEM" ] || die "$PEM missing — needed to ssh."   # $PEM resolved in lib.sh
 SECRETS="$AWSDIR/production-secrets.env"
 [ -f "$SECRETS" ] || die "aws/production-secrets.env missing — cp aws/production-secrets.env.example aws/production-secrets.env and fill it in."
 

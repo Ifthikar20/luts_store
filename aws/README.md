@@ -10,7 +10,30 @@ installed and `aws configure` done with an admin-ish user.
 ```bash
 cd aws
 cp config.env.example config.env   # edit: bucket name, region, domains, repo URL
+```
 
+### One command (recommended): `./deploy-all.sh`
+
+`deploy-all.sh` runs 01→05 in order **with checkpoints** — each finished step is
+recorded in `state.env`, so a re-run resumes from where you stopped instead of
+repeating everything. It pauses at one breakpoint (after 03) so you can point DNS
+at the Elastic IP, and it skips 05 until you've filled in your secrets.
+
+```bash
+./deploy-all.sh            # run all remaining steps, pausing at the DNS breakpoint
+./deploy-all.sh status     # show which steps are done / pending
+./deploy-all.sh --yes      # don't pause at the breakpoint (DNS already set)
+./deploy-all.sh --only 4   # just redeploy the app (git pull + rebuild)
+./deploy-all.sh --from 3   # re-run from step 3 onward
+./deploy-all.sh reset      # clear checkpoints (AWS resources untouched)
+```
+
+`./01-s3.sh upload ~/my-luts` (uploading your `<handle>.zip` files) stays a
+separate, repeatable step — run it whenever your catalog changes.
+
+### Or step-by-step
+
+```bash
 ./01-s3.sh                         # private, encrypted product-files bucket
 ./01-s3.sh upload ~/my-luts        # upload <handle>.zip files (repeatable)
 ./02-iam.sh                        # s3:GetObject-only role for the instance
@@ -27,8 +50,23 @@ cp production-secrets.env.example production-secrets.env   # fill in Stripe + SM
 Done. The storefront is at `https://<DOMAIN>`, the API at
 `https://<API_DOMAIN>/api/health`.
 
+### Reusing a key you already have (e.g. `fynda-deploy.pem`)
+
+By default 03 creates a fresh key pair and saves `aws/<KEY_NAME>.pem`. To use a
+private key you already downloaded, set both in `config.env`:
+
+```bash
+KEY_NAME=fynda-deploy                                    # the AWS key-pair name
+KEY_FILE=~/Downloads/LUTS.shop/luts_store/fynda-deploy.pem
+```
+
+With `KEY_FILE` set, 03 **never creates or overwrites** the key — it just checks
+the file is present and the pair exists in your region — and 04/05 ssh with that
+exact file. The `.pem` stays git-ignored; never commit it.
+
 | Script | Creates | Re-run to |
 | --- | --- | --- |
+| `deploy-all.sh` | Runs 01→05 with checkpoints + a DNS breakpoint | resume where you stopped (skips finished steps) |
 | `01-s3.sh` | Private bucket (Block Public Access + SSE) | upload more files |
 | `02-iam.sh` | Role + instance profile, `s3:GetObject` on `luts/*` only | update the policy |
 | `03-ec2.sh` | SG (22/80/443 only), key pair, t3.small, Elastic IP | reuses everything existing |

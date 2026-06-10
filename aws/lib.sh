@@ -31,3 +31,14 @@ put_state() { # key value — upsert into state.env
   mv "$STATE.tmp" "$STATE"
   export "${key}=${value}"
 }
+
+# --- SSH key (single source of truth for 03/04/05) ---------------------------
+# Set KEY_FILE in config.env to reuse a private key you already have
+# (e.g. fynda-deploy.pem); 03 then never creates or overwrites a key pair.
+# Otherwise PEM defaults to aws/$KEY_NAME.pem, which 03 creates.
+if [ -n "${KEY_FILE:-}" ]; then
+  PEM="${KEY_FILE/#\~/$HOME}"   # expand a leading ~ to $HOME
+else
+  PEM="$AWSDIR/${KEY_NAME:-luts-store}.pem"
+fi
+export PEM
