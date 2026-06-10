@@ -12,13 +12,16 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for the system design and request flows
 ## 1. Topology
 
 ```
-Browser ──► Next.js (storefront, :3000) ──► Django BFF (:8000) ──► Shopify / Postgres / S3
+Browser ──► Next.js (storefront, :3000) ──► Django BFF (:8000) ──► Stripe / Shopify / Postgres / S3
 ```
 
 - The **frontend** holds no secrets; it only receives `NEXT_PUBLIC_*` values.
 - The **backend** owns all secrets, the database, webhook handling, and signed
   download links.
-- **Shopify** is the commerce engine (catalog, cart, hosted checkout, payments).
+- **Payments**: Stripe Checkout (hosted; active when `STRIPE_SECRET_KEY` is set —
+  see GOING_LIVE.md) or Shopify's hosted checkout. Card data never touches this stack.
+- **Shopify** (optional) supplies the live catalog/cart; without it the in-repo
+  mock catalog serves the storefront (a valid combo with live Stripe payments).
 
 ---
 
@@ -44,6 +47,9 @@ Browser ──► Next.js (storefront, :3000) ──► Django BFF (:8000) ─�
 | `SHOPIFY_ADMIN_TOKEN` | Live mode | empty | Admin API token (order reads/fulfillment). |
 | `SHOPIFY_ADMIN_API_VERSION` | No | `2024-10` | Admin API version. |
 | `SHOPIFY_WEBHOOK_SECRET` | Live mode | empty | Shared secret to verify `orders/paid` HMAC. |
+| `STRIPE_SECRET_KEY` | Stripe payments | empty → demo checkout | Stripe secret key (`sk_live_…`/`sk_test_…`). Setting it makes `/api/checkout` return a hosted Stripe Checkout URL. |
+| `STRIPE_WEBHOOK_SECRET` | Stripe payments | empty | Signing secret (`whsec_…`) for the `checkout.session.completed` endpoint at `/api/webhooks/stripe`. |
+| `STRIPE_PUBLISHABLE_KEY` | No | empty | Only needed for a custom client-side Stripe UI; unused by the hosted flow. |
 | `DOWNLOAD_TOKEN_MAX_AGE` | No | `86400` | Signed download-token (grant link) lifetime, seconds. |
 | `DOWNLOAD_S3_BASE_URL` | No | `https://example-bucket.s3.amazonaws.com` | Legacy base; presigned flow derives URLs via boto3 instead. |
 | `AWS_ACCESS_KEY_ID` | Real delivery | empty → mock | IAM access key for presigned S3 downloads. Setting keys+bucket enables real delivery. |

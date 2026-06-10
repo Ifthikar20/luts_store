@@ -54,7 +54,9 @@ def _make_cart(client, handle="midnight-noir"):
     return resp.json()["id"], variant_id
 
 
-def _completed_event(cart_id, session_id="cs_test_123", email="guest@example.com"):
+def _completed_event(
+    cart_id, session_id="cs_test_123", email="guest@example.com", metadata=None
+):
     return {
         "type": "checkout.session.completed",
         "data": {
@@ -66,6 +68,7 @@ def _completed_event(cart_id, session_id="cs_test_123", email="guest@example.com
                 "amount_total": 3900,  # $39.00 in cents (midnight-noir)
                 "currency": "usd",
                 "payment_status": "paid",
+                "metadata": metadata or {"cart_id": cart_id},
             }
         },
     }
@@ -98,6 +101,12 @@ def test_checkout_creates_stripe_session(client, stripe_enabled, monkeypatch):
     assert captured["line_items"][0]["price_data"]["unit_amount"] == 3900
     assert captured["line_items"][0]["quantity"] == 1
     assert "stripe-{CHECKOUT_SESSION_ID}" in captured["success_url"]
+
+    # And a paid-lines snapshot in metadata (what the webhook will grant from).
+    import json
+
+    snapshot = json.loads(captured["metadata"]["lines"])
+    assert snapshot == [{"h": "midnight-noir", "t": "Midnight Noir", "q": 1}]
 
 
 def test_complete_404_when_stripe_enabled(client, stripe_enabled):
@@ -168,6 +177,54 @@ def test_webhook_is_idempotent(
     assert Order.objects.filter(shopify_order_id="stripe-cs_test_123").count() == 1
     # Idempotent replay sends no second email.
     assert len(mail.outbox) == 1
+
+
+def test_webhook_grants_from_snapshot_not_mutated_cart(
+    client, stripe_enabled, monkeypatch, django_capture_on_commit_callbacks
+):
+    """Items added to the cart AFTER the Stripe redirect must not get grants.
+
+    The webhook grants from the metadata snapshot taken at session creation,
+    not from the live cart (which the shopper could mutate in another tab while
+    on Stripe's payment page).
+    """
+    from catalog import mockdata
+
+    cart_id, _ = _make_cart(client)  # paid for: midnight-noir only
+
+    # Shopper mutates the cart while on Stripe's card page.
+    extra = mockdata.get_product("golden-hour-drama")["variants"][0]["id"]
+    resp = client.post(
+        f"/api/cart/{cart_id}/lines",
+        data={"merchandiseId": extra, "quantity": 1},
+        format="json",
+    )
+    assert resp.status_code == 200
+
+    event = _completed_event(
+        cart_id,
+        metadata={
+            "cart_id": cart_id,
+            "lines": '[{"h":"midnight-noir","t":"Midnight Noir","q":1}]',
+        },
+    )
+    monkeypatch.setattr(
+        gw.stripe.Webhook, "construct_event", lambda payload, sig, secret: event
+    )
+    with django_capture_on_commit_callbacks(execute=True):
+        client.post(
+            "/api/webhooks/stripe",
+            data="{}",
+            content_type="application/json",
+            HTTP_STRIPE_SIGNATURE="t=1,v1=sig",
+        )
+
+    from delivery.models import DownloadGrant
+
+    handles = list(
+        DownloadGrant.objects.values_list("product_handle", flat=True)
+    )
+    assert handles == ["midnight-noir"]  # no grant for the unpaid extra item
 
 
 def test_webhook_bad_signature_400(client, stripe_enabled, monkeypatch):

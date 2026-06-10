@@ -5,10 +5,14 @@ Tables) — individual LUTs, categorized collections, and bundles — built on a
 **Next.js + Django + Shopify** architecture.
 
 - **Frontend** (`frontend/`) — Next.js (App Router) + Tailwind + Framer Motion. A modern, cinematic, animated storefront. Holds no secrets.
-- **Backend** (`backend/`) — Django + DRF Backend-for-Frontend. Owns business logic, secrets, the database, webhook handling, and signed digital delivery. Talks to Shopify.
-- **Shopify** — commerce engine: catalog, cart, hosted checkout, payments.
+- **Backend** (`backend/`) — Django + DRF Backend-for-Frontend. Owns business logic, secrets, the database, webhook handling, and signed digital delivery.
+- **Payments** — **Stripe Checkout** (hosted, self-contained — recommended) or Shopify's hosted checkout. Card data never touches our servers.
+- **Shopify** (optional) — live catalog/cart engine; without it the in-repo mock catalog serves everything.
 
-See **[ARCHITECTURE.md](./ARCHITECTURE.md)** for the full design and request flows.
+Start with **[PROJECT.md](./PROJECT.md)** (overview, status, TODOs). Then:
+**[ARCHITECTURE.md](./ARCHITECTURE.md)** (design) · **[GOING_LIVE.md](./GOING_LIVE.md)**
+(activate Stripe/S3/SMTP) · **[SECURITY.md](./SECURITY.md)** (threat model) ·
+`./deploy.sh` (one-shot Docker deploy).
 
 ## Quick start (mock mode — no Shopify account needed)
 
@@ -34,16 +38,20 @@ npm run dev                       # http://localhost:3000
 
 Open http://localhost:3000.
 
-## Going live with Shopify
-Fill the Shopify env vars in `backend/.env` (Storefront token, Admin token,
-webhook secret, shop domain). The backend automatically switches from mock
-mode to real Shopify calls once `SHOPIFY_STOREFRONT_TOKEN` is set. Configure a
-Shopify webhook for `orders/paid` pointing at
-`/api/webhooks/shopify/orders-paid`. See `backend/README.md`.
+## Going live
+Every integration activates by env var alone — see **[GOING_LIVE.md](./GOING_LIVE.md)**:
+
+- **Payments (Stripe):** set `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`;
+  `/api/checkout` then returns a hosted Stripe Checkout URL and the signed
+  `/api/webhooks/stripe` webhook creates the order, downloads and receipt email.
+- **Shopify (optional):** set `SHOPIFY_STOREFRONT_TOKEN` (+ webhook secret,
+  `orders/paid` → `/api/webhooks/shopify/orders-paid`) for a live catalog/checkout.
+- **Downloads:** set the `AWS_*` vars and upload `luts/<handle>.zip` to a private bucket.
+- **Email:** point `EMAIL_BACKEND` at SMTP.
 
 ## Testing
 ```bash
-# Backend — Django + pytest (67 tests, runs in mock mode, SQLite)
+# Backend — Django + pytest (103 tests, runs in mock mode, SQLite)
 cd backend && source .venv/bin/activate && python -m pytest
 
 # Frontend — Vitest + React Testing Library (lib + component tests)

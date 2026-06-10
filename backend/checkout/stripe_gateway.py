@@ -20,6 +20,7 @@ resolve the order by session id even before the webhook fires (see
 """
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 from typing import Any
 
@@ -84,13 +85,35 @@ def create_checkout_session(
         "?order=stripe-{CHECKOUT_SESSION_ID}"
     )
     cancel_url = f"{settings.FRONTEND_URL}/cart"
+
+    # Snapshot WHAT IS BEING PAID FOR into session metadata. The webhook grants
+    # downloads from this snapshot — never from the cart as it exists at webhook
+    # time, which the shopper could have mutated (e.g. in another tab) after the
+    # redirect to Stripe. Stripe metadata values are capped at 500 chars; if a
+    # pathological cart exceeds that we omit the snapshot and the webhook falls
+    # back to the live cart (documented limitation).
+    metadata: dict[str, str] = {"cart_id": cart_id}
+    snapshot = json.dumps(
+        [
+            {
+                "h": line["merchandise"]["product"]["handle"],
+                "t": line["merchandise"]["product"]["title"][:60],
+                "q": int(line["quantity"]),
+            }
+            for line in cart.get("lines", [])
+        ],
+        separators=(",", ":"),
+    )
+    if len(snapshot) <= 500:
+        metadata["lines"] = snapshot
+
     try:
         return stripe.checkout.Session.create(
             mode="payment",
             line_items=line_items,
             customer_email=email or None,
             client_reference_id=cart_id,
-            metadata={"cart_id": cart_id},
+            metadata=metadata,
             success_url=success_url,
             cancel_url=cancel_url,
         )
@@ -119,13 +142,41 @@ def retrieve_session(session_id: str) -> Any:
         raise StripeError(f"Could not retrieve session {session_id}: {exc}") from exc
 
 
+def _lines_from_snapshot(raw: Any) -> list[dict[str, Any]] | None:
+    """Parse the ``lines`` metadata snapshot into ingest line items.
+
+    Returns None when the snapshot is missing or malformed (caller falls back
+    to resolving the live cart).
+    """
+    if not raw:
+        return None
+    try:
+        parsed = json.loads(raw)
+    except (TypeError, ValueError):
+        return None
+    if not isinstance(parsed, list) or not parsed:
+        return None
+    items: list[dict[str, Any]] = []
+    for entry in parsed:
+        if not isinstance(entry, dict) or "h" not in entry:
+            return None
+        items.append(
+            {
+                "handle": str(entry["h"]),
+                "title": str(entry.get("t") or entry["h"]),
+                "quantity": int(entry.get("q", 1) or 1),
+            }
+        )
+    return items
+
+
 def ingest_session(session: Any) -> tuple[Any, bool]:
     """Create Order/Purchases/DownloadGrants from a PAID checkout session.
 
-    Resolves the cart by ``client_reference_id`` to build authoritative line
-    items (handle/title/quantity), then feeds the shared ingest pipeline. The
-    total comes from Stripe's ``amount_total`` (cents). Idempotent on the session
-    id. Returns ``(order, created)``.
+    Line items come from the metadata snapshot captured at session creation
+    (what was paid for); the live cart is only a fallback. The total comes from
+    Stripe's ``amount_total`` (cents). Idempotent on the session id. Returns
+    ``(order, created)``.
     """
     from orders import services as orders_services
 
@@ -139,7 +190,8 @@ def ingest_session(session: Any) -> tuple[Any, bool]:
     if not session_id:
         raise StripeError("Session has no id.")
 
-    cart_id = g("client_reference_id") or (g("metadata") or {}).get("cart_id")
+    metadata = g("metadata") or {}
+    cart_id = g("client_reference_id") or metadata.get("cart_id")
     if not cart_id:
         raise StripeError("Session has no cart reference.")
 
@@ -152,24 +204,30 @@ def ingest_session(session: Any) -> tuple[Any, bool]:
     amount_total = g("amount_total")  # cents
     currency = str(g("currency") or "usd").upper()
 
-    try:
-        cart = cart_services.get_cart(str(cart_id))
-    except cart_services.CartNotFound as exc:
-        raise StripeError(f"Cart not found for session: {cart_id}") from exc
-
-    line_items = [
-        {
-            "title": line["merchandise"]["product"]["title"],
-            "handle": line["merchandise"]["product"]["handle"],
-            "quantity": line["quantity"],
-        }
-        for line in cart.get("lines", [])
-    ]
+    # Grant downloads from the metadata SNAPSHOT taken at session creation —
+    # i.e. what was actually paid for. Only fall back to resolving the live
+    # cart when the snapshot is absent (oversized cart / pre-snapshot session).
+    line_items = _lines_from_snapshot(metadata.get("lines"))
+    fallback_total: str | None = None
+    if line_items is None:
+        try:
+            cart = cart_services.get_cart(str(cart_id))
+        except cart_services.CartNotFound as exc:
+            raise StripeError(f"Cart not found for session: {cart_id}") from exc
+        line_items = [
+            {
+                "title": line["merchandise"]["product"]["title"],
+                "handle": line["merchandise"]["product"]["handle"],
+                "quantity": line["quantity"],
+            }
+            for line in cart.get("lines", [])
+        ]
+        fallback_total = cart["cost"]["total"]["amount"]
 
     total = (
         f"{Decimal(amount_total) / 100:.2f}"
         if amount_total is not None
-        else cart["cost"]["total"]["amount"]
+        else (fallback_total or "0.00")
     )
 
     payload = {
