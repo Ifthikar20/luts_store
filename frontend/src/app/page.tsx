@@ -13,23 +13,30 @@ import { Reveal } from "@/components/motion/Reveal";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 
-// Before/after examples by camera source (the "See the difference" section).
+// Before/after VIDEO examples by camera source (the "Instant cinema" section).
+// `video` plays as the graded "after"; the slider washes out the "before" half
+// live. PLACEHOLDER clips from Google's public sample bucket (already allowed
+// by the CSP media-src) — swap for real graded footage. `image` is the poster.
+const SAMPLE = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample";
 const beforeAfterExamples = [
   {
     label: "DJI Osmo Pocket 3",
     alt: "Aerial drone landscape",
+    video: `${SAMPLE}/ForBiggerEscapes.mp4`,
     image:
       "https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=1400&q=80",
   },
   {
     label: "iPhone",
     alt: "Street portrait shot on phone",
+    video: `${SAMPLE}/ForBiggerFun.mp4`,
     image:
       "https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?auto=format&fit=crop&w=1400&q=80",
   },
   {
     label: "Mirrorless",
     alt: "Cinematic city scene",
+    video: `${SAMPLE}/ForBiggerJoyrides.mp4`,
     image:
       "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1400&q=80",
   },

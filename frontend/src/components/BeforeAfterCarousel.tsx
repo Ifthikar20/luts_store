@@ -10,6 +10,8 @@ export interface BeforeAfterExample {
   label: string;
   alt: string;
   image: string;
+  /** Muted looping clip — plays a video before/after instead of stills. */
+  video?: string;
 }
 
 const GAP = 20;
@@ -27,7 +29,8 @@ export function BeforeAfterCarousel({
 }) {
   const reduced = useReducedMotion() ?? false;
   const [index, setIndex] = useState(0);
-  const [playing, setPlaying] = useState(false);
+  // Auto-advance by default; the control pauses it.
+  const [playing, setPlaying] = useState(true);
 
   // Measure the viewport so we can center one slide and let neighbours peek.
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -49,7 +52,7 @@ export function BeforeAfterCarousel({
 
   useEffect(() => {
     if (!playing || reduced) return;
-    const t = setInterval(next, 5000);
+    const t = setInterval(next, 7000);
     return () => clearInterval(t);
   }, [playing, reduced, next]);
 
@@ -103,8 +106,10 @@ export function BeforeAfterCarousel({
                 >
                   <BeforeAfterSlider
                     image={ex.image}
+                    video={ex.video}
                     alt={ex.alt}
                     label={ex.label}
+                    autoSlide={active}
                   />
                 </div>
               </motion.div>
