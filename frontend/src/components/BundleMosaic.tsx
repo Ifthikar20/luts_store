@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 // A field of small graded frames that scatter in and snap together into one
 // larger picture — visualising "many looks, one bundle". Plays once when the
 // card scrolls into view; respects prefers-reduced-motion.
-const TILES = [
+const PHOTOS = [
   "photo-1492691527719-9d1e07e534b4",
   "photo-1470770841072-f978cf4d019e",
   "photo-1449824913935-59a10b8d2000",
@@ -32,6 +32,32 @@ const TILES = [
   "photo-1490750967868-88aa4486c946",
   "photo-1500530855697-b586d89ba3ee",
 ].map((id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=400&q=70`);
+
+// CSS "grades" applied over the frames. Re-using a frame under a different
+// grade is exactly what a LUT does (one shot, many looks), and it lets the
+// mosaic show far more looks than there are source photos.
+const GRADES = [
+  "none",
+  "saturate(1.45) contrast(1.08)",
+  "hue-rotate(-18deg) saturate(1.25) contrast(1.05)",
+  "hue-rotate(14deg) contrast(1.15) brightness(1.05)",
+  "sepia(0.38) contrast(1.08) brightness(1.04)",
+  "saturate(0.55) contrast(1.22)",
+  "grayscale(0.9) contrast(1.18) brightness(1.06)",
+  "hue-rotate(42deg) saturate(0.85) brightness(0.98)",
+  "hue-rotate(-40deg) saturate(1.1) brightness(0.95) contrast(1.1)",
+  "sepia(0.2) saturate(1.35) hue-rotate(-8deg)",
+  "contrast(1.25) brightness(0.92) saturate(1.15)",
+  "hue-rotate(160deg) saturate(0.7) contrast(1.1)",
+];
+
+// 54 tiles (9×6): every source frame appears under different grades, so the
+// wall reads as 50+ distinct looks.
+const TILE_COUNT = 54;
+const TILES = Array.from({ length: TILE_COUNT }, (_, i) => ({
+  src: PHOTOS[i % PHOTOS.length],
+  filter: GRADES[(i * 7 + Math.floor(i / PHOTOS.length) * 5) % GRADES.length],
+}));
 
 // Deterministic pseudo-random (stable across SSR/CSR — avoids hydration drift).
 const rand = (n: number) => {
@@ -71,23 +97,24 @@ export function BundleMosaic() {
       viewport={{ once: true, amount: 0.3 }}
       variants={{
         hidden: {},
-        visible: { transition: { staggerChildren: reduced ? 0 : 0.05 } },
+        visible: { transition: { staggerChildren: reduced ? 0 : 0.02 } },
       }}
-      className="grid h-full min-h-[340px] w-full grid-cols-6 grid-rows-4 gap-1 p-1.5"
+      className="grid h-full min-h-[340px] w-full grid-cols-9 grid-rows-6 gap-1 p-1.5"
     >
-      {TILES.map((src, i) => (
+      {TILES.map((tile, i) => (
         <motion.div
-          key={src}
+          key={`${tile.src}-${i}`}
           custom={offsetFor(i)}
           variants={tileVariants}
-          className="relative overflow-hidden rounded-[10px] bg-cloud"
+          className="relative overflow-hidden rounded-[8px] bg-cloud"
         >
           <Image
-            src={src}
+            src={tile.src}
             alt=""
             fill
-            sizes="(max-width: 768px) 16vw, 9vw"
+            sizes="(max-width: 768px) 11vw, 6vw"
             className="object-cover"
+            style={tile.filter === "none" ? undefined : { filter: tile.filter }}
           />
         </motion.div>
       ))}
