@@ -21,13 +21,15 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 cd "$AWSDIR"
 
 steps=(01 02 03 04 05)
-declare -A NAME=(
-  [01]="S3 private product-files bucket"
-  [02]="IAM role (s3:GetObject on luts/* only)"
-  [03]="Security group + key + EC2 + Elastic IP"
-  [04]="App deploy (clone + Docker stack + Caddy TLS)"
-  [05]="Secrets (Stripe / SMTP) push + verify"
-)
+step_name() { # keep names here; works on macOS's Bash 3.2 (no associative arrays)
+  case "$1" in
+    01) echo "S3 private product-files bucket" ;;
+    02) echo "IAM role (s3:GetObject on luts/* only)" ;;
+    03) echo "Security group + key + EC2 + Elastic IP" ;;
+    04) echo "App deploy (clone + Docker stack + Caddy TLS)" ;;
+    05) echo "Secrets (Stripe / SMTP) push + verify" ;;
+  esac
+}
 
 norm()      { printf '%02d' "$((10#$1))"; }          # 3 or 03 -> 03
 done_flag() { local v="DONE_$1"; [ "${!v:-0}" = "1" ]; }
@@ -80,7 +82,7 @@ done
 if [ "$CMD" = status ]; then
   say "deploy checkpoints (aws/state.env):"
   for n in "${steps[@]}"; do
-    if done_flag "$n"; then ok "$n  ${NAME[$n]}"; else warn "$n  ${NAME[$n]} — pending"; fi
+    if done_flag "$n"; then ok "$n  $(step_name "$n")"; else warn "$n  $(step_name "$n") — pending"; fi
   done
   [ -n "${EIP:-}" ] && echo "  Elastic IP: $EIP"
   exit 0
@@ -100,9 +102,9 @@ fi
 say "using SSH key: $PEM"
 for n in "${steps[@]}"; do
   if [ -n "$ONLY" ] && [ "$n" != "$ONLY" ]; then continue; fi
-  if [ -z "$ONLY" ] && done_flag "$n"; then ok "step $n already done (${NAME[$n]}) — skipping"; continue; fi
+  if [ -z "$ONLY" ] && done_flag "$n"; then ok "step $n already done ($(step_name "$n")) — skipping"; continue; fi
 
-  echo; say "=== step $n: ${NAME[$n]} ==="
+  echo; say "=== step $n: $(step_name "$n") ==="
   rc=0; run_step "$n" || rc=$?
   if [ "$rc" -eq 10 ]; then continue; fi          # skipped on purpose, don't mark done
   [ "$rc" -eq 0 ] || die "step $n failed (exit $rc). Fix it and re-run — finished steps stay checkpointed."
