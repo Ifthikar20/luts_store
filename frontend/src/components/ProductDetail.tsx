@@ -15,7 +15,7 @@ import { ClaimFreeLut } from "./ClaimFreeLut";
 import { Reveal } from "./motion/Reveal";
 
 export function ProductDetail({ product }: { product: Product }) {
-  const { addItem, loading, openCart } = useCart();
+  const { addItem, loading } = useCart();
   const gallery =
     product.images.length > 0 ? product.images : [product.featuredImage];
   const [active, setActive] = useState(0);
@@ -174,9 +174,6 @@ export function ProductDetail({ product }: { product: Product }) {
                   "Add to cart"
                 )}
               </MagneticButton>
-              <button type="button" onClick={openCart} className="btn-ghost">
-                View cart
-              </button>
             </div>
           )}
           {variant && !variant.availableForSale && (
