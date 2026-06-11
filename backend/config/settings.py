@@ -348,7 +348,9 @@ if USE_S3_MEDIA:
             "default_acl": None,        # bucket has Block Public Access on
             "querystring_auth": True,   # serve via short-lived presigned URLs
             "file_overwrite": True,     # luts/<handle>.zip is the canonical key
-            **({"endpoint_url": AWS_S3_ENDPOINT_URL} if AWS_S3_ENDPOINT_URL else {}),
+            # Must be None (never "") for real AWS, else boto3 rejects the
+            # empty endpoint. Set only for S3-compatible stores (MinIO/R2).
+            "endpoint_url": AWS_S3_ENDPOINT_URL or None,
         },
     }
 else:
