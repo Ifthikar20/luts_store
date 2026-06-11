@@ -34,13 +34,13 @@ const columns = [
 export function Footer() {
   return (
     <footer className="relative z-10 border-t border-hairline bg-cloud">
-      <div className="container-xl py-16">
-        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <div className="container-xl py-12">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Link href="/" aria-label="Luts.shop home">
               <Logo />
             </Link>
-            <p className="mt-4 max-w-xs text-sm text-slate2">
+            <p className="mt-3 max-w-xs text-sm text-slate2">
               Cinematic color in one drag. Hand-crafted LUTs for filmmakers,
               editors and creators.
             </p>
@@ -50,7 +50,7 @@ export function Footer() {
               <h4 className="text-xs font-semibold uppercase tracking-widest text-slate2">
                 {col.title}
               </h4>
-              <ul className="mt-4 space-y-2.5">
+              <ul className="mt-3 space-y-2">
                 {col.links.map((l) => (
                   <li key={l.label}>
                     <Link
@@ -66,7 +66,7 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-hairline pt-6 text-xs text-slate2 sm:flex-row sm:items-center">
+        <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-hairline pt-5 text-xs text-slate2 sm:flex-row sm:items-center">
           <p>© {new Date().getFullYear()} Luts.shop. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <Link href="/policies/terms" className="transition-colors hover:text-graphite">
