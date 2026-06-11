@@ -12,6 +12,7 @@ import { track } from "@/lib/analytics";
 import { MagneticButton } from "./motion/MagneticButton";
 import { BeforeAfterSlider } from "./BeforeAfterSlider";
 import { ClaimFreeLut } from "./ClaimFreeLut";
+import { ProductReviews } from "./ProductReviews";
 import { Reveal } from "./motion/Reveal";
 
 export function ProductDetail({ product }: { product: Product }) {
@@ -229,6 +230,9 @@ export function ProductDetail({ product }: { product: Product }) {
           </div>
         </section>
       )}
+
+      {/* Customer reviews */}
+      <ProductReviews />
     </div>
   );
 }
