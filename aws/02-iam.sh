@@ -2,9 +2,10 @@
 #
 # 02-iam.sh — least-privilege IAM for the EC2 instance.
 #
-# Creates a role + instance profile whose ONLY permission is s3:GetObject on
-# $BUCKET_NAME/luts/* — the instance can serve presigned downloads and nothing
-# else. No access keys are created; boto3 picks the role up automatically.
+# Creates a role + instance profile scoped to GetObject/PutObject on
+# $BUCKET_NAME/luts/* (LUT downloads + admin uploads) and /media/* (preview
+# images/videos). Nothing else. No access keys are created; boto3 picks the
+# role up automatically.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 TRUST='{
@@ -19,10 +20,15 @@ TRUST='{
 POLICY="{
   \"Version\": \"2012-10-17\",
   \"Statement\": [{
-    \"Sid\": \"ReadLutFilesOnly\",
+    \"Sid\": \"LutFilesReadWrite\",
     \"Effect\": \"Allow\",
-    \"Action\": \"s3:GetObject\",
+    \"Action\": [\"s3:GetObject\", \"s3:PutObject\"],
     \"Resource\": \"arn:aws:s3:::${BUCKET_NAME}/luts/*\"
+  }, {
+    \"Sid\": \"MediaReadWrite\",
+    \"Effect\": \"Allow\",
+    \"Action\": [\"s3:GetObject\", \"s3:PutObject\"],
+    \"Resource\": \"arn:aws:s3:::${BUCKET_NAME}/media/*\"
   }]
 }"
 

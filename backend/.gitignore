@@ -13,3 +13,6 @@ htmlcov/
 *.log
 .DS_Store
 staticfiles/
+
+# Local uploaded media (dev fallback when no S3 bucket)
+media/

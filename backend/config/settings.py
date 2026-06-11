@@ -334,11 +334,34 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Uploaded admin media (LUT zips + preview images/videos). With AWS_S3_BUCKET
+# set (production), the DEFAULT file storage is the private S3 bucket using the
+# instance role; otherwise it falls back to the local filesystem (dev/CI), so
+# the admin and tests work with no AWS at all.
+USE_S3_MEDIA = bool(AWS_S3_BUCKET.strip())
+if USE_S3_MEDIA:
+    _default_storage = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": AWS_S3_BUCKET,
+            "region_name": AWS_S3_REGION,
+            "default_acl": None,        # bucket has Block Public Access on
+            "querystring_auth": True,   # serve via short-lived presigned URLs
+            "file_overwrite": True,     # luts/<handle>.zip is the canonical key
+            **({"endpoint_url": AWS_S3_ENDPOINT_URL} if AWS_S3_ENDPOINT_URL else {}),
+        },
+    }
+else:
+    _default_storage = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # WhiteNoise serves the admin's static files (CSS/JS) straight from gunicorn so
 # /admin is styled in production without a separate static server. Compressed,
 # no manifest hashing (avoids strict missing-file errors for third-party apps).
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": _default_storage,
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"
     },

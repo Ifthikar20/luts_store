@@ -7,10 +7,26 @@ thin: they parse query params, call the service, and return JSON.
 """
 from __future__ import annotations
 
+from django.core.files.storage import default_storage
+from django.http import HttpResponseRedirect, JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from . import services
+
+
+def media(request, key: str):
+    """Serve an uploaded preview asset (image/video) by storage key.
+
+    Redirects to a short-lived presigned S3 URL (or the local file in dev).
+    Restricted to the ``media/`` prefix so it can NEVER expose the private LUT
+    files under ``luts/``. Public — these are storefront preview assets.
+    """
+    if not key.startswith("media/") or ".." in key:
+        return JsonResponse({"detail": "Not found."}, status=404)
+    if not default_storage.exists(key):
+        return JsonResponse({"detail": "Not found."}, status=404)
+    return HttpResponseRedirect(default_storage.url(key))
 
 
 @api_view(["GET"])

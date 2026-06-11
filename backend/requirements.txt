@@ -13,6 +13,8 @@ whitenoise>=6.7
 psycopg[binary]>=3.2
 # AWS SDK — minting presigned URLs for private-S3 LUT file delivery (real mode).
 boto3>=1.34
+# S3 storage backend for admin file uploads (LUT zips + preview images/videos).
+django-storages>=1.14
 # Stripe — hosted Checkout payments (active when STRIPE_SECRET_KEY is set).
 stripe>=9.0
 # Redis client — backs shared DRF rate-limit counters (active when REDIS_URL set).

@@ -64,18 +64,27 @@ class ProductAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Media",
+            "Media (upload a file or paste a URL)",
             {
                 "fields": (
+                    "featured_image_file",
                     "featured_image_url",
                     "featured_image_alt",
                     "before_image_url",
                     "after_image_url",
+                    "preview_video_file",
                     "preview_video_url",
                 )
             },
         ),
-        ("Delivery", {"fields": ("file_key",)}),
+        (
+            "Downloadable LUT file",
+            {
+                "fields": ("lut_file", "file_key"),
+                "description": "Upload the .zip buyers download (a single .cube is zipped for you). "
+                "file_key is set automatically.",
+            },
+        ),
         (
             "Visibility",
             {"fields": ("published", "available", "featured", "position")},
