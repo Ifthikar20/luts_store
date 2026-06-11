@@ -109,9 +109,17 @@ if [ "$CADDY_MODE" = "ip" ]; then
   # Plain HTTP on :80, single host. /api/* -> backend, everything else -> frontend.
   sudo tee /etc/caddy/Caddyfile >/dev/null <<'CADDY'
 :80 {
+    # API, Django admin dashboard, and admin static files -> backend.
     handle /api/* {
         reverse_proxy localhost:8000
     }
+    handle /admin* {
+        reverse_proxy localhost:8000
+    }
+    handle /static/* {
+        reverse_proxy localhost:8000
+    }
+    # Everything else -> storefront.
     handle {
         reverse_proxy localhost:3000
     }

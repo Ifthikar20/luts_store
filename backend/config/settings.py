@@ -239,6 +239,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Serves collected static files (Django admin CSS/JS) in production.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     # Attach CSP / Permissions-Policy / CORP to every response (see
     # common/security_headers.py).
     "common.security_headers.SecurityHeadersMiddleware",
@@ -331,6 +333,16 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# WhiteNoise serves the admin's static files (CSS/JS) straight from gunicorn so
+# /admin is styled in production without a separate static server. Compressed,
+# no manifest hashing (avoids strict missing-file errors for third-party apps).
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

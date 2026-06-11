@@ -61,9 +61,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Apply migrations, then start gunicorn (defined in backend/Dockerfile CMD).
+    # Collect admin static files (WhiteNoise serves them), apply migrations,
+    # then start gunicorn (CMD defined in backend/Dockerfile).
     command: >
-      sh -c "python manage.py migrate --noinput &&
+      sh -c "python manage.py collectstatic --noinput &&
+             python manage.py migrate --noinput &&
              gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --access-logfile - --error-logfile -"
     ports:
       - "8000:8000"

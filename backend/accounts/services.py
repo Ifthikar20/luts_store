@@ -97,12 +97,13 @@ def _seed_mock_downloads(user: User) -> None:
     Picks two real mock-catalog handles so the generated download tokens resolve
     against actual products on the library/thank-you pages.
     """
-    from catalog import mockdata
+    from catalog import source
     from delivery.models import DownloadGrant
 
     sample_handles = ["midnight-noir", "dji-aerial-vivid"]
+    data = source.active()
     for handle in sample_handles:
-        product = mockdata.get_product(handle)
+        product = data.get_product(handle)
         if product is None:  # pragma: no cover - defensive
             continue
         DownloadGrant.objects.create(

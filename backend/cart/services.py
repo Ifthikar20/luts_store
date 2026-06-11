@@ -17,7 +17,7 @@ from typing import Any
 
 from django.conf import settings
 
-from catalog import mockdata
+from catalog import source
 
 
 class CartNotFound(Exception):
@@ -86,7 +86,7 @@ def _normalize_lines(raw_lines: list[dict[str, Any]]) -> list[dict[str, Any]]:
         quantity = int(line.get("quantity", 1))
         if quantity <= 0:
             continue
-        if mockdata.find_variant(merchandise_id) is None:
+        if source.active().find_variant(merchandise_id) is None:
             raise InvalidMerchandise(merchandise_id)
         normalized.append(
             {
@@ -158,10 +158,11 @@ def _mock_serialize(cart) -> dict[str, Any]:
     lines_out: list[dict[str, Any]] = []
     subtotal = Decimal("0")
     total_qty = 0
-    currency = mockdata.CURRENCY
+    data = source.active()
+    currency = data.CURRENCY
 
     for stored in cart.lines:
-        resolved = mockdata.find_variant(stored["merchandiseId"])
+        resolved = data.find_variant(stored["merchandiseId"])
         if resolved is None:
             continue  # skip stale lines defensively
         product = resolved["product"]

@@ -67,6 +67,26 @@ Caddy issues TLS automatically once DNS resolves. (IP mode is HTTP-only — fine
 for testing, but don't put real Stripe live keys behind it; switch to the domain
 first so traffic is encrypted.)
 
+### Product admin dashboard (`/admin`)
+
+Manage LUT packs from Django admin instead of editing code. After a deploy:
+
+```bash
+# create your login (one time)
+ssh -i <KEY> ubuntu@<EIP> \
+  'cd luts_store && sudo docker compose exec backend python manage.py createsuperuser'
+
+# optional: load the existing demo catalog into the DB so you have rows to edit
+ssh -i <KEY> ubuntu@<EIP> \
+  'cd luts_store && sudo docker compose exec backend python manage.py seed_catalog'
+```
+
+Then open `http://<EIP>/admin` (or `https://<API_DOMAIN>/admin` with a domain),
+log in, and add/edit products under **Catalog → Products**. The moment a product
+is **published**, the store serves from the database instead of the in-repo
+demo catalog. WhiteNoise serves the admin styling; Caddy routes `/admin` and
+`/static` to the backend.
+
 ### Reusing a key you already have (e.g. `fynda-deploy.pem`)
 
 By default 03 creates a fresh key pair and saves `aws/<KEY_NAME>.pem`. To use a

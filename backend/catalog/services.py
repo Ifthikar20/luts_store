@@ -17,7 +17,7 @@ from typing import Any
 
 from django.conf import settings
 
-from . import mockdata
+from . import source
 
 
 # ---------------------------------------------------------------------------
@@ -37,9 +37,10 @@ def _public(product: dict[str, Any]) -> dict[str, Any]:
 def list_collections() -> list[dict[str, Any]]:
     """Return collections as ``[{handle,title,description,image,productCount}]``."""
     if settings.MOCK_MODE:
+        data = source.active()
         result = []
-        for coll in mockdata.all_collections():
-            count = len(mockdata.products_in_collection(coll["handle"]))
+        for coll in data.all_collections():
+            count = len(data.products_in_collection(coll["handle"]))
             result.append(
                 {
                     "handle": coll["handle"],
@@ -56,7 +57,8 @@ def list_collections() -> list[dict[str, Any]]:
 def get_collection(handle: str) -> dict[str, Any] | None:
     """Return ``{handle,title,description,products:[Product]}`` or None."""
     if settings.MOCK_MODE:
-        coll = mockdata.get_collection(handle)
+        data = source.active()
+        coll = data.get_collection(handle)
         if not coll:
             return None
         return {
@@ -64,7 +66,7 @@ def get_collection(handle: str) -> dict[str, Any] | None:
             "title": coll["title"],
             "description": coll["description"],
             "products": [
-                _public(p) for p in mockdata.products_in_collection(handle)
+                _public(p) for p in data.products_in_collection(handle)
             ],
         }
     return _live_get_collection(handle)
@@ -91,10 +93,11 @@ def list_products(
     price range, and tag (any-match) filtering, followed by a final sort.
     """
     if settings.MOCK_MODE:
+        data = source.active()
         if collection:
-            products = mockdata.products_in_collection(collection)
+            products = data.products_in_collection(collection)
         else:
-            products = mockdata.all_products()
+            products = data.all_products()
         if featured:
             products = [p for p in products if p.get("featured")]
         if search:
@@ -116,7 +119,7 @@ def list_products(
 def get_product(handle: str) -> dict[str, Any] | None:
     """Return a single Product or None."""
     if settings.MOCK_MODE:
-        product = mockdata.get_product(handle)
+        product = source.active().get_product(handle)
         return _public(product) if product else None
     return _live_get_product(handle)
 
@@ -128,7 +131,7 @@ def free_lut() -> dict[str, Any] | None:
     carrying the ``free`` tag. Picks the first match.
     """
     if settings.MOCK_MODE:
-        for product in mockdata.all_products():
+        for product in source.active().all_products():
             if "free" in (product.get("tags") or []):
                 return _public(product)
         return None
@@ -153,7 +156,7 @@ def file_key_for_handle(handle: str) -> str:
     deterministic default. The key is ALWAYS derived here from the validated
     handle and is never read from the client/token -> no path traversal/IDOR.
     """
-    return mockdata.file_key_for_handle(handle)
+    return source.active().file_key_for_handle(handle)
 
 
 def facets(collection: str | None = None) -> dict[str, Any]:
@@ -163,10 +166,11 @@ def facets(collection: str | None = None) -> dict[str, Any]:
     in the scope carry each tag / product type.
     """
     if settings.MOCK_MODE:
+        data = source.active()
         if collection:
-            products = mockdata.products_in_collection(collection)
+            products = data.products_in_collection(collection)
         else:
-            products = mockdata.all_products()
+            products = data.all_products()
         return _compute_facets(products)
     return _live_facets(collection)
 

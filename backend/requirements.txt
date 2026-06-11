@@ -5,6 +5,9 @@ requests>=2.32
 python-decouple>=3.8
 dj-database-url>=2.2
 gunicorn>=22.0
+# Serves Django admin static files (CSS/JS) in production (DEBUG=False) so the
+# /admin dashboard is styled without a separate static file server.
+whitenoise>=6.7
 # Postgres driver — only used when DATABASE_URL points at Postgres (e.g. the
 # docker-compose `db` service). SQLite remains the zero-config local default.
 psycopg[binary]>=3.2
