@@ -36,7 +36,7 @@ SSH=(ssh -i "$PEM" -o StrictHostKeyChecking=accept-new "ubuntu@$EIP")
 
 say "deploying to ubuntu@$EIP (this builds Docker images — first run takes a few minutes)"
 
-"${SSH[@]}" REPO_URL="$REPO_URL" \
+"${SSH[@]}" REPO_URL="$REPO_URL" REPO_BRANCH="${REPO_BRANCH:-}" \
   SITE_URL="$SITE_URL" API_URL="$API_URL" API_BASE="$API_BASE" \
   PUB_HOST="$PUB_HOST" SECURE="$SECURE" CADDY_MODE="$CADDY_MODE" \
   DOMAIN="${DOMAIN:-}" API_DOMAIN="${API_DOMAIN:-}" EIP="$EIP" \
@@ -47,10 +47,17 @@ set -euo pipefail
 cloud-init status --wait >/dev/null 2>&1 || true
 
 # --- code --------------------------------------------------------------------
-if [ -d luts_store ]; then
-  cd luts_store && git pull --ff-only
+# REPO_BRANCH (optional) deploys a specific branch; empty = the repo default.
+if [ ! -d luts_store ]; then
+  git clone "$REPO_URL" luts_store
+fi
+cd luts_store
+git fetch origin
+if [ -n "$REPO_BRANCH" ]; then
+  git checkout "$REPO_BRANCH" 2>/dev/null || git checkout -b "$REPO_BRANCH" "origin/$REPO_BRANCH"
+  git reset --hard "origin/$REPO_BRANCH"
 else
-  git clone "$REPO_URL" luts_store && cd luts_store
+  git pull --ff-only
 fi
 
 gen() { python3 -c "import secrets;print(secrets.token_urlsafe($1))"; }
