@@ -12,10 +12,9 @@ import { cn } from "@/lib/format";
 
 const links = [
   { href: "/collections/cinematic", label: "Cinematic" },
-  { href: "/collections/drone-dji", label: "Drone" },
-  { href: "/collections/mobile-capcut", label: "Mobile / CapCut" },
   { href: "/collections/dji-osmo", label: "DJI / OSMO" },
   { href: "/collections/bundles", label: "Bundles" },
+  { href: "/search", label: "Explore" },
 ];
 
 export function Nav() {
