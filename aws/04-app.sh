@@ -34,6 +34,10 @@ fi
 
 SSH=(ssh -i "$PEM" -o StrictHostKeyChecking=accept-new "ubuntu@$EIP")
 
+# Drop any stale host key for this IP — recreating an instance behind the same
+# Elastic IP changes the host key, which would otherwise block SSH.
+ssh-keygen -R "$EIP" >/dev/null 2>&1 || true
+
 say "deploying to ubuntu@$EIP (this builds Docker images — first run takes a few minutes)"
 
 "${SSH[@]}" REPO_URL="$REPO_URL" REPO_BRANCH="${REPO_BRANCH:-}" \

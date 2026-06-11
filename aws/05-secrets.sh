@@ -18,6 +18,9 @@ fi
 
 say "pushing secrets to ubuntu@$EIP and redeploying"
 
+# Drop any stale host key for this IP (instance may have been recreated).
+ssh-keygen -R "$EIP" >/dev/null 2>&1 || true
+
 ssh -i "$PEM" -o StrictHostKeyChecking=accept-new "ubuntu@$EIP" 'bash -s' < <(
   cat <<'HEAD'
 set -euo pipefail
