@@ -652,6 +652,12 @@ def file_key_for_handle(handle: str) -> str:
     return f"{prefix}/{handle}.zip"
 
 
+def deliverable_handles(handle: str) -> list[str]:
+    """Handles whose files to grant for a purchase. The fixture has no bundle
+    membership, so a product always delivers itself."""
+    return [handle]
+
+
 def find_variant(variant_id: str) -> dict[str, Any] | None:
     """Return ``{"product": product, "variant": variant}`` for a variant id."""
     product = _PRODUCT_BY_VARIANT_ID.get(variant_id)

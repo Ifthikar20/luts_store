@@ -82,6 +82,23 @@ def _pk_from_variant_gid(variant_id: str) -> int | None:
         return None
 
 
+def deliverable_handles(handle: str) -> list[str]:
+    """Expand a purchased handle into the handles whose files should be granted.
+
+    A bundle delivers each of its member packs; a normal product delivers
+    itself. Unknown handles fall back to themselves so delivery never breaks.
+    """
+    product = (
+        Product.objects.filter(handle=handle)
+        .prefetch_related("bundled_products")
+        .first()
+    )
+    if not product:
+        return [handle]
+    members = [p.handle for p in product.bundled_products.all()]
+    return members or [handle]
+
+
 def find_variant(variant_id: str) -> dict[str, Any] | None:
     """Return ``{"product": <contract>, "variant": <variant>}`` for a variant id."""
     pk = _pk_from_variant_gid(variant_id)

@@ -1,0 +1,50 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<style>
+  .dash-cards{display:flex;flex-wrap:wrap;gap:16px;margin:10px 0 24px}
+  .dash-card{flex:1 1 160px;border:1px solid var(--hairline-color,#e5e5e5);border-radius:10px;padding:16px}
+  .dash-card .v{font-size:28px;font-weight:700}
+  .dash-card .l{color:var(--body-quiet-color,#666);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  .dash-grid{display:flex;flex-wrap:wrap;gap:24px}
+  .dash-grid table{border-collapse:collapse;min-width:320px}
+  .dash-grid th,.dash-grid td{text-align:left;padding:6px 12px;border-bottom:1px solid var(--hairline-color,#eee)}
+</style>
+
+<div class="dash-cards">
+  <div class="dash-card"><div class="v">${{ total_revenue|floatformat:2 }}</div><div class="l">Revenue (net of refunds)</div></div>
+  <div class="dash-card"><div class="v">${{ revenue_30|floatformat:2 }}</div><div class="l">Revenue · last 30 days</div></div>
+  <div class="dash-card"><div class="v">{{ live_count }}</div><div class="l">Orders ({{ orders_30 }} in 30d)</div></div>
+  <div class="dash-card"><div class="v">{{ refunded_count }}</div><div class="l">Refunded</div></div>
+  <div class="dash-card"><div class="v">{{ email_pending }}</div><div class="l">Emails not sent</div></div>
+</div>
+
+<div class="dash-grid">
+  <div>
+    <h2>Top LUTs</h2>
+    <table>
+      <tr><th>Product</th><th>Units</th><th>Orders</th></tr>
+      {% for p in top_products %}
+        <tr><td>{{ p.title|default:p.product_handle }}</td><td>{{ p.units }}</td><td>{{ p.orders }}</td></tr>
+      {% empty %}
+        <tr><td colspan="3">No sales yet.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div>
+    <h2>Recent orders</h2>
+    <table>
+      <tr><th>Order</th><th>Email</th><th>Total</th><th>Email sent</th></tr>
+      {% for o in recent_orders %}
+        <tr>
+          <td><a href="{% url 'admin:orders_order_change' o.id %}">{{ o.shopify_order_id }}</a></td>
+          <td>{{ o.email|default:"—" }}</td>
+          <td>${{ o.total|floatformat:2 }}</td>
+          <td>{% if o.confirmation_email_sent_at %}✓{% else %}✗{% endif %}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4">No orders yet.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock %}

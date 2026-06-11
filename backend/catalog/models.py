@@ -17,6 +17,8 @@ from typing import Any
 from django.conf import settings
 from django.db import models
 
+from .validators import image_validators, lut_file_validators, video_validators
+
 
 def _csv_to_list(value: str) -> list[str]:
     """Split a comma-separated admin field into a clean list."""
@@ -111,20 +113,27 @@ class Product(models.Model):
         blank=True, help_text="Main image URL (or upload a file below)."
     )
     featured_image_file = models.FileField(
-        upload_to=media_upload_to, blank=True, help_text="Upload the main image."
+        upload_to=media_upload_to,
+        blank=True,
+        validators=image_validators,
+        help_text="Upload the main image (jpg/png/webp, ≤15 MB).",
     )
     featured_image_alt = models.CharField(max_length=200, blank=True)
     before_image_url = models.URLField(blank=True, help_text="Ungraded frame (before/after slider).")
     after_image_url = models.URLField(blank=True, help_text="Graded frame (enables the slider).")
     preview_video_url = models.URLField(blank=True, help_text="Looping preview clip URL (or upload below).")
     preview_video_file = models.FileField(
-        upload_to=media_upload_to, blank=True, help_text="Upload a looping preview clip (mp4)."
+        upload_to=media_upload_to,
+        blank=True,
+        validators=video_validators,
+        help_text="Upload a looping preview clip (mp4/webm, ≤100 MB).",
     )
 
     lut_file = models.FileField(
         upload_to=lut_upload_to,
         blank=True,
-        help_text="Upload the downloadable LUT pack (.zip, or a single .cube — it's zipped for you).",
+        validators=lut_file_validators,
+        help_text="Upload the downloadable LUT pack (.zip/.cube/.3dl, ≤200 MB). A single .cube is zipped for you.",
     )
     file_key = models.CharField(
         max_length=200,
@@ -134,6 +143,15 @@ class Product(models.Model):
 
     collections = models.ManyToManyField(
         Collection, blank=True, related_name="products"
+    )
+    # For a Bundle: the member packs it contains. On purchase, the buyer gets a
+    # download grant for each member (so a bundle delivers every pack's file).
+    bundled_products = models.ManyToManyField(
+        "self",
+        symmetrical=False,
+        blank=True,
+        related_name="in_bundles",
+        help_text="Bundles only: the packs included in this bundle.",
     )
 
     featured = models.BooleanField(default=False, help_text="Float to the top of listings.")

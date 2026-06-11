@@ -44,7 +44,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ("product_type", "featured", "published", "collections")
     search_fields = ("title", "handle", "tags")
     prepopulated_fields = {"handle": ("title",)}
-    filter_horizontal = ("collections",)
+    filter_horizontal = ("collections", "bundled_products")
     inlines = [IncludedLutInline, ProductImageInline]
     save_on_top = True
     fieldsets = (
@@ -61,6 +61,14 @@ class ProductAdmin(admin.ModelAdmin):
                     "vendor",
                     "collections",
                 )
+            },
+        ),
+        (
+            "Bundle contents",
+            {
+                "fields": ("bundled_products",),
+                "description": "Bundles only: pick the packs this bundle includes. "
+                "Buyers get a download grant for each.",
             },
         ),
         (

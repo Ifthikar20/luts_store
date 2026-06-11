@@ -88,6 +88,8 @@ def ingest_paid_order(payload: dict[str, Any]) -> tuple[Order, bool]:
     if email:
         user = User.objects.filter(email__iexact=email).first()
 
+    from catalog import source
+
     for item in payload.get("line_items", []) or []:
         handle = _extract_handle(item)
         title = item.get("title", "")
@@ -98,12 +100,14 @@ def ingest_paid_order(payload: dict[str, Any]) -> tuple[Order, bool]:
             title=title,
             quantity=quantity,
         )
-        DownloadGrant.objects.create(
-            order=order,
-            user=user,
-            email=email,
-            product_handle=handle,
-        )
+        # A bundle delivers each of its member packs; a normal product delivers
+        # itself. One grant per deliverable file so every pack is downloadable.
+        for deliver_handle in source.active().deliverable_handles(handle):
+            DownloadGrant.objects.get_or_create(
+                order=order,
+                product_handle=deliver_handle,
+                defaults={"user": user, "email": email},
+            )
 
     # Send the confirmation email AFTER grants exist. Idempotent + best-effort:
     # a mail failure must never break webhook ingestion (Shopify would retry and

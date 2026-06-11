@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
 
+from orders.admin_views import dashboard as admin_dashboard
+
 
 def root(_request):
     """Friendly landing for the API host. The storefront UI runs separately
@@ -18,6 +20,7 @@ def root(_request):
 
 urlpatterns = [
     path("", root),
+    path("admin/dashboard/", admin_dashboard, name="admin-dashboard"),
     path("admin/", admin.site.urls),
     path("api/", include("common.urls")),
     path("api/", include("catalog.urls")),
