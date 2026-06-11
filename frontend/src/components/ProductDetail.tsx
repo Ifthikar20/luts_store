@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, ChevronRight, Layers, MonitorPlay, Package } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
 import { useCart } from "@/context/CartContext";
@@ -121,61 +121,35 @@ export function ProductDetail({ product }: { product: Product }) {
             {product.description}
           </p>
 
-          {/* What's included */}
-          <div className="mt-8 grid gap-3 rounded-[28px] border border-hairline bg-cloud p-6">
+          {/* What's included — one concise line */}
+          <div className="mt-8 border-t border-hairline pt-6">
             <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-slate2">
               What&apos;s included
             </h2>
-            <div className="flex items-center gap-3 text-graphite">
-              <Layers className="h-5 w-5 text-sky" />
-              <span>
-                <strong className="text-graphite">
-                  {product.metafields.lutCount}
-                </strong>{" "}
-                LUTs in this pack
-              </span>
-            </div>
-            <div className="flex items-center gap-3 text-graphite">
-              <Package className="h-5 w-5 text-sky" />
-              <span>
-                Formats:{" "}
-                <strong className="text-graphite">
-                  {product.metafields.formats.join(", ")}
-                </strong>
-              </span>
-            </div>
-            <div className="flex items-start gap-3 text-graphite">
-              <MonitorPlay className="mt-0.5 h-5 w-5 shrink-0 text-sky" />
-              <span>
-                Compatible with{" "}
-                <strong className="text-graphite">
-                  {product.metafields.compatibleApps.join(", ")}
-                </strong>
-              </span>
-            </div>
+            <p className="mt-2 leading-relaxed text-slate2">
+              <strong className="text-graphite">
+                {product.metafields.lutCount} LUTs
+              </strong>{" "}
+              · {product.metafields.formats.join(", ")} · Works in{" "}
+              {product.metafields.compatibleApps.join(", ")}
+            </p>
           </div>
 
           {/* Inside the pack — every LUT by name with its coloring note. */}
           {product.includedLuts && product.includedLuts.length > 0 && (
-            <div className="mt-6 rounded-[28px] border border-hairline bg-white p-6">
+            <div className="mt-6 border-t border-hairline pt-6">
               <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-slate2">
                 {product.productType === "Bundle"
                   ? "Inside the bundle"
                   : "Inside the pack"}
               </h2>
-              <ul className="mt-4 grid gap-x-6 gap-y-2.5 sm:grid-cols-2">
+              <ul className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
                 {product.includedLuts.map((lut) => (
-                  <li key={lut.name} className="flex items-start gap-2.5 text-sm">
-                    <span
-                      aria-hidden
-                      className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-gradient-to-br from-sky to-[#8e5cff]"
-                    />
-                    <span className="text-slate2">
-                      <span className="font-semibold text-graphite">
-                        {lut.name}
-                      </span>{" "}
-                      — {lut.tone}
-                    </span>
+                  <li key={lut.name} className="text-sm text-slate2">
+                    <span className="font-semibold text-graphite">
+                      {lut.name}
+                    </span>{" "}
+                    — {lut.tone}
                   </li>
                 ))}
               </ul>
