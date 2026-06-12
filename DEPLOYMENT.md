@@ -335,3 +335,21 @@ docker compose up --build
 This stack is for prod-like local runs and as a deployment reference, not a
 turnkey production cluster (add a TLS-terminating proxy, managed Postgres,
 secrets store, and CDN for a real deploy).
+
+## 13. Shipping code to the live box (`./ship.sh`)
+
+Once the AWS bring-up has run (`aws/deploy-all.sh`, steps 01–03 create the
+instance), redeploy the latest code with a single command from the repo root:
+
+```bash
+./ship.sh                 # push the current branch + redeploy it to production
+./ship.sh main            # ship a specific branch
+./ship.sh --no-push       # redeploy whatever is already on origin
+./ship.sh status          # show the AWS deploy checkpoints
+```
+
+It pushes the branch to origin, pins the live server to it
+(`REPO_BRANCH` in `aws/config.env`), then runs `aws/04-app.sh`, which SSHes in,
+pulls the branch, rebuilds the Docker stack and reloads Caddy. `collectstatic`
+and `migrate` run inside the backend container on start, so no manual DB step is
+needed. Re-runnable and non-destructive.
