@@ -63,6 +63,7 @@ class Command(BaseCommand):
         )
 
         self._check_s3(opts["limit"])
+        self._check_google()
         self._check_shopify()
 
         self.stdout.write(self.style.MIGRATE_HEADING("\n== Result =="))
@@ -149,6 +150,68 @@ class Command(BaseCommand):
             )
         except Exception as exc:
             self.failures.append(f"S3: presign failed ({exc})")
+
+    # --------------------------------------------------------------- Google
+    def _check_google(self):
+        """Confirm 'Sign in with Google' will redirect to Google (read-only).
+
+        Enabled requires BOTH GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET. We also
+        validate the redirect URI Google will see: it must be HTTPS on a real
+        hostname — Google rejects plain http and raw IP addresses, the most
+        common reason the button silently stays in demo mode in production.
+        """
+        from urllib.parse import urlparse
+
+        self.stdout.write(self.style.MIGRATE_HEADING("\n== Sign-in with Google =="))
+        if not settings.GOOGLE_OAUTH_ENABLED:
+            self.stdout.write(
+                f"  {WARN} Not configured — set GOOGLE_CLIENT_ID + "
+                "GOOGLE_CLIENT_SECRET to enable. "
+                f"{DIM}(button falls back to the demo email login){RST}"
+            )
+            return
+
+        redirect_uri = settings.GOOGLE_REDIRECT_URI
+        self.stdout.write(
+            f"  client_id={_redact(settings.GOOGLE_CLIENT_ID)} "
+            f"secret={_redact(settings.GOOGLE_CLIENT_SECRET)}"
+        )
+        self.stdout.write(f"  redirect_uri={redirect_uri}")
+
+        parsed = urlparse(redirect_uri)
+        host = parsed.hostname or ""
+        is_ip = bool(host) and all(part.isdigit() for part in host.split("."))
+        if parsed.scheme != "https":
+            self.failures.append(
+                "Google: GOOGLE_REDIRECT_URI must be https (Google rejects http) — "
+                f"got {redirect_uri}. Deploy with a real domain (USE_IP=0)."
+            )
+        elif is_ip or host in ("localhost", "127.0.0.1"):
+            self.failures.append(
+                "Google: GOOGLE_REDIRECT_URI host must be a real domain — Google "
+                f"does not allow IPs/localhost ({host}). Deploy with USE_IP=0."
+            )
+        else:
+            self.stdout.write(
+                f"  {OK} redirect URI looks valid — register it EXACTLY in the "
+                "Google client's Authorized redirect URIs."
+            )
+
+        # Read-only reachability check of Google's OIDC discovery doc. Confirms
+        # outbound connectivity to Google; does not use the secret.
+        try:
+            disc = requests.get(
+                "https://accounts.google.com/.well-known/openid-configuration",
+                timeout=10,
+            )
+            if disc.status_code == 200 and disc.json().get("authorization_endpoint"):
+                self.stdout.write(f"  {OK} Google OIDC reachable")
+            else:
+                self.stdout.write(
+                    f"  {WARN} Google OIDC discovery returned {disc.status_code}"
+                )
+        except requests.RequestException as exc:
+            self.stdout.write(f"  {WARN} Google OIDC unreachable ({exc})")
 
     # -------------------------------------------------------------- Shopify
     def _check_shopify(self):
