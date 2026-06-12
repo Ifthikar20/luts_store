@@ -216,7 +216,6 @@ export function ProductDetail({ product }: { product: Product }) {
             {product.previewVideo && (
               <Reveal direction="left">
                 <video
-                  src={product.previewVideo}
                   poster={product.featuredImage.url}
                   autoPlay
                   muted
@@ -224,7 +223,9 @@ export function ProductDetail({ product }: { product: Product }) {
                   playsInline
                   preload="none"
                   className="aspect-[16/10] w-full rounded-[28px] border border-hairline object-cover shadow-soft"
-                />
+                >
+                  <source src={product.previewVideo} type="video/mp4" />
+                </video>
               </Reveal>
             )}
           </div>

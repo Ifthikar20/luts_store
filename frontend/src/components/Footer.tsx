@@ -6,6 +6,7 @@ const columns = [
     title: "Shop",
     links: [
       { href: "/collections/cinematic", label: "Cinematic" },
+      { href: "/collections/dji-osmo", label: "DJI / OSMO" },
       { href: "/collections/drone-dji", label: "Drone / DJI" },
       { href: "/collections/mobile-capcut", label: "Mobile / CapCut" },
       { href: "/collections/film-emulation", label: "Film Emulation" },

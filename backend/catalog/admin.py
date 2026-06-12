@@ -35,7 +35,10 @@ class ProductAdmin(admin.ModelAdmin):
         "handle",
         "product_type",
         "price",
+        "currency",
         "lut_count",
+        "bundled_count",
+        "downloads_granted",
         "featured",
         "available",
         "published",
@@ -46,7 +49,20 @@ class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {"handle": ("title",)}
     filter_horizontal = ("collections", "bundled_products")
     inlines = [IncludedLutInline, ProductImageInline]
+    readonly_fields = ("file_key",)
     save_on_top = True
+
+    @admin.display(description="Packs in bundle")
+    def bundled_count(self, obj):
+        """How many packs a bundle contains — visible at a glance in the list."""
+        return obj.bundled_products.count() or "—"
+
+    @admin.display(description="Downloads granted")
+    def downloads_granted(self, obj):
+        """Number of download grants issued for this product (purchases delivered)."""
+        from delivery.models import DownloadGrant
+
+        return DownloadGrant.objects.filter(product_handle=obj.handle).count()
     fieldsets = (
         (None, {"fields": ("title", "handle", "product_type", "description", "best_for")}),
         ("Pricing", {"fields": ("price", "compare_at_price", "currency")}),
