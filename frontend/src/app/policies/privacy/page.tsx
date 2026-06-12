@@ -525,12 +525,12 @@ export default function PrivacyPage() {
           Privacy Policy, or if you would like to exercise any of the rights
           available to you, please call or email us at{" "}
           <a
-            href="mailto:Info@thelookslab.com"
+            href="mailto:team@luts.shop"
             className="text-grade-teal underline-offset-4 hover:underline"
           >
-            Info@thelookslab.com
-          </a>{" "}
-          or contact us at Heidestraat 8, Merksplas, 2330, BE.
+            team@luts.shop
+          </a>
+          .
         </p>
         <p>
           For the purpose of applicable data protection laws and if not
