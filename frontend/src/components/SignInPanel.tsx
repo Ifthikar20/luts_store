@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Gift, Loader2, Sparkles } from "lucide-react";
+import { Gift, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { googleLogin } from "@/lib/api";
 import type { SocialProvider } from "@/lib/types";
@@ -168,18 +168,6 @@ export function SignInPanel({ onDone }: { onDone?: () => void }) {
 
   return (
     <div>
-      {/* Value prop — why sign in. */}
-      <div className="flex items-start gap-3 rounded-2xl bg-sky/5 p-4">
-        <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-sky" />
-        <p className="text-sm text-slate2">
-          Sign in to keep every purchase in your{" "}
-          <span className="font-semibold text-graphite">download library</span> — and
-          get the <span className="font-semibold text-graphite">best deals</span> plus
-          a <span className="font-semibold text-graphite">free LUT every two weeks</span>,
-          straight to your inbox.
-        </p>
-      </div>
-
       <AnimatePresence>
         {error && (
           <motion.p

@@ -35,8 +35,7 @@ function AccountAuthForm() {
             Sign in
           </h1>
           <p className="mt-2 text-sm text-slate2">
-            Use your Google or Apple account — it&rsquo;s how you check out and
-            access your download library.
+            Use your Google or Apple account to access your library.
           </p>
           <div className="mt-6">
             <SignInPanel onDone={() => router.replace(next)} />

@@ -7,6 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { completeCheckout, getCart } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import { formatMoney } from "@/lib/format";
 import type { Cart } from "@/lib/types";
 import { Reveal } from "@/components/motion/Reveal";
@@ -19,13 +20,13 @@ function CheckoutContent() {
   const router = useRouter();
   const params = useSearchParams();
   const cartId = params.get("cart");
-  // The BFF echoes the resolved receipt email (account or guest) for prefill —
-  // mirrors Stripe's customer_email prefill on the hosted page.
-  const prefillEmail = params.get("email") ?? "";
+  // Prefill the email from the signed-in session (NOT the URL — PII must never
+  // be exposed in the URL). Guests just type it.
+  const { customer } = useAuth();
 
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState(prefillEmail);
+  const [email, setEmail] = useState("");
   const [touched, setTouched] = useState(false);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,11 @@ function CheckoutContent() {
       active = false;
     };
   }, [cartId]);
+
+  // Prefill from the session once it hydrates, unless the user already typed.
+  useEffect(() => {
+    if (customer?.email) setEmail((current) => current || customer.email);
+  }, [customer]);
 
   const emailValid = EMAIL_RE.test(email.trim());
 

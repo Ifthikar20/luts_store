@@ -58,10 +58,11 @@ def test_mock_checkout_returns_relative_url(client):
     assert resp.status_code == 200
     body = resp.json()
     assert body["mode"] == "mock"
-    # Relative path (frontend renders a demo checkout page); the signed-in
-    # account's email is resolved server-side and echoed for prefill.
-    assert body["checkoutUrl"].startswith(f"/checkout?cart={cart_id}")
-    assert "buyer%40example.com" in body["checkoutUrl"]
+    # Relative path (frontend renders a demo checkout page). Only the opaque
+    # cart id is in the URL — the email (PII) is NEVER exposed there.
+    assert body["checkoutUrl"] == f"/checkout?cart={cart_id}"
+    assert "@" not in body["checkoutUrl"]
+    assert "email" not in body["checkoutUrl"]
 
 
 def test_checkout_unknown_cart_404(client):
@@ -107,8 +108,9 @@ def test_guest_checkout_with_email_succeeds(anon_client):
     assert resp.status_code == 200
     body = resp.json()
     assert body["mode"] == "mock"
-    # Email is normalized lowercase and carried to the checkout surface.
-    assert "guest%40example.com" in body["checkoutUrl"]
+    # Even when an email is supplied, it is NOT placed in the URL (no PII leak).
+    assert body["checkoutUrl"] == f"/checkout?cart={cart_id}"
+    assert "@" not in body["checkoutUrl"]
 
 
 # ---------------------------------------------------------------------------
