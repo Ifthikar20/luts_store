@@ -55,6 +55,8 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, SimpleRateThrottle
 
+from common.drf import CsrfExemptSessionAuthentication
+
 from . import oauth, services
 
 logger = logging.getLogger(__name__)
@@ -282,3 +284,53 @@ def session_view(request):
             {"authenticated": True, "customer": services.serialize_customer(user)}
         )
     return Response({"authenticated": False, "customer": None})
+
+
+# ---------------------------------------------------------------------------
+# GET/POST /api/me/preferences — account settings (session-authenticated)
+# ---------------------------------------------------------------------------
+def _preferences_for(user) -> dict:
+    """Current account settings for a signed-in customer.
+
+    ``marketingEmails`` is sourced from the newsletter list: a customer is
+    opted-in iff a NewsletterSubscriber row exists for their email.
+    """
+    from engagement.models import NewsletterSubscriber
+
+    email = (user.email or "").strip().lower()
+    return {
+        "email": user.email,
+        "memberSince": user.date_joined.isoformat(),
+        "marketingEmails": NewsletterSubscriber.objects.filter(
+            email__iexact=email
+        ).exists(),
+    }
+
+
+@api_view(["GET", "POST"])
+@authentication_classes([CsrfExemptSessionAuthentication])
+@permission_classes([])
+@throttle_classes([AnonRateThrottle])
+def account_preferences(request):
+    """Read or update the signed-in customer's settings.
+
+    GET  -> {email, memberSince, marketingEmails}
+    POST {marketingEmails: bool} -> subscribe/unsubscribe + return the new state.
+    """
+    user = request.user
+    if not (user and user.is_authenticated):
+        return Response({"detail": "Not signed in."}, status=401)
+
+    if request.method == "POST":
+        from engagement.models import NewsletterSubscriber
+
+        data = request.data if isinstance(request.data, dict) else {}
+        if "marketingEmails" in data:
+            email = (user.email or "").strip().lower()
+            if email:
+                if data.get("marketingEmails"):
+                    NewsletterSubscriber.objects.get_or_create(email=email)
+                else:
+                    NewsletterSubscriber.objects.filter(email__iexact=email).delete()
+
+    return Response(_preferences_for(user))

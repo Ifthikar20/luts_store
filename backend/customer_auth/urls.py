@@ -19,6 +19,8 @@ urlpatterns = [
     ),
     path("auth/shopify/logout", views.shopify_logout, name="shopify-logout"),
     path("auth/session", views.session_view, name="shopify-session"),
+    # Account settings (session-authenticated): email + marketing-email opt-in.
+    path("me/preferences", views.account_preferences, name="account-preferences"),
     # Provider-agnostic alias: clears the Django session no matter how the user
     # signed in (Google, Apple, email/password or Shopify).
     path("auth/session/logout", views.shopify_logout, name="session-logout"),

@@ -18,6 +18,7 @@ import type {
   CollectionWithProducts,
   ContactInput,
   CustomerSession,
+  AccountPreferences,
   DownloadItem,
   EngagementResponse,
   Facets,
@@ -470,6 +471,25 @@ export async function getMyDownloads(): Promise<DownloadItem[]> {
   return request<DownloadItem[]>("/me/downloads", {
     method: "GET",
     session: true,
+  });
+}
+
+// Account settings — read the signed-in customer's preferences.
+export async function getPreferences(): Promise<AccountPreferences> {
+  return request<AccountPreferences>("/me/preferences", {
+    method: "GET",
+    session: true,
+  });
+}
+
+// Update settings (e.g. toggle marketing emails); returns the new state.
+export async function updatePreferences(
+  patch: Partial<Pick<AccountPreferences, "marketingEmails">>,
+): Promise<AccountPreferences> {
+  return request<AccountPreferences>("/me/preferences", {
+    method: "POST",
+    session: true,
+    body: JSON.stringify(patch),
   });
 }
 

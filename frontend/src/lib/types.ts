@@ -243,6 +243,13 @@ export interface DownloadItem {
   expiresAt: string;
 }
 
+// Account settings — GET/POST /api/me/preferences.
+export interface AccountPreferences {
+  email: string;
+  memberSince: string;
+  marketingEmails: boolean;
+}
+
 // A single immediate-download entry on the thank-you confirmation.
 export interface ConfirmationDownload {
   title: string;

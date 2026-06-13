@@ -22,7 +22,6 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import validate_email
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -32,18 +31,7 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, SimpleRateThrottle
 
-
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-    """Session auth that populates ``request.user`` WITHOUT enforcing CSRF.
-
-    CSRF for these cookie-authenticated POSTs is covered by the SameSite=Lax
-    session cookie (a cross-site POST never carries the cookie — see settings),
-    matching how the customer-auth logout endpoint is handled. We still need the
-    real session user, which an empty authenticator list would not provide.
-    """
-
-    def enforce_csrf(self, request):  # noqa: D401 - intentional no-op
-        return
+from common.drf import CsrfExemptSessionAuthentication
 
 from .models import ContactMessage, NewsletterSubscriber, Review
 
