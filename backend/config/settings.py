@@ -444,6 +444,22 @@ CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = "Lax"
 
+# Bound the session lifetime (default 14 days) and refresh it on activity so an
+# abandoned session can't live forever.
+SESSION_COOKIE_AGE = config("SESSION_COOKIE_AGE", default=1_209_600, cast=int)
+SESSION_SAVE_EVERY_REQUEST = True
+
+# In production (HTTPS, so the *_SECURE flags are on) upgrade the cookie names to
+# the __Host- prefix. That binds each cookie to THIS exact host, over HTTPS only,
+# with Path=/ and no Domain attribute — so it can't be set/overwritten by a
+# subdomain or a man-in-the-middle on a sibling host (cookie-injection / fixation
+# defense). Django already uses Path=/ and no Domain by default, satisfying the
+# prefix rules; in http dev the plain names are kept so cookies still work.
+if SESSION_COOKIE_SECURE:
+    SESSION_COOKIE_NAME = "__Host-sessionid"
+if CSRF_COOKIE_SECURE:
+    CSRF_COOKIE_NAME = "__Host-csrftoken"
+
 # Optional /admin/ IP allowlist. Comma-separated IPs; when set, the admin is
 # 404'd for any other client (see common.admin_guard). Empty = no restriction.
 ADMIN_IP_ALLOWLIST = [

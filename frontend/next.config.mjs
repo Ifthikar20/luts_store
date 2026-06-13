@@ -20,25 +20,49 @@ const VIDEO_HOSTS = (
   .split(/[ ,]+/)
   .filter(Boolean);
 
+// CDN origin for uploaded preview media (CloudFront). When set, optimised
+// images + adaptive-HLS video are served from here, so it must be allowed for
+// images, <video>/HLS media, AND connect-src (hls.js fetches .m3u8/.ts segments
+// over fetch/XHR — without this the player is silently CSP-blocked). The S3
+// presigned fallback (when no CDN) is covered by the amazonaws.com source.
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || "";
+let cdnOrigin = "";
+try {
+  cdnOrigin = CDN_URL ? new URL(CDN_URL).origin : "";
+} catch {
+  // keep empty
+}
+// Sources for media that may come from the CDN or directly from S3 (presigned).
+const mediaSources = [cdnOrigin, "https://*.amazonaws.com"]
+  .filter(Boolean)
+  .join(" ");
+
+// In production we drop 'unsafe-eval' — the built Next bundle doesn't need it
+// (it's only used by the dev HMR/react-refresh runtime). 'unsafe-inline' for
+// scripts stays because Next injects unnonced inline bootstrap scripts.
+const isProd = process.env.NODE_ENV === "production";
+const scriptSrc = isProd
+  ? "script-src 'self' 'unsafe-inline'"
+  : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+
 // A reasonable Content-Security-Policy:
 // - next/font (Google) is self-hosted at build time, so no font CDN is needed.
 // - 'unsafe-inline' for styles is required by Next's runtime style injection + Framer Motion.
-// - script 'unsafe-inline'/'unsafe-eval' kept loose for Next dev/runtime; tighten with nonces in a hardened deploy.
-// - images allowed from self, data URIs, blob, and images.unsplash.com (placeholder photos).
-// - media-src allows self, blob:, and the video host(s) so the <video> previews load.
-// - connect-src allows the API origin so the storefront can call the BFF.
+// - images allowed from self, data URIs, blob, Unsplash placeholders, and the CDN/S3.
+// - media-src allows self, blob:, the sample video host(s), and the CDN/S3 (HLS).
+// - connect-src allows the API origin (BFF calls) and the CDN/S3 (hls.js fetches).
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
-  "img-src 'self' data: blob: https://images.unsplash.com",
-  `media-src 'self' blob: ${VIDEO_HOSTS.join(" ")}`,
+  `img-src 'self' data: blob: https://images.unsplash.com ${mediaSources}`,
+  `media-src 'self' blob: ${VIDEO_HOSTS.join(" ")} ${mediaSources}`,
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  `connect-src 'self' ${apiOrigin}`,
+  scriptSrc,
+  `connect-src 'self' ${apiOrigin} ${mediaSources}`,
 ].join("; ");
 
 const securityHeaders = [
@@ -58,13 +82,23 @@ const nextConfig = {
   // runner stage can ship a minimal image (see frontend/Dockerfile).
   output: "standalone",
   images: {
-    // Only allow Unsplash placeholder photos through next/image.
+    // Hosts next/image is allowed to optimise: Unsplash placeholders, plus the
+    // CDN origin (uploaded product images) when configured.
     remotePatterns: [
       {
         protocol: "https",
         hostname: "images.unsplash.com",
         pathname: "/**",
       },
+      ...(cdnOrigin
+        ? [
+            {
+              protocol: "https",
+              hostname: new URL(cdnOrigin).hostname,
+              pathname: "/**",
+            },
+          ]
+        : []),
     ],
   },
   async headers() {

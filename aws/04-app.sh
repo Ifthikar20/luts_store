@@ -84,6 +84,8 @@ set_root() { # KEY VALUE — upsert in root .env
 }
 set_root NEXT_PUBLIC_API_URL "$API_URL"
 set_root NEXT_PUBLIC_SITE_URL "$SITE_URL"
+# Let the storefront CSP + next/image allow the CDN origin (preview media).
+[ -n "${CDN_BASE_URL:-}" ] && set_root NEXT_PUBLIC_CDN_URL "$CDN_BASE_URL"
 # docker-compose.yml passes ALLOWED_HOSTS from THIS file into the backend
 # container (its environment: block overrides backend/.env).
 set_root ALLOWED_HOSTS "${PUB_HOST},localhost,127.0.0.1,backend"
@@ -109,6 +111,16 @@ set_var SHOPIFY_CUSTOMER_ACCOUNT_REDIRECT_URI "${API_BASE}/api/auth/shopify/call
 # Over plain HTTP (IP mode) cookies must NOT be Secure or sessions/CSRF break.
 set_var SESSION_COOKIE_SECURE "$SECURE"
 set_var CSRF_COOKIE_SECURE "$SECURE"
+# In HTTPS/domain mode, force TLS at the app layer and send a long-lived HSTS
+# header (1 year, preload). Skipped on plain-IP HTTP where HSTS is invalid and a
+# redirect loop would lock you out.
+if [ "$SECURE" = "True" ]; then
+  set_var SECURE_SSL_REDIRECT True
+  set_var SECURE_HSTS_SECONDS 31536000
+else
+  set_var SECURE_SSL_REDIRECT False
+  set_var SECURE_HSTS_SECONDS 0
+fi
 # S3 delivery via the INSTANCE ROLE — bucket only, no keys on disk.
 set_var AWS_S3_BUCKET "$BUCKET_NAME"
 set_var AWS_S3_REGION "$AWS_REGION"
