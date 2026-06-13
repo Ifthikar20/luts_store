@@ -188,12 +188,9 @@ export function ProductDetail({ product }: { product: Product }) {
           )}
 
           {product.tags.length > 0 && (
-            <div className="mt-8 flex flex-wrap gap-2">
+            <div className="mt-8 flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate2">
               {product.tags.map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full border border-hairline bg-cloud px-3 py-1 text-xs text-slate2"
-                >
+                <span key={t} className="transition-colors hover:text-graphite">
                   #{t}
                 </span>
               ))}

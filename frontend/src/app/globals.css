@@ -20,6 +20,10 @@
 
 html {
   scroll-behavior: smooth;
+  /* Always reserve the scrollbar gutter so the page never shifts horizontally
+     when content height changes (e.g. filtering the catalog adds/removes the
+     vertical scrollbar). Prevents the results column jumping left/right. */
+  scrollbar-gutter: stable;
 }
 
 body {
