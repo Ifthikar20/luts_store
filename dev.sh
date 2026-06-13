@@ -55,11 +55,18 @@ setup_backend() {
 setup_frontend() {
   say "Frontend: setting up"
   cd "$FRONTEND"
+  # Install when deps are missing OR when package-lock.json changed since the
+  # last install (e.g. after pulling new code that adds a dependency). Using the
+  # lockfile mtime vs node_modules avoids a slow reinstall on every run while
+  # still catching new deps like hls.js.
   if [ ! -d node_modules ]; then
     say "installing Node deps (npm install)"
     npm install --no-fund --no-audit
+  elif [ package-lock.json -nt node_modules ]; then
+    say "package-lock.json changed — syncing Node deps (npm install)"
+    npm install --no-fund --no-audit
   else
-    ok "node_modules present (skipping npm install)"
+    ok "node_modules up to date (skipping npm install)"
   fi
   if [ ! -f .env.local ]; then
     cp .env.local.example .env.local
