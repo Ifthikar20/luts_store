@@ -6,6 +6,10 @@
 # pair (saved to aws/$KEY_NAME.pem), an Ubuntu 24.04 instance with the IAM role
 # from 02 attached, and an Elastic IP. cloud-init installs docker + caddy + git.
 #
+# The root EBS volume is ENCRYPTED (AWS-managed aws/ebs KMS key, no extra cost):
+# that gives encryption at rest for everything on the box — including the
+# Postgres data volume — transparently (encrypt on write, decrypt on read).
+#
 # Prints the Elastic IP — point your DNS A records ($DOMAIN and $API_DOMAIN) at
 # it, then run ./04-app.sh.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -88,7 +92,7 @@ EOF
     --image-id "$AMI" --instance-type "$INSTANCE_TYPE" \
     --key-name "$KEY_NAME" --security-group-ids "$SG_ID" \
     --iam-instance-profile "Name=$ROLE_NAME" \
-    --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":20,"VolumeType":"gp3"}}]' \
+    --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":20,"VolumeType":"gp3","Encrypted":true}}]' \
     --user-data "$USERDATA" \
     --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=luts-store}]' \
     --query 'Instances[0].InstanceId' --output text)

@@ -119,6 +119,7 @@ exact file. The `.pem` stays git-ignored; never commit it.
 | `04-app.sh` | App env files, Docker stack, Caddyfile | **deploy code updates** (`git pull` + rebuild) |
 | `05-secrets.sh` | Stripe/SMTP values in server's `backend/.env` | rotate keys |
 | `06-cdn.sh` | CloudFront + OAC + bucket CORS/policy for `media/*` | reuse the distribution |
+| `07-budget.sh` | Monthly cost budget + email spend alerts (free) | change the limit |
 
 Notes:
 
