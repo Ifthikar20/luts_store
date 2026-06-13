@@ -127,9 +127,15 @@ export function ProductDetail({ product }: { product: Product }) {
             <p className="mt-2 leading-relaxed text-slate2">
               <strong className="text-graphite">
                 {product.metafields.lutCount} LUTs
-              </strong>{" "}
+              </strong>
+              {product.metafields.lutType &&
+                ` · ${product.metafields.lutType}`}{" "}
               · {product.metafields.formats.join(", ")} · Works in{" "}
               {product.metafields.compatibleApps.join(", ")}
+            </p>
+            <p className="mt-2 text-sm text-slate2">
+              These grade color directly — a LUT, not an app-specific preset —
+              so the same file looks identical in every editor.
             </p>
           </div>
 

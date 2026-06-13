@@ -30,6 +30,8 @@ export interface CollectionRef {
 
 export interface ProductMetafields {
   lutCount: number;
+  /** Technical type of the deliverable, e.g. "3D creative look LUT". */
+  lutType?: string;
   formats: string[];
   compatibleApps: string[];
 }

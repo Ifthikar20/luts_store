@@ -88,6 +88,11 @@ def _single_variant(pid: str, title: str, price: str, available: bool = True):
 def _metafields(lut_count: int) -> dict[str, Any]:
     return {
         "lutCount": lut_count,
+        # Technical type of the deliverable. These are 3D *creative look* LUTs
+        # (color transforms baked into a cube), not technical/conversion LUTs
+        # (e.g. log-to-Rec709) and not app-specific presets — so the same file
+        # grades identically in any host app.
+        "lutType": "3D creative look LUT",
         "formats": [".cube"],
         "compatibleApps": [
             "Premiere Pro",

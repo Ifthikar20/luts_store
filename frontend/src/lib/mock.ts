@@ -57,6 +57,7 @@ function makeProduct(p: {
     collections: p.collections,
     metafields: {
       lutCount: p.lutCount,
+      lutType: "3D creative look LUT",
       formats: p.formats,
       compatibleApps: p.apps,
     },
