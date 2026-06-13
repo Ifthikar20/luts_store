@@ -82,10 +82,26 @@ def _bad_request(message: str) -> Response:
     return Response({"detail": message}, status=400)
 
 
+def _human_or_bad_request(request, action: str):
+    """Return a 400 Response if reCAPTCHA fails, else None (proceed).
+
+    No-op when reCAPTCHA is unconfigured (see common.recaptcha).
+    """
+    from common import recaptcha
+
+    data = request.data if isinstance(request.data, dict) else {}
+    token = data.get("recaptchaToken") or data.get("recaptcha_token")
+    if not recaptcha.verify(token, action=action, remote_ip=recaptcha.client_ip(request)):
+        return _bad_request("Could not verify you're human. Please try again.")
+    return None
+
+
 @api_view(["POST"])
 @permission_classes([])
 @throttle_classes([AnonRateThrottle, AuthScopedThrottle])
 def register(request):
+    if (blocked := _human_or_bad_request(request, "register")) is not None:
+        return blocked
     data = request.data if isinstance(request.data, dict) else {}
     email = data.get("email")
     password = data.get("password")
@@ -107,6 +123,8 @@ def register(request):
 @permission_classes([])
 @throttle_classes([AnonRateThrottle, AuthScopedThrottle])
 def login(request):
+    if (blocked := _human_or_bad_request(request, "login")) is not None:
+        return blocked
     data = request.data if isinstance(request.data, dict) else {}
     email = data.get("email")
     password = data.get("password")
@@ -148,6 +166,8 @@ def _social(request, provider: str):
     session. Returns ``{user}`` only — the browser is NEVER handed a bearer
     token (nothing for XSS to exfiltrate; the session cookie is the credential).
     """
+    if (blocked := _human_or_bad_request(request, "login")) is not None:
+        return blocked
     data = request.data if isinstance(request.data, dict) else {}
     token = data.get("credential") or data.get("token") or data.get("identityToken")
     if not token:

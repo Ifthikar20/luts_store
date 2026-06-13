@@ -41,6 +41,7 @@ import {
   mockProductByHandle,
   mockProducts,
 } from "./mock";
+import { executeRecaptcha } from "./recaptcha";
 import { envelope } from "./obfuscate";
 
 export const API_URL =
@@ -360,10 +361,11 @@ export async function socialLogin(
   provider: SocialProvider,
   credential: string,
 ): Promise<User> {
+  const recaptchaToken = await executeRecaptcha("login");
   const res = await request<{ user: User }>(`/auth/${provider}`, {
     method: "POST",
     session: true,
-    body: JSON.stringify({ credential }),
+    body: JSON.stringify({ credential, recaptchaToken }),
   });
   return res.user;
 }
@@ -423,9 +425,10 @@ export async function createReview(
   handle: string,
   input: { rating: number; title?: string; body: string; name?: string },
 ): Promise<{ review: Review }> {
+  const recaptchaToken = await executeRecaptcha("review");
   return request<{ review: Review }>(
     `/products/${encodeURIComponent(handle)}/reviews/create`,
-    { method: "POST", session: true, body: JSON.stringify(input) },
+    { method: "POST", session: true, body: JSON.stringify({ ...input, recaptchaToken }) },
   );
 }
 

@@ -86,6 +86,9 @@ set_root NEXT_PUBLIC_API_URL "$API_URL"
 set_root NEXT_PUBLIC_SITE_URL "$SITE_URL"
 # Let the storefront CSP + next/image allow the CDN origin (preview media).
 [ -n "${CDN_BASE_URL:-}" ] && set_root NEXT_PUBLIC_CDN_URL "$CDN_BASE_URL"
+# Public reCAPTCHA v3 site key (bot protection on sign-in + reviews). The CSP
+# allows Google's reCAPTCHA hosts only when this is set.
+[ -n "${RECAPTCHA_SITE_KEY:-}" ] && set_root NEXT_PUBLIC_RECAPTCHA_SITE_KEY "$RECAPTCHA_SITE_KEY"
 # docker-compose.yml passes ALLOWED_HOSTS from THIS file into the backend
 # container (its environment: block overrides backend/.env).
 set_root ALLOWED_HOSTS "${PUB_HOST},localhost,127.0.0.1,backend"

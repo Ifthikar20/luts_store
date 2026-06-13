@@ -37,13 +37,25 @@ const mediaSources = [cdnOrigin, "https://*.amazonaws.com"]
   .filter(Boolean)
   .join(" ");
 
+// Google reCAPTCHA v3 hosts — only added to the CSP when a site key is set, so
+// the policy stays tight when the bot check is disabled. reCAPTCHA loads a
+// script from google/gstatic, may open a challenge iframe (google), and phones
+// home over fetch (google).
+const RECAPTCHA_ON = !!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+const RECAPTCHA_SCRIPT = RECAPTCHA_ON
+  ? " https://www.google.com https://www.gstatic.com"
+  : "";
+const RECAPTCHA_FRAME = RECAPTCHA_ON ? " https://www.google.com" : "";
+const RECAPTCHA_CONNECT = RECAPTCHA_ON ? " https://www.google.com" : "";
+
 // In production we drop 'unsafe-eval' — the built Next bundle doesn't need it
 // (it's only used by the dev HMR/react-refresh runtime). 'unsafe-inline' for
 // scripts stays because Next injects unnonced inline bootstrap scripts.
 const isProd = process.env.NODE_ENV === "production";
-const scriptSrc = isProd
-  ? "script-src 'self' 'unsafe-inline'"
-  : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+const scriptSrc =
+  (isProd
+    ? "script-src 'self' 'unsafe-inline'"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'") + RECAPTCHA_SCRIPT;
 
 // A reasonable Content-Security-Policy:
 // - next/font (Google) is self-hosted at build time, so no font CDN is needed.
@@ -56,13 +68,14 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
+  `frame-src 'self'${RECAPTCHA_FRAME}`,
   "object-src 'none'",
   `img-src 'self' data: blob: https://images.unsplash.com ${mediaSources}`,
   `media-src 'self' blob: ${VIDEO_HOSTS.join(" ")} ${mediaSources}`,
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
   scriptSrc,
-  `connect-src 'self' ${apiOrigin} ${mediaSources}`,
+  `connect-src 'self' ${apiOrigin} ${mediaSources}${RECAPTCHA_CONNECT}`,
 ].join("; ");
 
 const securityHeaders = [

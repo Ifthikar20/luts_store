@@ -223,6 +223,14 @@ def create_review(request, handle: str):
         )
 
     data = request.data if isinstance(request.data, dict) else {}
+    # Bot check (no-op unless reCAPTCHA is configured).
+    from common import recaptcha
+
+    token = data.get("recaptchaToken") or data.get("recaptcha_token")
+    if not recaptcha.verify(token, action="review", remote_ip=recaptcha.client_ip(request)):
+        return Response(
+            {"detail": "Could not verify you're human. Please try again."}, status=400
+        )
     try:
         rating = int(data.get("rating"))
     except (TypeError, ValueError):

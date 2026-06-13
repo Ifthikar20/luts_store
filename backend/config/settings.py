@@ -97,6 +97,19 @@ GOOGLE_REDIRECT_URI = config(
 GOOGLE_OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 
 # ---------------------------------------------------------------------------
+# Google reCAPTCHA v3 — invisible, score-based human verification.
+# ---------------------------------------------------------------------------
+# Guards bot-prone POSTs (sign-in / sign-up and review submission). The frontend
+# fetches a short-lived token with the SITE key; the backend verifies it against
+# Google with the SECRET key and accepts only a sufficient score. Active ONLY
+# when RECAPTCHA_SECRET_KEY is set — otherwise every check is skipped so dev/CI
+# and un-keyed deploys keep working unchanged. Keys: google.com/recaptcha (v3).
+RECAPTCHA_SECRET_KEY = config("RECAPTCHA_SECRET_KEY", default="").strip()
+# Reject scores below this (0.0 = bot … 1.0 = human). 0.5 is Google's default.
+RECAPTCHA_MIN_SCORE = config("RECAPTCHA_MIN_SCORE", default=0.5, cast=float)
+RECAPTCHA_ENABLED = bool(RECAPTCHA_SECRET_KEY)
+
+# ---------------------------------------------------------------------------
 # Shopify Customer Accounts (OAuth 2.0 / OpenID Connect, PKCE) — OPTIONAL login
 # ---------------------------------------------------------------------------
 # Powers the hosted-login account/library portal at account.<domain>, exactly
