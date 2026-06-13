@@ -233,6 +233,7 @@ def test_order_confirm_from_mock_cart(client):
     assert body["orderId"] == f"mock-cart-{cart_id}"
     assert len(body["lines"]) == 1
     assert body["lines"][0]["title"] == "Midnight Noir"
+    assert body["lines"][0]["price"]["amount"] == "39.00"  # per-line price shown
     assert body["total"]["currencyCode"] == "USD"
     assert len(body["downloads"]) == 1
     assert body["downloads"][0]["downloadUrl"].startswith("/api/download/")
@@ -283,4 +284,7 @@ def test_order_confirm_from_real_order(client, settings):
     assert body["orderId"] == "4242"
     assert body["email"] == "buyer@example.com"
     assert body["lines"][0]["quantity"] == 2
+    # Per-line price is derived from the catalog (unit × quantity).
+    assert body["lines"][0]["handle"] == "midnight-noir"
+    assert body["lines"][0]["price"]["amount"] == "78.00"  # 2 × 39.00
     assert len(body["downloads"]) == 1

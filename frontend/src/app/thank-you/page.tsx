@@ -109,19 +109,20 @@ function ThankYouContent() {
             Thank you!
           </h1>
           <p className="mt-3 text-slate2">
-            Your order is confirmed.{" "}
-            <span className="text-graphite">
-              No account needed — download your looks right now.
-            </span>
+            Your order is confirmed — download your looks right now,{" "}
+            <span className="text-graphite">no account needed</span>.
           </p>
           {confirmation.email && (
-            <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-slate2">
-              <Mail className="h-4 w-4 text-sky" />A copy has also been
-              emailed to {confirmation.email}.
+            <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-slate2">
+              <Mail className="h-4 w-4 text-sky" /> A copy was emailed to{" "}
+              <span className="text-graphite">{confirmation.email}</span>.
             </p>
           )}
-          <p className="mt-1 text-xs text-slate2">
-            Order {confirmation.orderId}
+          <p className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-hairline bg-cloud px-3 py-1 text-xs text-slate2">
+            Order ref
+            <span className="break-all font-mono text-graphite">
+              {confirmation.orderId}
+            </span>
           </p>
         </div>
 
@@ -134,10 +135,19 @@ function ThankYouContent() {
             {confirmation.lines.map((line, i) => (
               <li
                 key={`${line.title}-${i}`}
-                className="flex items-center justify-between py-3 text-sm"
+                className="flex items-center justify-between gap-4 py-3 text-sm"
               >
-                <span className="text-graphite">{line.title}</span>
-                <span className="text-slate2">×{line.quantity}</span>
+                <span className="min-w-0 truncate text-graphite">
+                  {line.title}
+                  {line.quantity > 1 && (
+                    <span className="text-slate2"> × {line.quantity}</span>
+                  )}
+                </span>
+                {line.price && (
+                  <span className="shrink-0 font-medium text-graphite">
+                    {formatMoney(line.price)}
+                  </span>
+                )}
               </li>
             ))}
           </ul>
@@ -210,7 +220,7 @@ function ThankYouContent() {
         <div className="mt-10 flex flex-col items-center gap-3 text-center">
           <p className="inline-flex items-center gap-2 text-sm text-slate2">
             <CheckCircle2 className="h-4 w-4 text-sky" />
-            These links work without logging in — a copy was also emailed to you.
+            Your download links don&apos;t require an account.
           </p>
           <Link href="/account" className="btn-ghost">
             <Library className="h-4 w-4" /> Have an account? View your library

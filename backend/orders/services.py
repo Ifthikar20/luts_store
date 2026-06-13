@@ -175,9 +175,44 @@ def _confirmation_downloads(grants) -> list[dict[str, Any]]:
     return out
 
 
+def _line_price(handle: str, quantity: int, currency: str) -> dict[str, str] | None:
+    """Per-line money (unit price × quantity), looked up from the catalog.
+
+    Orders persist title + quantity but not price, so we derive each line total
+    from the current catalog by handle. Returns None when the product/price is
+    unavailable (the line then renders without a price rather than a wrong one).
+    """
+    if not handle:
+        return None
+    from catalog import services as catalog_services
+
+    product = catalog_services.get_product(handle)
+    if not product:
+        return None
+    try:
+        unit = product["priceRange"]["min"]
+        amount = float(unit["amount"]) * max(int(quantity), 1)
+    except (KeyError, TypeError, ValueError):
+        return None
+    return {
+        "amount": f"{amount:.2f}",
+        "currencyCode": unit.get("currencyCode", currency),
+    }
+
+
+def _confirm_line(
+    title: str, quantity: int, handle: str, currency: str
+) -> dict[str, Any]:
+    line: dict[str, Any] = {"title": title, "quantity": quantity, "handle": handle}
+    price = _line_price(handle, quantity, currency)
+    if price:
+        line["price"] = price
+    return line
+
+
 def _confirm_from_order(order: Order) -> dict[str, Any]:
     lines = [
-        {"title": p.title, "quantity": p.quantity}
+        _confirm_line(p.title, p.quantity, p.product_handle, order.currency)
         for p in order.purchases.all()
     ]
     downloads = _confirmation_downloads(
@@ -212,11 +247,14 @@ def _confirm_from_mock_cart(cart_id: str) -> dict[str, Any]:
     except cart_services.CartNotFound as exc:
         raise OrderNotFound(cart_id) from exc
 
+    currency = cart["cost"]["total"].get("currencyCode", "USD")
     lines = [
-        {
-            "title": line["merchandise"]["product"]["title"],
-            "quantity": line["quantity"],
-        }
+        _confirm_line(
+            line["merchandise"]["product"]["title"],
+            line["quantity"],
+            line["merchandise"]["product"].get("handle", ""),
+            currency,
+        )
         for line in cart.get("lines", [])
     ]
 

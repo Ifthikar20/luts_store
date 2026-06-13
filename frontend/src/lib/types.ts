@@ -253,7 +253,9 @@ export interface ConfirmationDownload {
 export interface OrderConfirmation {
   orderId: string;
   email: string;
-  lines: { title: string; quantity: number }[];
+  // `price` is the line total (unit × quantity); may be absent if the catalog
+  // price can't be resolved. `handle` links the line to its product page.
+  lines: { title: string; quantity: number; handle?: string; price?: Money }[];
   total: Money;
   downloads: ConfirmationDownload[];
 }
