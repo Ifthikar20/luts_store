@@ -22,6 +22,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import validate_email
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -31,7 +32,20 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, SimpleRateThrottle
 
-from .models import ContactMessage, NewsletterSubscriber
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    """Session auth that populates ``request.user`` WITHOUT enforcing CSRF.
+
+    CSRF for these cookie-authenticated POSTs is covered by the SameSite=Lax
+    session cookie (a cross-site POST never carries the cookie — see settings),
+    matching how the customer-auth logout endpoint is handled. We still need the
+    real session user, which an empty authenticator list would not provide.
+    """
+
+    def enforce_csrf(self, request):  # noqa: D401 - intentional no-op
+        return
+
+from .models import ContactMessage, NewsletterSubscriber, Review
 
 logger = logging.getLogger(__name__)
 
@@ -134,3 +148,101 @@ def contact_submit(request):
         logger.exception("Failed to send contact-message notification email")
 
     return Response(_CONTACT_GENERIC, status=200)
+
+
+# ---------------------------------------------------------------------------
+# Product reviews — authenticated + verified-purchase gated
+# ---------------------------------------------------------------------------
+class AuthScopedThrottle(SimpleRateThrottle):
+    """Pin review writes to the ``auth`` rate (10/min) to deter spam."""
+
+    scope = "auth"
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {
+            "scope": self.scope,
+            "ident": self.get_ident(request),
+        }
+
+
+def _has_purchased(user, handle: str) -> bool:
+    """True iff ``user`` holds a non-revoked download grant for ``handle``."""
+    from delivery.models import DownloadGrant
+
+    return DownloadGrant.objects.filter(
+        user=user, product_handle=handle, revoked_at__isnull=True
+    ).exists()
+
+
+def _display_name(user, supplied: str) -> str:
+    """A friendly first-name label, never the full email (privacy)."""
+    name = (supplied or "").strip()
+    if name:
+        return name[:120]
+    if user.first_name:
+        return user.first_name
+    local = (user.email or "").split("@", 1)[0]
+    return local.split(".")[0].capitalize() or "Customer"
+
+
+@api_view(["GET"])
+@permission_classes([])
+@throttle_classes([AnonRateThrottle])
+def list_reviews(request, handle: str):
+    """Public: real reviews for one product + aggregate rating."""
+    qs = Review.objects.filter(product_handle=handle)
+    reviews = [r.to_public() for r in qs]
+    count = len(reviews)
+    average = round(sum(r["rating"] for r in reviews) / count, 1) if count else 0.0
+    # Tell a signed-in buyer whether they're eligible to write/edit a review, so
+    # the storefront can show the form only when it will actually be accepted.
+    user = request.user
+    can_review = bool(
+        user and user.is_authenticated and _has_purchased(user, handle)
+    )
+    return Response({"average": average, "count": count, "reviews": reviews, "canReview": can_review})
+
+
+@api_view(["POST"])
+@authentication_classes([CsrfExemptSessionAuthentication])
+@permission_classes([])
+@throttle_classes([AnonRateThrottle, AuthScopedThrottle])
+def create_review(request, handle: str):
+    """Create/update the signed-in buyer's review for ``handle``.
+
+    Gated: must be logged in (401) AND own a non-revoked grant for the product
+    (403). One review per (product, user) — re-posting updates it. This is what
+    makes reviews authentic: a non-buyer literally cannot create one.
+    """
+    user = request.user
+    if not (user and user.is_authenticated):
+        return Response({"detail": "Sign in to leave a review."}, status=401)
+    if not _has_purchased(user, handle):
+        return Response(
+            {"detail": "Only verified buyers can review this product."}, status=403
+        )
+
+    data = request.data if isinstance(request.data, dict) else {}
+    try:
+        rating = int(data.get("rating"))
+    except (TypeError, ValueError):
+        return Response({"detail": "A rating (1–5) is required."}, status=400)
+    if not 1 <= rating <= 5:
+        return Response({"detail": "Rating must be between 1 and 5."}, status=400)
+
+    body = (data.get("body") or "").strip()
+    if not body:
+        return Response({"detail": "Please write a short review."}, status=400)
+
+    review, _created = Review.objects.update_or_create(
+        product_handle=handle,
+        user=user,
+        defaults={
+            "rating": rating,
+            "title": (data.get("title") or "").strip()[:140],
+            "body": body[:5000],
+            "author_name": _display_name(user, data.get("name", "")),
+            "verified": True,
+        },
+    )
+    return Response({"review": review.to_public()}, status=201)

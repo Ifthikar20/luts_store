@@ -235,7 +235,7 @@ export function ProductDetail({ product }: { product: Product }) {
       )}
 
       {/* Customer reviews */}
-      <ProductReviews />
+      <ProductReviews handle={product.handle} />
     </div>
   );
 }

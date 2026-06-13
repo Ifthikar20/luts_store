@@ -1,96 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Star } from "lucide-react";
+import { createReview, getReviews } from "@/lib/api";
+import type { Review, ReviewsResponse } from "@/lib/types";
 
-type Review = {
-  id: string;
-  name: string;
-  rating: number; // 1–5
-  date: string; // ISO, for sorting
-  dateLabel: string; // human label, e.g. "last year"
-  title: string;
-  body: string;
-  verified?: boolean;
-  source?: string;
-};
-
-// Sample reviews. There is no reviews API yet, so these are seeded placeholders
-// shown under every product — swap for real, per-product data when available.
-const REVIEWS: Review[] = [
-  {
-    id: "r1",
-    name: "Rowan",
-    rating: 5,
-    date: "2025-04-18",
-    dateLabel: "last year",
-    title: "Good and very interested guide",
-    body: "Good and very interested guide, learned a lot about it and it’s very easy to use the camera now, didn’t had any idea how it works etc now it’s easier.",
-    verified: true,
-    source: "Review collected via store invitation",
-  },
-  {
-    id: "r2",
-    name: "Maya",
-    rating: 5,
-    date: "2025-06-02",
-    dateLabel: "11 months ago",
-    title: "Instant filmic look",
-    body: "Dragged one LUT onto my DJI Osmo footage and it just clicked — richer contrast and gorgeous skin tones with zero extra grading. Huge time saver.",
-    verified: true,
-    source: "Review collected via store invitation",
-  },
-  {
-    id: "r3",
-    name: "Daniel",
-    rating: 5,
-    date: "2025-08-21",
-    dateLabel: "9 months ago",
-    title: "Works everywhere",
-    body: "Installed them in Premiere and DaVinci Resolve without any trouble. The .cube files are clean and consistent across all my cameras.",
-    verified: true,
-  },
-  {
-    id: "r4",
-    name: "Priya",
-    rating: 5,
-    date: "2025-10-09",
-    dateLabel: "7 months ago",
-    title: "Best money I’ve spent on color",
-    body: "Tried a lot of LUT packs and most are too heavy. These are subtle and natural — they enhance the footage instead of fighting it.",
-    verified: true,
-    source: "Review collected via store invitation",
-  },
-  {
-    id: "r5",
-    name: "Tom",
-    rating: 5,
-    date: "2025-12-14",
-    dateLabel: "5 months ago",
-    title: "Cinematic in one drag",
-    body: "Exactly what the store promises. My iPhone clips finally look like they belong next to my mirrorless shots. Highly recommend.",
-    verified: true,
-  },
-  {
-    id: "r6",
-    name: "Elena",
-    rating: 5,
-    date: "2026-02-27",
-    dateLabel: "3 months ago",
-    title: "Easy and beautiful",
-    body: "Super easy to use and the results are beautiful straight out of the box. A little tweak to exposure and it’s perfect every time.",
-    verified: true,
-    source: "Review collected via store invitation",
-  },
-];
-
-function Stars({ rating, className = "" }: { rating: number; className?: string }) {
+function Stars({
+  rating,
+  className = "",
+  size = "h-3.5 w-3.5",
+}: {
+  rating: number;
+  className?: string;
+  size?: string;
+}) {
   return (
     <div className={`flex items-center gap-0.5 ${className}`} aria-hidden>
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`h-4 w-4 ${
+          className={`${size} ${
             i <= Math.round(rating)
               ? "fill-amber-400 text-amber-400"
               : "fill-transparent text-slate-300"
@@ -101,96 +30,206 @@ function Stars({ rating, className = "" }: { rating: number; className?: string 
   );
 }
 
-type SortKey = "recent" | "highest" | "lowest";
+/** Compact "x months/years ago" from an ISO date. */
+function relativeDate(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const days = Math.floor((Date.now() - then) / 86_400_000);
+  if (days < 1) return "today";
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} month${months === 1 ? "" : "s"} ago`;
+  const years = Math.floor(days / 365);
+  return `${years} year${years === 1 ? "" : "s"} ago`;
+}
 
-export function ProductReviews() {
-  const [sort, setSort] = useState<SortKey>("recent");
-
-  const reviews = useMemo(() => {
-    const list = [...REVIEWS];
-    switch (sort) {
-      case "highest":
-        return list.sort((a, b) => b.rating - a.rating);
-      case "lowest":
-        return list.sort((a, b) => a.rating - b.rating);
-      default:
-        return list.sort((a, b) => b.date.localeCompare(a.date));
-    }
-  }, [sort]);
-
-  const count = REVIEWS.length;
-  const average = useMemo(
-    () => REVIEWS.reduce((sum, r) => sum + r.rating, 0) / count,
-    [count],
+// Interactive 1–5 picker for the write form.
+function RatingPicker({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <button
+          key={i}
+          type="button"
+          aria-label={`${i} star${i === 1 ? "" : "s"}`}
+          onClick={() => onChange(i)}
+          className="p-0.5"
+        >
+          <Star
+            className={`h-5 w-5 ${
+              i <= value
+                ? "fill-amber-400 text-amber-400"
+                : "fill-transparent text-slate-300 hover:text-amber-300"
+            }`}
+          />
+        </button>
+      ))}
+    </div>
   );
+}
+
+function ReviewRow({ r }: { r: Review }) {
+  return (
+    <li className="border-t border-hairline py-4 first:border-t-0">
+      <div className="flex items-center gap-2 text-sm">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cloud text-xs font-semibold text-graphite">
+          {r.name.charAt(0).toUpperCase()}
+        </span>
+        <span className="font-semibold text-graphite">{r.name}</span>
+        {r.verified && (
+          <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+            Verified
+          </span>
+        )}
+        <Stars rating={r.rating} className="ml-1" />
+        <span className="ml-auto text-xs text-slate2">{relativeDate(r.date)}</span>
+      </div>
+      {r.title && <p className="mt-1.5 text-sm font-semibold text-graphite">{r.title}</p>}
+      <p className="mt-1 text-sm leading-relaxed text-slate2">{r.body}</p>
+    </li>
+  );
+}
+
+export function ProductReviews({ handle }: { handle: string }) {
+  const [data, setData] = useState<ReviewsResponse | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+
+  // write-form state
+  const [rating, setRating] = useState(5);
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    getReviews(handle).then((r) => alive && setData(r));
+    return () => {
+      alive = false;
+    };
+  }, [handle]);
+
+  const visible = useMemo(() => {
+    const list = data?.reviews ?? [];
+    return expanded ? list : list.slice(0, 3);
+  }, [data, expanded]);
+
+  if (!data) return null;
+  const { average, count, reviews, canReview } = data;
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!body.trim()) {
+      setError("Please write a short review.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await createReview(handle, { rating, title: title.trim(), body: body.trim() });
+      const fresh = await getReviews(handle);
+      setData(fresh);
+      setShowForm(false);
+      setTitle("");
+      setBody("");
+      setRating(5);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not submit your review.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
-    <section className="mt-20 border-t border-hairline pt-12">
-      <h2 className="font-display text-2xl font-bold tracking-tight text-graphite sm:text-3xl">
-        Customer Reviews
-      </h2>
-
-      {/* Summary */}
-      <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
-        <div className="flex items-center gap-3">
-          <span className="font-display text-4xl font-bold text-graphite">
-            {average.toFixed(1)}
+    <section className="mt-16 border-t border-hairline pt-8">
+      {/* Compact header: title + inline aggregate, all on one row. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h2 className="font-display text-xl font-bold tracking-tight text-graphite">
+          Reviews
+        </h2>
+        {count > 0 ? (
+          <span className="flex items-center gap-1.5 text-sm text-slate2">
+            <strong className="text-graphite">{average.toFixed(1)}</strong>
+            <Stars rating={average} />· {count} verified
           </span>
-          <div>
-            <Stars rating={average} />
-            <p className="mt-1 text-sm text-slate2">
-              {count} review{count === 1 ? "" : "s"}
-            </p>
-          </div>
-        </div>
-        <span className="rounded-full border border-hairline bg-cloud px-3 py-1 text-xs font-medium text-slate2">
-          Verified
-        </span>
-
-        <div className="ml-auto flex items-center gap-2 text-sm text-slate2">
-          <label htmlFor="review-sort">Sort reviews by</label>
-          <select
-            id="review-sort"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            className="rounded-lg border border-hairline bg-white px-3 py-1.5 text-graphite focus:outline-none focus:ring-2 focus:ring-sky/40"
+        ) : (
+          <span className="text-sm text-slate2">No reviews yet</span>
+        )}
+        {canReview && !showForm && (
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="ml-auto rounded-full border border-hairline px-3 py-1 text-sm font-medium text-graphite hover:bg-cloud"
           >
-            <option value="recent">Most recent</option>
-            <option value="highest">Highest rating</option>
-            <option value="lowest">Lowest rating</option>
-          </select>
-        </div>
+            Write a review
+          </button>
+        )}
       </div>
 
-      {/* List */}
-      <ul className="mt-10 space-y-8">
-        {reviews.map((r) => (
-          <li key={r.id} className="border-t border-hairline pt-8 first:border-t-0 first:pt-0">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cloud text-sm font-semibold text-graphite">
-                {r.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="font-semibold text-graphite">{r.name}</span>
-                  {r.verified && (
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                      Verified
-                    </span>
-                  )}
-                  <span className="ml-auto text-xs text-slate2">{r.dateLabel}</span>
-                </div>
-                <Stars rating={r.rating} className="mt-2" />
-                <h3 className="mt-3 font-semibold text-graphite">{r.title}</h3>
-                <p className="mt-1.5 leading-relaxed text-slate2">{r.body}</p>
-                {r.source && (
-                  <p className="mt-3 text-xs italic text-slate-400">{r.source}</p>
-                )}
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {/* Write form — only rendered for a verified buyer. */}
+      {showForm && (
+        <form onSubmit={submit} className="mt-4 rounded-2xl border border-hairline bg-cloud/50 p-4">
+          <RatingPicker value={rating} onChange={setRating} />
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Title (optional)"
+            maxLength={140}
+            className="mt-3 w-full rounded-lg border border-hairline bg-white px-3 py-2 text-sm text-graphite focus:outline-none focus:ring-2 focus:ring-sky/40"
+          />
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="How did these LUTs work for you?"
+            rows={3}
+            className="mt-2 w-full rounded-lg border border-hairline bg-white px-3 py-2 text-sm text-graphite focus:outline-none focus:ring-2 focus:ring-sky/40"
+          />
+          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-full bg-graphite px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {saving ? "Posting…" : "Post review"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="text-sm text-slate2 hover:text-graphite"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Compact list — first 3, with a show-all toggle. */}
+      {count > 0 && (
+        <>
+          <ul className="mt-4">
+            {visible.map((r) => (
+              <ReviewRow key={r.id} r={r} />
+            ))}
+          </ul>
+          {reviews.length > 3 && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="mt-2 text-sm font-medium text-sky hover:underline"
+            >
+              {expanded ? "Show fewer" : `Show all ${count} reviews`}
+            </button>
+          )}
+        </>
+      )}
     </section>
   );
 }

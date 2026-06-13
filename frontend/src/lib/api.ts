@@ -28,6 +28,8 @@ import type {
   ProductQuery,
   ProductsResponse,
   ResendDownloadsResponse,
+  Review,
+  ReviewsResponse,
   ShopifyLoginResponse,
   SocialProvider,
   User,
@@ -397,6 +399,33 @@ export async function shopifyLogin(
   return request<ShopifyLoginResponse>(
     `/auth/shopify/login?returnTo=${encodeURIComponent(returnTo)}`,
     { method: "GET", session: true },
+  );
+}
+
+/* Reviews — real, per-product. Creation is gated server-side on a verified    */
+/* purchase, so these surface REAL errors (401 not signed in, 403 not a buyer).*/
+
+// Public list + aggregate. session:true so `canReview` reflects the logged-in
+// buyer (sends the session cookie); falls back to an empty set on error.
+export async function getReviews(handle: string): Promise<ReviewsResponse> {
+  try {
+    return await request<ReviewsResponse>(
+      `/products/${encodeURIComponent(handle)}/reviews`,
+      { method: "GET", session: true },
+    );
+  } catch {
+    return { average: 0, count: 0, reviews: [], canReview: false };
+  }
+}
+
+// Create/update the signed-in buyer's review. Errors (401/403/400) propagate.
+export async function createReview(
+  handle: string,
+  input: { rating: number; title?: string; body: string; name?: string },
+): Promise<{ review: Review }> {
+  return request<{ review: Review }>(
+    `/products/${encodeURIComponent(handle)}/reviews/create`,
+    { method: "POST", session: true, body: JSON.stringify(input) },
   );
 }
 

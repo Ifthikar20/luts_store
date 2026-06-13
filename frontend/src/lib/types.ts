@@ -208,6 +208,26 @@ export interface CustomerSession {
   customer: Customer | null;
 }
 
+// One product review (authentic — only verified buyers can post).
+export interface Review {
+  id: string;
+  name: string;
+  rating: number; // 1–5
+  date: string; // ISO
+  title: string;
+  body: string;
+  verified: boolean;
+}
+
+// Response from GET /api/products/<handle>/reviews.
+export interface ReviewsResponse {
+  average: number;
+  count: number;
+  reviews: Review[];
+  // True when the signed-in customer bought this product (may post/edit).
+  canReview: boolean;
+}
+
 // Response from POST /api/auth/shopify/mock-complete (MOCK-only demo login).
 export interface MockCompleteResponse {
   customer: Customer;
