@@ -40,11 +40,19 @@ ssh-keygen -R "$EIP" >/dev/null 2>&1 || true
 
 say "deploying to ubuntu@$EIP (this builds Docker images — first run takes a few minutes)"
 
+# CDN + transcode wiring (produced by 06-cdn.sh / 02-iam.sh into state.env).
+# Empty when those scripts haven't run — the app then serves preview media via
+# presigned redirects with no HLS, so deploys still work without them.
+CDN_BASE_URL=""
+[ -n "${CLOUDFRONT_DOMAIN:-}" ] && CDN_BASE_URL="https://${CLOUDFRONT_DOMAIN}"
+
 "${SSH[@]}" REPO_URL="$REPO_URL" REPO_BRANCH="${REPO_BRANCH:-}" \
   SITE_URL="$SITE_URL" API_URL="$API_URL" API_BASE="$API_BASE" \
   PUB_HOST="$PUB_HOST" SECURE="$SECURE" CADDY_MODE="$CADDY_MODE" \
   DOMAIN="${DOMAIN:-}" API_DOMAIN="${API_DOMAIN:-}" EIP="$EIP" \
-  BUCKET_NAME="$BUCKET_NAME" AWS_REGION="$AWS_REGION" 'bash -s' <<'REMOTE'
+  BUCKET_NAME="$BUCKET_NAME" AWS_REGION="$AWS_REGION" \
+  CDN_BASE_URL="$CDN_BASE_URL" \
+  MEDIACONVERT_ROLE_ARN="${MEDIACONVERT_ROLE_ARN:-}" 'bash -s' <<'REMOTE'
 set -euo pipefail
 
 # Wait for cloud-init (docker/caddy install) to finish on a fresh instance.
@@ -104,6 +112,11 @@ set_var CSRF_COOKIE_SECURE "$SECURE"
 # S3 delivery via the INSTANCE ROLE — bucket only, no keys on disk.
 set_var AWS_S3_BUCKET "$BUCKET_NAME"
 set_var AWS_S3_REGION "$AWS_REGION"
+# Preview media via CloudFront + adaptive-HLS transcode (both optional). Set
+# only when 06-cdn.sh / 02-iam.sh have produced them; blank keeps the presigned
+# /api/media path with no HLS.
+[ -n "${CDN_BASE_URL:-}" ] && set_var CDN_BASE_URL "$CDN_BASE_URL"
+[ -n "${MEDIACONVERT_ROLE_ARN:-}" ] && set_var MEDIACONVERT_ROLE_ARN "$MEDIACONVERT_ROLE_ARN"
 
 # --- build + start -------------------------------------------------------------
 ./deploy.sh

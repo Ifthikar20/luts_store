@@ -20,14 +20,17 @@
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 cd "$AWSDIR"
 
-steps=(01 02 03 04 05)
+# Order is execution order: CDN (06) runs after IAM so its long CloudFront
+# propagation overlaps the EC2 build, and 04 picks up CDN + MediaConvert wiring.
+steps=(01 02 06 03 04 05)
 step_name() { # keep names here; works on macOS's Bash 3.2 (no associative arrays)
   case "$1" in
     01) echo "S3 private product-files bucket" ;;
-    02) echo "IAM role (s3:GetObject on luts/* only)" ;;
+    02) echo "IAM roles (instance + MediaConvert)" ;;
     03) echo "Security group + key + EC2 + Elastic IP" ;;
     04) echo "App deploy (clone + Docker stack + Caddy TLS)" ;;
     05) echo "Secrets (Stripe / SMTP) push + verify" ;;
+    06) echo "CloudFront CDN for preview media" ;;
   esac
 }
 
@@ -38,6 +41,7 @@ run_step() { # returns 0 = ok (mark done), 10 = intentionally skipped
   case "$1" in
     01) ./01-s3.sh ;;
     02) ./02-iam.sh ;;
+    06) ./06-cdn.sh ;;
     03) ./03-ec2.sh ;;
     04) ./04-app.sh ;;
     05)

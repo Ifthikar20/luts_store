@@ -49,8 +49,40 @@ class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {"handle": ("title",)}
     filter_horizontal = ("collections", "bundled_products")
     inlines = [IncludedLutInline, ProductImageInline]
-    readonly_fields = ("file_key",)
+    readonly_fields = ("file_key", "transcode_status")
     save_on_top = True
+    actions = ["resubmit_transcode", "refresh_transcode_status"]
+
+    @admin.action(description="Re-transcode preview video (HLS)")
+    def resubmit_transcode(self, request, queryset):
+        from delivery import transcode
+
+        if not transcode.transcode_enabled():
+            self.message_user(
+                request, "MediaConvert is not configured.", level="warning"
+            )
+            return
+        done = 0
+        for product in queryset:
+            if not product.preview_video_file:
+                continue
+            fields = product._process_video()  # resets + resubmits
+            product.save(update_fields=fields)
+            done += 1
+        self.message_user(request, f"Submitted {done} transcode job(s).")
+
+    @admin.action(description="Refresh transcode status from MediaConvert")
+    def refresh_transcode_status(self, request, queryset):
+        from delivery import transcode
+
+        for product in queryset.exclude(transcode_job_id=""):
+            try:
+                product.transcode_status = transcode.job_status(product.transcode_job_id)
+                product.save(update_fields=["transcode_status"])
+            except Exception as exc:  # surface, don't crash the admin
+                self.message_user(
+                    request, f"{product.handle}: {exc}", level="error"
+                )
 
     @admin.display(description="Packs in bundle")
     def bundled_count(self, obj):

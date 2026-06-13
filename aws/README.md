@@ -36,16 +36,25 @@ separate, repeatable step — run it whenever your catalog changes.
 ```bash
 ./01-s3.sh                         # private, encrypted product-files bucket
 ./01-s3.sh upload ~/my-luts        # upload <handle>.zip files (repeatable)
-./02-iam.sh                        # s3:GetObject-only role for the instance
+./02-iam.sh                        # instance role + MediaConvert service role
+./06-cdn.sh                        # CloudFront CDN for preview media (images/HLS)
 ./03-ec2.sh                        # security group + key + Ubuntu instance + Elastic IP
 
 # >>> point your two DNS A records at the printed Elastic IP, then:
 
 ./04-app.sh                        # clone + env files + Docker stack + Caddy TLS
+                                   # (auto-wires CDN_BASE_URL + MEDIACONVERT_ROLE_ARN)
 
 cp production-secrets.env.example production-secrets.env   # fill in Stripe + SMTP
 ./05-secrets.sh                    # push secrets + restart + verify_integrations
 ```
+
+`06-cdn.sh` is optional but recommended: it fronts the **public** preview
+images/videos with CloudFront (edge-cached, cheap egress) and enables adaptive
+**HLS** streaming of uploaded clips via MediaConvert. The paid LUT `.zip`s under
+`luts/*` are never exposed on the CDN — they stay behind short-lived presigned
+URLs. Skip it and previews fall back to same-origin presigned redirects (no HLS).
+See `docs/MEDIA_COST_ANALYSIS.md` for the cost breakdown.
 
 Done. The storefront is at `https://<DOMAIN>`, the API at
 `https://<API_DOMAIN>/api/health`.
@@ -103,12 +112,13 @@ exact file. The `.pem` stays git-ignored; never commit it.
 
 | Script | Creates | Re-run to |
 | --- | --- | --- |
-| `deploy-all.sh` | Runs 01→05 with checkpoints + a DNS breakpoint | resume where you stopped (skips finished steps) |
+| `deploy-all.sh` | Runs 01→06 with checkpoints + a DNS breakpoint | resume where you stopped (skips finished steps) |
 | `01-s3.sh` | Private bucket (Block Public Access + SSE) | upload more files |
-| `02-iam.sh` | Role + instance profile, `s3:GetObject` on `luts/*` only | update the policy |
+| `02-iam.sh` | Instance role (S3 + MediaConvert submit) + MediaConvert service role | update the policy |
 | `03-ec2.sh` | SG (22/80/443 only), key pair, t3.small, Elastic IP | reuses everything existing |
 | `04-app.sh` | App env files, Docker stack, Caddyfile | **deploy code updates** (`git pull` + rebuild) |
 | `05-secrets.sh` | Stripe/SMTP values in server's `backend/.env` | rotate keys |
+| `06-cdn.sh` | CloudFront + OAC + bucket CORS/policy for `media/*` | reuse the distribution |
 
 Notes:
 

@@ -63,6 +63,7 @@ class Command(BaseCommand):
         )
 
         self._check_s3(opts["limit"])
+        self._check_media_pipeline()
         self._check_google()
         self._check_shopify()
 
@@ -150,6 +151,55 @@ class Command(BaseCommand):
             )
         except Exception as exc:
             self.failures.append(f"S3: presign failed ({exc})")
+
+    # ----------------------------------------------------- Media / CDN pipeline
+    def _check_media_pipeline(self):
+        """Report CDN delivery + MediaConvert transcode configuration."""
+        self.stdout.write(
+            self.style.MIGRATE_HEADING("\n== Preview media (CDN + transcode) ==")
+        )
+        cdn = getattr(settings, "CDN_BASE_URL", "")
+        if cdn:
+            self.stdout.write(f"  {OK} CDN delivery on — preview assets via {cdn}")
+            try:
+                r = requests.head(cdn, timeout=10, allow_redirects=True)
+                self.stdout.write(
+                    f"  {OK} CDN reachable (HTTP {r.status_code})"
+                    if r.status_code < 500
+                    else f"  {WARN} CDN returned {r.status_code}"
+                )
+            except requests.RequestException as exc:
+                self.stdout.write(f"  {WARN} CDN unreachable ({exc})")
+        else:
+            self.stdout.write(
+                f"  {WARN} CDN_BASE_URL unset — preview assets served via "
+                f"presigned /api/media redirects. {DIM}(set up CloudFront for "
+                f"edge caching){RST}"
+            )
+
+        if settings.TRANSCODE_ENABLED:
+            self.stdout.write(
+                f"  {OK} MediaConvert on — preview clips transcode to adaptive HLS"
+            )
+            self.stdout.write(
+                f"  role={_redact(settings.MEDIACONVERT_ROLE_ARN)} "
+                f"queue={settings.MEDIACONVERT_QUEUE_ARN or '(account default)'}"
+            )
+            try:
+                from delivery import transcode
+
+                transcode.get_client()  # resolves the account endpoint
+                self.stdout.write(f"  {OK} MediaConvert endpoint resolved")
+            except Exception as exc:
+                self.failures.append(
+                    f"MediaConvert: cannot resolve endpoint/client ({exc})"
+                )
+        else:
+            self.stdout.write(
+                f"  {WARN} MEDIACONVERT_ROLE_ARN unset — uploaded clips stored "
+                f"as-is (served progressively, no HLS). {DIM}(run aws/02-iam.sh "
+                f"to create the role){RST}"
+            )
 
     # --------------------------------------------------------------- Google
     def _check_google(self):

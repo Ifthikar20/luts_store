@@ -15,6 +15,8 @@ psycopg[binary]>=3.2
 boto3>=1.34
 # S3 storage backend for admin file uploads (LUT zips + preview images/videos).
 django-storages>=1.14
+# Pillow — optimise uploaded preview images to WebP before CDN delivery.
+Pillow>=10.0
 # Stripe — hosted Checkout payments (active when STRIPE_SECRET_KEY is set).
 stripe>=9.0
 # Redis client — backs shared DRF rate-limit counters (active when REDIS_URL set).

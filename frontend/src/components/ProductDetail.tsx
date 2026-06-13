@@ -11,6 +11,7 @@ import { useCart } from "@/context/CartContext";
 import { track } from "@/lib/analytics";
 import { MagneticButton } from "./motion/MagneticButton";
 import { BeforeAfterSlider } from "./BeforeAfterSlider";
+import { HlsVideo } from "./HlsVideo";
 import { ClaimFreeLut } from "./ClaimFreeLut";
 import { ProductReviews } from "./ProductReviews";
 import { Reveal } from "./motion/Reveal";
@@ -219,19 +220,14 @@ export function ProductDetail({ product }: { product: Product }) {
                 />
               </Reveal>
             )}
-            {product.previewVideo && (
+            {(product.previewHls || product.previewVideo) && (
               <Reveal direction="left">
-                <video
-                  poster={product.featuredImage.url}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="none"
+                <HlsVideo
+                  hls={product.previewHls}
+                  mp4={product.previewVideo}
+                  poster={product.previewPoster || product.featuredImage.url}
                   className="aspect-[16/10] w-full rounded-[28px] border border-hairline object-cover shadow-soft"
-                >
-                  <source src={product.previewVideo} type="video/mp4" />
-                </video>
+                />
               </Reveal>
             )}
           </div>

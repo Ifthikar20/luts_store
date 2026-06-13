@@ -26,12 +26,19 @@ def _csv_to_list(value: str) -> list[str]:
 
 
 def _media_url(name: str) -> str:
-    """Stable, same-origin URL for an uploaded media object.
+    """Stable, public URL for an uploaded *preview* media object (image/video/HLS).
 
-    Points at the ``/api/media/<key>`` endpoint, which 302-redirects to a fresh
-    presigned S3 URL (or the local file in dev). Stable so SSR/CDN caching works
-    even though the underlying presigned URL rotates.
+    When a CDN is configured (``settings.CDN_BASE_URL``) these public storefront
+    assets are served straight from CloudFront — edge-cached, cheap egress, and
+    ideal for the many small HLS segment requests. Without a CDN (dev/CI) it
+    falls back to the same-origin ``/api/media/<key>`` endpoint, which
+    302-redirects to a fresh presigned S3 URL (or the local file in dev).
     """
+    if not name:
+        return ""
+    cdn = getattr(settings, "CDN_BASE_URL", "")
+    if cdn:
+        return f"{cdn}/{name.lstrip('/')}"
     base = settings.API_BASE_URL.rstrip("/")
     return f"{base}/api/media/{name}"
 
@@ -126,7 +133,21 @@ class Product(models.Model):
         upload_to=media_upload_to,
         blank=True,
         validators=video_validators,
-        help_text="Upload a looping preview clip (mp4/webm, ≤100 MB).",
+        help_text="Upload a looping preview clip (mp4/webm, ≤100 MB). "
+        "Auto-transcoded to adaptive HLS for smooth, low-cost streaming.",
+    )
+    # Optimised WebP rendering of featured_image_file (set on upload). Served in
+    # preference to the original to cut bytes over the CDN.
+    featured_image_cdn_key = models.CharField(max_length=300, blank=True, editable=False)
+    # Adaptive-HLS transcode outputs for preview_video_file (set on upload).
+    preview_hls_key = models.CharField(max_length=300, blank=True, editable=False)
+    preview_poster_key = models.CharField(max_length=300, blank=True, editable=False)
+    transcode_job_id = models.CharField(max_length=120, blank=True, editable=False)
+    transcode_status = models.CharField(
+        max_length=20,
+        blank=True,
+        editable=False,
+        help_text="MediaConvert job status (SUBMITTED → PROGRESSING → COMPLETE/ERROR).",
     )
 
     lut_file = models.FileField(
@@ -192,9 +213,26 @@ class Product(models.Model):
         return self.file_key.strip() if self.file_key.strip() else f"luts/{self.handle}.zip"
 
     def featured_image(self) -> str:
-        return _media_url(self.featured_image_file.name) if self.featured_image_file else self.featured_image_url
+        # Prefer the optimised WebP; fall back to the raw upload, then a URL.
+        if self.featured_image_cdn_key:
+            return _media_url(self.featured_image_cdn_key)
+        if self.featured_image_file:
+            return _media_url(self.featured_image_file.name)
+        return self.featured_image_url
+
+    def preview_hls(self) -> str | None:
+        """Adaptive-HLS master playlist URL, once the transcode has completed."""
+        if self.preview_hls_key and self.transcode_status == "COMPLETE":
+            return _media_url(self.preview_hls_key)
+        return None
+
+    def preview_poster(self) -> str | None:
+        if self.preview_poster_key and self.transcode_status == "COMPLETE":
+            return _media_url(self.preview_poster_key)
+        return None
 
     def preview_video(self) -> str | None:
+        """Progressive (mp4/webm) source — the fallback when HLS isn't ready."""
         if self.preview_video_file:
             return _media_url(self.preview_video_file.name)
         return self.preview_video_url or None
@@ -215,11 +253,71 @@ class Product(models.Model):
                 self.lut_file.save(
                     f"{self.handle}.zip", ContentFile(buf.getvalue()), save=False
                 )
+
+        # Detect freshly-uploaded preview media BEFORE super().save() commits it
+        # to storage (afterwards ``_committed`` flips to True). The actual
+        # processing must run AFTER the object exists in S3.
+        image_pending = bool(self.featured_image_file) and not getattr(
+            self.featured_image_file, "_committed", True
+        )
+        video_pending = bool(self.preview_video_file) and not getattr(
+            self.preview_video_file, "_committed", True
+        )
+
         super().save(*args, **kwargs)
+
+        changed: list[str] = []
         # Keep file_key in sync with the uploaded object's key.
         if self.lut_file and self.file_key != self.lut_file.name:
             self.file_key = self.lut_file.name
-            super().save(update_fields=["file_key"])
+            changed.append("file_key")
+        if image_pending:
+            changed += self._process_image()
+        if video_pending:
+            changed += self._process_video()
+        if changed:
+            super().save(update_fields=changed)
+
+    def _process_image(self) -> list[str]:
+        """Optimise a just-uploaded featured image to WebP (best-effort)."""
+        from delivery.images import optimize_image
+
+        try:
+            out = optimize_image(self.featured_image_file.name)
+        except Exception:  # never let optimisation block an admin save
+            out = None
+        if out:
+            self.featured_image_cdn_key = out
+            return ["featured_image_cdn_key"]
+        return []
+
+    def _process_video(self) -> list[str]:
+        """Submit an adaptive-HLS transcode for a just-uploaded preview clip."""
+        from delivery import transcode
+
+        # Reset any prior outputs; they'll repopulate when the new job finishes.
+        self.preview_hls_key = ""
+        self.preview_poster_key = ""
+        self.transcode_job_id = ""
+        self.transcode_status = ""
+        fields = [
+            "preview_hls_key",
+            "preview_poster_key",
+            "transcode_job_id",
+            "transcode_status",
+        ]
+        if not transcode.transcode_enabled():
+            return fields  # stored as-is; served progressively until a CDN+role exist
+        try:
+            res = transcode.submit_hls_job(self.preview_video_file.name, self.handle)
+        except Exception:
+            self.transcode_status = "ERROR"
+            return fields
+        self.preview_hls_key = res["hls_key"]
+        self.preview_poster_key = res["poster_key"]
+        self.transcode_job_id = res["job_id"]
+        self.transcode_status = "SUBMITTED"
+        return fields
 
     def to_contract(self) -> dict[str, Any]:
         """Render this product into the public Product contract dict.
@@ -259,6 +357,8 @@ class Product(models.Model):
             "beforeImage": self.before_image_url or featured,
             "afterImage": self.after_image_url or None,
             "previewVideo": self.preview_video(),
+            "previewHls": self.preview_hls(),
+            "previewPoster": self.preview_poster(),
             "priceRange": {"min": price, "max": price},
             "variants": [
                 {

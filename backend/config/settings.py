@@ -173,6 +173,32 @@ DOWNLOAD_URL_TTL = config("DOWNLOAD_URL_TTL", default=60, cast=int)
 S3_DELIVERY_ENABLED = bool(AWS_S3_BUCKET.strip())
 
 # ---------------------------------------------------------------------------
+# CDN + media transcoding (preview images/videos)
+# ---------------------------------------------------------------------------
+# Preview assets (product images + looping clips) are PUBLIC storefront content,
+# so they are served through a CloudFront CDN for edge caching + cheap egress
+# rather than per-request presigned S3 redirects. When CDN_BASE_URL is set, the
+# catalog renders stable `https://<cdn>/<key>` URLs (cacheable forever); when it
+# is blank (dev/CI) it falls back to the same-origin `/api/media/<key>` redirect.
+# The PRIVATE paid LUT files under `luts/` are never put on the CDN — they stay
+# behind short-lived presigned URLs (see delivery/storage.py).
+CDN_BASE_URL = config("CDN_BASE_URL", default="").rstrip("/")
+
+# AWS Elemental MediaConvert turns an uploaded preview clip into an adaptive
+# HLS ladder (1080/720/480) + a poster frame so it streams smoothly on any
+# connection and caches well at the edge. Active only when both a bucket and a
+# MediaConvert service-role ARN are configured; otherwise uploads are stored
+# as-is and the raw file is served (no transcode).
+MEDIACONVERT_ROLE_ARN = config("MEDIACONVERT_ROLE_ARN", default="")
+# Account-specific MediaConvert endpoint. Optional — discovered via
+# describe_endpoints() and cached when left blank.
+MEDIACONVERT_ENDPOINT = config("MEDIACONVERT_ENDPOINT", default="")
+# Optional named queue ARN (else the account default on-demand queue is used).
+MEDIACONVERT_QUEUE_ARN = config("MEDIACONVERT_QUEUE_ARN", default="")
+TRANSCODE_ENABLED = bool(AWS_S3_BUCKET.strip() and MEDIACONVERT_ROLE_ARN.strip())
+
+
+# ---------------------------------------------------------------------------
 # Frontend / public site URL (used to build links inside emails)
 # ---------------------------------------------------------------------------
 # FRONTEND_URL is where customer-facing links (library, support) point. It

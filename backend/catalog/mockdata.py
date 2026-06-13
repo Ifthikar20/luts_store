@@ -154,6 +154,10 @@ def _product(
         "afterImage": after_image,
         # Optional short, muted, looping preview clip of the look in motion.
         "previewVideo": preview_video,
+        # Adaptive-HLS stream + poster (set for DB products once MediaConvert
+        # has transcoded an uploaded clip; the in-repo fixtures only ship mp4).
+        "previewHls": None,
+        "previewPoster": None,
         "priceRange": {
             "min": _money(price),
             "max": _money(max_price or price),

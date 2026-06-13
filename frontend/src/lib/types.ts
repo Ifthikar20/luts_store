@@ -54,6 +54,11 @@ export interface Product {
   beforeImage?: string;
   afterImage?: string | null;
   previewVideo?: string | null;
+  // Adaptive-HLS master playlist (.m3u8) + poster, produced by MediaConvert for
+  // admin-uploaded clips. When present the player streams HLS (adapting to the
+  // viewer's bandwidth) and falls back to `previewVideo` where HLS is missing.
+  previewHls?: string | null;
+  previewPoster?: string | null;
   // Concise use-case phrase ("Best for …") — the bold lead of card captions.
   bestFor?: string;
   // The named LUTs inside a pack (or member packs, for bundles): each has a
