@@ -191,14 +191,14 @@ export const mockProducts: Product[] = [
   makeProduct({
     handle: "the-everything-bundle",
     title: "The Everything Bundle",
-    price: "129.00",
-    desc: "Every pack we make in one download — 52 looks in .cube and .3dl, graded for everything from DJI and iPhone to mirrorless. The whole library, the best price.",
+    price: "45.00",
+    desc: "55 LUTs across all four categories — cinematic, drone/DJI, mobile/CapCut and film emulation — in .cube and .3dl. The whole core library, the best price.",
     imgId: "photo-1500530855697-b586d89ba3ee",
     imgId2: "photo-1502082553048-f009c37129b9",
     productType: "Bundle",
     collections: [{ handle: "bundles", title: "Bundles" }],
     tags: ["bundle", "value", "all-access"],
-    lutCount: 52,
+    lutCount: 55,
     formats: [".cube", ".3dl"],
     apps: [
       "Premiere Pro",

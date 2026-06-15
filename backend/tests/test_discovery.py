@@ -191,9 +191,9 @@ def test_facets_counts_match_mockdata(client):
     assert tag_counts.get("value") == 3
     # The weekly free LUT is tagged "free".
     assert tag_counts.get("free") == 1
-    # The price range spans the free LUT ($0) to the everything bundle.
+    # The price range spans the free LUT ($0) to the priciest pack.
     assert data["priceRange"]["min"] == 0.0
-    assert data["priceRange"]["max"] == 129.0
+    assert data["priceRange"]["max"] == 79.0
 
 
 def test_facets_scoped_to_collection(client):

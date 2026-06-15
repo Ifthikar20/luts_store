@@ -29,10 +29,13 @@ export function BundleCard({ bundle }: { bundle: Product }) {
 
   return (
     <motion.div
-      initial={reduced ? false : { opacity: 0, scale: 0.85, y: 28 }}
-      whileInView={reduced ? undefined : { opacity: 1, scale: 1, y: 0 }}
+      // Quick, one-directional slide-in (no scale, no spring bounce) so the
+      // card — and the button inside it — settles instantly and stably instead
+      // of wobbling on entrance.
+      initial={reduced ? false : { opacity: 0, x: -28 }}
+      whileInView={reduced ? undefined : { opacity: 1, x: 0 }}
       viewport={{ once: true, amount: 0.3 }}
-      transition={{ type: "spring", stiffness: 220, damping: 17 }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className="overflow-hidden rounded-[28px] bg-white shadow-lift ring-1 ring-emerald-500/10"
     >
       <div className="grid items-stretch gap-0 md:grid-cols-2">

@@ -594,16 +594,17 @@ PRODUCTS: list[dict[str, Any]] = [
         pid="5003",
         handle="the-everything-bundle",
         title="The Everything Bundle",
-        description="Our entire library in one place. Every cinematic, drone, "
-        "mobile, and film-emulation LUT we make, at the best possible price.",
-        price="129.00",
-        compare_at_price="299.00",
+        description="55 LUTs spanning all four categories — cinematic, drone/DJI, "
+        "mobile/CapCut and film emulation. Our entire core library in one "
+        "download, at the best possible price.",
+        price="45.00",
+        compare_at_price="99.00",
         image_url="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=1200&q=80",
         extra_image_url="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=1200&q=80",
         tags=["bundle", "everything", "value", "complete"],
         product_type="Bundle",
         collections=["bundles", "cinematic", "drone-dji", "mobile-capcut", "film-emulation"],
-        lut_count=120,
+        lut_count=55,
         featured=True,
     ),
 ]
