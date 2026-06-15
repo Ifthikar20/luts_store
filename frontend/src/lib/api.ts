@@ -19,6 +19,8 @@ import type {
   ContactInput,
   CustomerSession,
   AccountPreferences,
+  BlogPost,
+  BlogPostSummary,
   DownloadItem,
   EngagementResponse,
   Facets,
@@ -42,6 +44,7 @@ import {
   mockProductByHandle,
   mockProducts,
 } from "./mock";
+import { mockBlogPost, mockBlogPosts } from "./mockBlog";
 import { executeRecaptcha } from "./recaptcha";
 import { envelope } from "./obfuscate";
 
@@ -472,6 +475,24 @@ export async function getMyDownloads(): Promise<DownloadItem[]> {
     method: "GET",
     session: true,
   });
+}
+
+/* Blog (read) — falls back to mock posts so /blog renders offline/at build.   */
+
+export async function getBlogPosts(): Promise<BlogPostSummary[]> {
+  try {
+    return await request<BlogPostSummary[]>("/blog/posts");
+  } catch {
+    return mockBlogPosts;
+  }
+}
+
+export async function getBlogPost(slug: string): Promise<BlogPost | null> {
+  try {
+    return await request<BlogPost>(`/blog/posts/${encodeURIComponent(slug)}`);
+  } catch {
+    return mockBlogPost(slug);
+  }
 }
 
 // Account settings — read the signed-in customer's preferences.

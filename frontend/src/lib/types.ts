@@ -243,6 +243,21 @@ export interface DownloadItem {
   expiresAt: string;
 }
 
+// Blog — list summary (cards) and full post (detail page).
+export interface BlogPostSummary {
+  slug: string;
+  title: string;
+  excerpt: string;
+  coverImage: string;
+  author: string;
+  publishedAt: string | null;
+  readingTime: number;
+}
+
+export interface BlogPost extends BlogPostSummary {
+  bodyHtml: string;
+}
+
 // Account settings — GET/POST /api/me/preferences.
 export interface AccountPreferences {
   email: string;

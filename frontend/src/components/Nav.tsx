@@ -15,6 +15,7 @@ const links = [
   { href: "/collections/dji-osmo", label: "DJI / OSMO" },
   { href: "/collections/bundles", label: "Bundles" },
   { href: "/search", label: "Explore" },
+  { href: "/blog", label: "Blog" },
 ];
 
 export function Nav() {

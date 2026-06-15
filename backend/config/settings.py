@@ -272,6 +272,7 @@ INSTALLED_APPS = [
     "delivery",
     "accounts",
     "customer_auth",
+    "blog",
     "engagement",
     "analytics",
 ]

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getCollections, getProducts } from "@/lib/api";
+import { getBlogPosts, getCollections, getProducts } from "@/lib/api";
 import { absoluteUrl } from "@/lib/site";
 
 // Dynamic sitemap: static marketing/legal routes + every collection + every
@@ -13,6 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/"), lastModified: now, priority: 1 },
     { url: absoluteUrl("/search"), lastModified: now, priority: 0.5 },
+    { url: absoluteUrl("/blog"), lastModified: now, priority: 0.7 },
     { url: absoluteUrl("/about"), lastModified: now, priority: 0.6 },
     { url: absoluteUrl("/contact"), lastModified: now, priority: 0.6 },
     { url: absoluteUrl("/help"), lastModified: now, priority: 0.6 },
@@ -22,9 +23,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/policies/license"), lastModified: now, priority: 0.3 },
   ];
 
-  const [collections, products] = await Promise.all([
+  const [collections, products, posts] = await Promise.all([
     getCollections(),
     getProducts(),
+    getBlogPosts(),
   ]);
 
   const collectionRoutes: MetadataRoute.Sitemap = collections.map((c) => ({
@@ -39,5 +41,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticRoutes, ...collectionRoutes, ...productRoutes];
+  const blogRoutes: MetadataRoute.Sitemap = posts.map((p) => ({
+    url: absoluteUrl(`/blog/${p.slug}`),
+    lastModified: p.publishedAt ? new Date(p.publishedAt) : now,
+    priority: 0.6,
+  }));
+
+  return [
+    ...staticRoutes,
+    ...collectionRoutes,
+    ...productRoutes,
+    ...blogRoutes,
+  ];
 }
