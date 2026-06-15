@@ -73,7 +73,11 @@ export function DiscoveryView({
             <SortSelect value={state.sort} onChange={setSort} />
           </div>
 
-          <ProductGrid products={products} emptyMessage={emptyMessage} />
+          <ProductGrid
+            products={products}
+            emptyMessage={emptyMessage}
+            animated={false}
+          />
         </div>
       </div>
     </div>
