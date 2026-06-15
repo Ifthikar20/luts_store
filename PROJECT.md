@@ -78,12 +78,12 @@ These are **operator inputs** (keys/files), not code:
    `pip-audit`/`npm audit` in CI.
 4. **Admin hardening** — IP-allowlist `/admin/`, or disable it publicly.
 
-✅ ~~Refund handling~~ — done: Stripe `charge.refunded` (and a manual
+~~Refund handling~~ — done: Stripe `charge.refunded` (and a manual
 `manage.py refund_order <id>` command) marks the order refunded, revokes its
 DownloadGrants (download 403s, hidden from library/confirmation) and emails
 the buyer. Idempotent.
 
-✅ ~~Analytics~~ — done: first-party, PII-free funnel tracking (`page_view`,
+~~Analytics~~ — done: first-party, PII-free funnel tracking (`page_view`,
 `add_to_cart`, `begin_checkout`, `purchase`) via `POST /api/events`
 (allowlisted + throttled), with a staff-only 30-day report at
 `GET /api/analytics/summary` (totals, unique sessions, top products/pages).

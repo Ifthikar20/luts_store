@@ -97,7 +97,7 @@ is permanent:
      5 GB S3. After 12 months it all becomes paid.
    - New model (accounts created after mid-2025): you get **up to $200 in
      credits** to spend over ~6 months instead of per-service caps.
-   - ⚠️ **Our stack uses a `t3.small`, which is NOT free-tier eligible** (only
+   - **Our stack uses a `t3.small`, which is NOT free-tier eligible** (only
      `t3.micro`/`t2.micro` are). So even on a brand-new account you are likely
      **already paying for the EC2 instance** — the rest (small EBS, a few GB of
      S3) may be covered for the first year.
@@ -156,7 +156,7 @@ Both use **AWS-managed KMS keys, which are free** (only *customer-managed* KMS
 keys cost ~$1/key/mo). Encryption/decryption is automatic on every write/read —
 nothing to call from the application.
 
-> ⚠️ **EBS encryption only applies to a newly-launched instance.** If you already
+> **EBS encryption only applies to a newly-launched instance.** If you already
 > ran `03-ec2.sh` before this change, the existing root volume stays unencrypted.
 > To fix: snapshot it → copy the snapshot with encryption enabled → launch a new
 > instance from the encrypted snapshot (or just re-run the bring-up on a fresh

@@ -78,7 +78,7 @@ class Review(models.Model):
         ]
 
     def __str__(self) -> str:  # pragma: no cover - repr only
-        return f"Review({self.product_handle}, {self.author_name}, {self.rating}★)"
+        return f"Review({self.product_handle}, {self.author_name}, {self.rating} stars)"
 
     def to_public(self) -> dict:
         """The shape the storefront renders (date label is computed client-side)."""

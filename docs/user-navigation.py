@@ -115,7 +115,7 @@ label(530 + fw / 2 + 86, 350, "results → product", size=11, style="italic")
 
 # ---- post-purchase deliverables ----
 box(1180, 360, 270, 92, "", fill=GREEN_BG, stroke=GREEN, r=14)
-label(1180 + 135, 392, "⬇  Download delivery", size=16, col=GREEN, weight="bold")
+label(1180 + 135, 392, "v  Download delivery", size=16, col=GREEN, weight="bold")
 label(1180 + 135, 414, "signed .cube / .zip link (expiring)", size=12.5, style="italic", col=INK)
 label(1180 + 135, 433, "+ confirmation email", size=12.5, style="italic", col=INK)
 arrow(1250 + fw / 2, fy + fh, 1180 + 135, 360, sky=False)
@@ -161,7 +161,7 @@ chip(60, SKY_BG, SKY, "purchase funnel")
 chip(260, GREEN_BG, GREEN, "account / delivery")
 chip(470, GREY_BG, HAIR, "discovery / info pages")
 label(700, ly + 13, "→ solid = primary flow", size=13, anchor="start")
-label(900, ly + 13, "⇢ dashed = optional", size=13, anchor="start")
+label(900, ly + 13, "-> dashed = optional", size=13, anchor="start")
 
 parts.append("</svg>")
 
