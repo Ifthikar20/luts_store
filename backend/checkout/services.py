@@ -25,6 +25,18 @@ from django.conf import settings
 from cart import services as cart_services
 
 
+def demo_checkout_enabled() -> bool:
+    """Whether the login-free DEMO checkout may mint payment-free grants.
+
+    True ONLY in the pure in-app demo — no real payment provider configured
+    (no Stripe AND no live Shopify storefront, i.e. ``MOCK_MODE``). The instant
+    Stripe (or Shopify) is wired up, every demo grant-creating path is disabled
+    so downloads can only come from a payment-verified order. Read live from
+    settings so it can never drift from the deployment's real configuration.
+    """
+    return settings.MOCK_MODE and not settings.STRIPE_ENABLED
+
+
 class CheckoutError(Exception):
     """Raised when a checkout cannot be created (e.g. unknown/empty cart)."""
 
@@ -50,7 +62,7 @@ def begin_checkout(cart_id: str, email: str | None = None) -> dict[str, Any]:
             raise CheckoutError(str(exc)) from exc
         return {"mode": "stripe", "checkoutUrl": session.url}
 
-    if settings.MOCK_MODE:
+    if demo_checkout_enabled():
         # Relative path -> the frontend renders a demo checkout page. ONLY the
         # opaque cart id goes in the URL — never the email. PII must not leak via
         # URLs (browser history, referer headers, server/access logs, shared
@@ -81,6 +93,12 @@ def complete_mock_checkout(cart_id: str, email: str) -> dict[str, Any]:
     from django.db import transaction
 
     from orders import services as orders_services
+
+    # Defense in depth: never mint payment-free grants once a real payment
+    # provider is configured (the view also gates this, but guard the service
+    # too so no caller can bypass it).
+    if not demo_checkout_enabled():
+        raise CheckoutError("Demo checkout is disabled.")
 
     try:
         cart = cart_services.get_cart(cart_id)

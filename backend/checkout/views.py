@@ -130,7 +130,7 @@ def checkout_complete(request):
     Creates the Order + DownloadGrants + sends the confirmation email, then
     returns ``{orderId}``.
     """
-    if settings.STRIPE_ENABLED or not settings.MOCK_MODE:
+    if not services.demo_checkout_enabled():
         return Response({"detail": "Not found."}, status=404)
 
     data = request.data if isinstance(request.data, dict) else {}

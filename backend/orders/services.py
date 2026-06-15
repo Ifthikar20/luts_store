@@ -231,7 +231,12 @@ def _confirm_from_order(order: Order) -> dict[str, Any]:
 
 
 def _confirm_from_mock_cart(cart_id: str) -> dict[str, Any]:
-    """MOCK_MODE ONLY: synthesize a confirmation from a cart id.
+    """DEMO-ONLY: synthesize a confirmation from a cart id (no payment).
+
+    Reachable only when ``checkout.services.demo_checkout_enabled()`` (pure in-app demo: no
+    Stripe and no live Shopify). It mints free download grants, so it MUST stay
+    gated — the moment a real payment provider is configured, confirmations come
+    only from payment-verified orders.
 
     The placeholder ``checkoutUrl`` produced in mock mode ends with the cart id,
     so the thank-you page can pass that id here to demo the full funnel without a
@@ -286,8 +291,10 @@ def confirm_order(id_or_token: str) -> dict[str, Any]:
 
     Lookup order:
     1. A real ``Order`` by its ``shopify_order_id``.
-    2. In MOCK_MODE, a cart id (the placeholder checkout URL ends with it) ->
-       synthesize a confirmation so the funnel is demoable end to end.
+    2. A Stripe success id (``stripe-<session>``) -> ingest if paid.
+    3. ONLY in the pure demo (``demo_checkout_enabled()``), a cart id ->
+       synthesize a confirmation. This path mints free grants, so it is disabled
+       whenever a real payment provider (Stripe/Shopify) is configured.
 
     Raises ``OrderNotFound`` when nothing matches.
     """
@@ -307,7 +314,9 @@ def confirm_order(id_or_token: str) -> dict[str, Any]:
         if order is not None:
             return _confirm_from_order(order)
 
-    if settings.MOCK_MODE:
+    from checkout.services import demo_checkout_enabled
+
+    if demo_checkout_enabled():
         return _confirm_from_mock_cart(str(id_or_token))
 
     raise OrderNotFound(str(id_or_token))
