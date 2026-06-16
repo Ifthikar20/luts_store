@@ -19,7 +19,7 @@ export function ProductCard({
   previewSrc?: string;
 }) {
   const reduced = useReducedMotion() ?? false;
-  const { addItem, loading } = useCart();
+  const { addItem } = useCart();
   const variant = product.variants[0];
   const href = `/luts/${product.handle}`;
   const isRange =
@@ -44,10 +44,18 @@ export function ProductCard({
     else v.pause();
   }, [showPreview, hovering, loadVideo]);
 
+  // Local pending state so ONLY this card's button shows "Adding…" — the cart's
+  // global `loading` would flip every Buy button on the page at once (flicker).
+  const [adding, setAdding] = useState(false);
   async function onAdd() {
-    if (!variant) return;
+    if (!variant || adding) return;
     track("add_to_cart", { handle: product.handle });
-    await addItem(variant.id, 1);
+    setAdding(true);
+    try {
+      await addItem(variant.id, 1);
+    } finally {
+      setAdding(false);
+    }
   }
 
   return (
@@ -156,10 +164,10 @@ export function ProductCard({
           <button
             type="button"
             onClick={onAdd}
-            disabled={loading || !variant?.availableForSale}
+            disabled={adding || !variant?.availableForSale}
             className="inline-flex items-center justify-center rounded-full bg-sky px-6 py-2.5 text-sm font-semibold text-white shadow-[0_2px_10px_rgba(0,113,227,0.25)] transition-colors hover:bg-sky-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Adding…" : "Buy"}
+            {adding ? "Adding…" : "Buy"}
           </button>
         )}
       </div>

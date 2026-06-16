@@ -17,20 +17,26 @@ import { ProductReviews } from "./ProductReviews";
 import { Reveal } from "./motion/Reveal";
 
 export function ProductDetail({ product }: { product: Product }) {
-  const { addItem, loading } = useCart();
+  const { addItem } = useCart();
   const gallery =
     product.images.length > 0 ? product.images : [product.featuredImage];
   const [active, setActive] = useState(0);
   const [added, setAdded] = useState(false);
+  const [adding, setAdding] = useState(false);
   const variant = product.variants[0];
   const isFree = Number.parseFloat(product.priceRange.min.amount) === 0;
 
   async function onAdd() {
-    if (!variant) return;
+    if (!variant || adding) return;
     track("add_to_cart", { handle: product.handle });
-    await addItem(variant.id, 1);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
+    setAdding(true);
+    try {
+      await addItem(variant.id, 1);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1800);
+    } finally {
+      setAdding(false);
+    }
   }
 
   return (
@@ -173,7 +179,7 @@ export function ProductDetail({ product }: { product: Product }) {
                   <>
                     <Check className="h-4 w-4" /> Added
                   </>
-                ) : loading ? (
+                ) : adding ? (
                   "Adding…"
                 ) : (
                   "Add to cart"

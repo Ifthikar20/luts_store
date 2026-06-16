@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Product } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
@@ -10,7 +11,10 @@ import { CountUp } from "./CountUp";
 
 export function BundleCard({ bundle }: { bundle: Product }) {
   const reduced = useReducedMotion() ?? false;
-  const { addItem, loading } = useCart();
+  const { addItem } = useCart();
+  // Local pending so this button doesn't flicker when other Buy buttons (which
+  // share the cart's global `loading`) are clicked elsewhere on the page.
+  const [adding, setAdding] = useState(false);
   const variant = bundle.variants[0];
 
   const price = bundle.priceRange.min;
@@ -99,14 +103,20 @@ export function BundleCard({ bundle }: { bundle: Product }) {
           {variant && (
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
+                if (adding) return;
                 track("add_to_cart", { handle: bundle.handle });
-                void addItem(variant.id, 1);
+                setAdding(true);
+                try {
+                  await addItem(variant.id, 1);
+                } finally {
+                  setAdding(false);
+                }
               }}
-              disabled={loading || !variant.availableForSale}
+              disabled={adding || !variant.availableForSale}
               className="btn-grade mt-1 w-fit px-7 py-3 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? "Adding…" : "Get the bundle"}
+              {adding ? "Adding…" : "Get the bundle"}
             </button>
           )}
         </div>
