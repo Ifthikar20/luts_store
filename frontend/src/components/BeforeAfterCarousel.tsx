@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Pause, Play } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/format";
 import { BeforeAfterSlider } from "./BeforeAfterSlider";
 
@@ -19,8 +19,9 @@ const GAP = 20;
 /**
  * Peek-style before/after slider: the active comparison sits centered with the
  * neighbouring slides bleeding in at the edges; advancing slides the track
- * horizontally. Click a peeking slide (or a pager dot) to focus it, and the
- * play/pause control auto-advances. Apple-style; reduced-motion aware.
+ * horizontally. Click a peeking slide (or a pager dot) to focus it, or use the
+ * Next (chevron) control to move to the next card. It also auto-advances on a
+ * gentle timer. Apple-style; reduced-motion aware.
  */
 export function BeforeAfterCarousel({
   examples,
@@ -29,8 +30,6 @@ export function BeforeAfterCarousel({
 }) {
   const reduced = useReducedMotion() ?? false;
   const [index, setIndex] = useState(0);
-  // Auto-advance by default; the control pauses it.
-  const [playing, setPlaying] = useState(true);
 
   // Measure the viewport so we can center one slide and let neighbours peek.
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -50,11 +49,13 @@ export function BeforeAfterCarousel({
     [examples.length],
   );
 
+  // Gentle auto-advance. `index` is a dependency so the timer RESETS whenever
+  // the card changes (manual Next click included) — they never double-advance.
   useEffect(() => {
-    if (!playing || reduced) return;
-    const t = setInterval(next, 7000);
-    return () => clearInterval(t);
-  }, [playing, reduced, next]);
+    if (reduced) return;
+    const t = setTimeout(next, 7000);
+    return () => clearTimeout(t);
+  }, [reduced, next, index]);
 
   if (examples.length === 0) return null;
 
@@ -139,16 +140,11 @@ export function BeforeAfterCarousel({
         </div>
         <button
           type="button"
-          onClick={() => setPlaying((p) => !p)}
-          aria-label={playing ? "Pause" : "Play"}
-          aria-pressed={playing}
+          onClick={next}
+          aria-label="Next look"
           className="grid h-11 w-11 place-items-center rounded-full border border-hairline bg-white text-graphite shadow-soft transition-colors hover:bg-cloud"
         >
-          {playing ? (
-            <Pause className="h-4 w-4" />
-          ) : (
-            <Play className="h-4 w-4 translate-x-[1px] fill-current" />
-          )}
+          <ChevronRight className="h-5 w-5" />
         </button>
       </div>
 
