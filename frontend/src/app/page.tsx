@@ -89,6 +89,7 @@ export default async function HomePage() {
           <SectionHeading
             title="Get every look"
             align="center"
+            titleClassName="font-serif text-4xl font-normal leading-[1.05] tracking-tight text-graphite sm:text-5xl md:text-6xl"
           />
           <div className="mt-12">
             <BundleCard bundle={bundle} />
@@ -109,6 +110,7 @@ export default async function HomePage() {
           }
           subtitle="Drag the handle to reveal what a single Luts.shop grade does to raw footage from DJI Osmo, iPhone and mirrorless cameras — richer contrast, filmic color, glowing skin."
           align="center"
+          titleClassName="font-serif text-4xl font-normal leading-[1.05] tracking-tight text-graphite sm:text-5xl md:text-6xl"
         />
         {/* Single-panel carousel: one comparison at a time, with pager + play. */}
         <Reveal>
