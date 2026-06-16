@@ -89,6 +89,10 @@ set_root NEXT_PUBLIC_SITE_URL "$SITE_URL"
 # Public reCAPTCHA v3 site key (bot protection on sign-in + reviews). The CSP
 # allows Google's reCAPTCHA hosts only when this is set.
 [ -n "${RECAPTCHA_SITE_KEY:-}" ] && set_root NEXT_PUBLIC_RECAPTCHA_SITE_KEY "$RECAPTCHA_SITE_KEY"
+# Trustpilot verified-reviews widget (public ids; baked into the frontend build).
+[ -n "${TRUSTPILOT_BUSINESS_UNIT_ID:-}" ] && set_root NEXT_PUBLIC_TRUSTPILOT_BUSINESS_UNIT_ID "$TRUSTPILOT_BUSINESS_UNIT_ID"
+[ -n "${TRUSTPILOT_TEMPLATE_ID:-}" ] && set_root NEXT_PUBLIC_TRUSTPILOT_TEMPLATE_ID "$TRUSTPILOT_TEMPLATE_ID"
+[ -n "${TRUSTPILOT_DOMAIN:-}" ] && set_root NEXT_PUBLIC_TRUSTPILOT_DOMAIN "$TRUSTPILOT_DOMAIN"
 # docker-compose.yml passes ALLOWED_HOSTS from THIS file into the backend
 # container (its environment: block overrides backend/.env).
 set_root ALLOWED_HOSTS "${PUB_HOST},localhost,127.0.0.1,backend"

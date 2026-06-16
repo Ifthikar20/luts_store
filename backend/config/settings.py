@@ -119,6 +119,16 @@ RECAPTCHA_ENABLED = bool(RECAPTCHA_SECRET_KEY)
 FIELD_ENCRYPTION_KEY = config("FIELD_ENCRYPTION_KEY", default="").strip()
 
 # ---------------------------------------------------------------------------
+# Trustpilot — third-party VERIFIED reviews
+# ---------------------------------------------------------------------------
+# Verified-review invitations are triggered via Trustpilot's Automatic Feedback
+# Service: when set, every order-confirmation email is BCC'd to this unique
+# Trustpilot address, so each real buyer is invited to leave a verified review.
+# (The review widget itself is rendered client-side — see the frontend
+# NEXT_PUBLIC_TRUSTPILOT_* build vars.)
+TRUSTPILOT_AFS_BCC = config("TRUSTPILOT_AFS_BCC", default="").strip()
+
+# ---------------------------------------------------------------------------
 # Shopify Customer Accounts (OAuth 2.0 / OpenID Connect, PKCE) — OPTIONAL login
 # ---------------------------------------------------------------------------
 # Powers the hosted-login account/library portal at account.<domain>, exactly

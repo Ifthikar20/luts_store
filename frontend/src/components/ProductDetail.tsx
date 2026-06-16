@@ -13,7 +13,7 @@ import { MagneticButton } from "./motion/MagneticButton";
 import { BeforeAfterSlider } from "./BeforeAfterSlider";
 import { HlsVideo } from "./HlsVideo";
 import { ClaimFreeLut } from "./ClaimFreeLut";
-import { ProductReviews } from "./ProductReviews";
+import { TrustpilotWidget } from "./TrustpilotWidget";
 import { Reveal } from "./motion/Reveal";
 
 export function ProductDetail({ product }: { product: Product }) {
@@ -238,7 +238,14 @@ export function ProductDetail({ product }: { product: Product }) {
       )}
 
       {/* Customer reviews */}
-      <ProductReviews handle={product.handle} />
+      {/* Verified reviews via Trustpilot (third-party). Scoped to this product
+          via its handle as the SKU for the product-reviews template. */}
+      <section className="mt-16 border-t border-hairline pt-8">
+        <h2 className="font-display text-xl font-bold tracking-tight text-graphite">
+          Reviews
+        </h2>
+        <TrustpilotWidget sku={product.handle} className="mt-4" />
+      </section>
     </div>
   );
 }

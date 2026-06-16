@@ -97,11 +97,20 @@ def send_order_confirmation(order) -> bool:
     if not order.email:
         return False
     subject, text_body, html_body = render_order_confirmation(order)
+    # Trustpilot Automatic Feedback Service: BCC the unique Trustpilot address so
+    # every confirmed purchase triggers a VERIFIED review invitation. Active only
+    # when TRUSTPILOT_AFS_BCC is set (otherwise no BCC is added).
+    bcc = (
+        [settings.TRUSTPILOT_AFS_BCC]
+        if getattr(settings, "TRUSTPILOT_AFS_BCC", "")
+        else None
+    )
     message = EmailMultiAlternatives(
         subject=subject,
         body=text_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[order.email],
+        bcc=bcc,
     )
     message.attach_alternative(html_body, "text/html")
     message.send()

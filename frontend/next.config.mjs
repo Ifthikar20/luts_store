@@ -48,6 +48,18 @@ const RECAPTCHA_SCRIPT = RECAPTCHA_ON
 const RECAPTCHA_FRAME = RECAPTCHA_ON ? " https://www.google.com" : "";
 const RECAPTCHA_CONNECT = RECAPTCHA_ON ? " https://www.google.com" : "";
 
+// Trustpilot TrustBox widget — only added when a business unit id is set. The
+// widget loads a bootstrap script, renders inside an iframe, and pulls review
+// images, so it needs script/frame/img/connect allowances.
+const TRUSTPILOT_ON = !!process.env.NEXT_PUBLIC_TRUSTPILOT_BUSINESS_UNIT_ID;
+const TP_HOSTS = "https://widget.trustpilot.com https://*.trustpilot.com";
+const TRUSTPILOT_SCRIPT = TRUSTPILOT_ON ? ` ${TP_HOSTS}` : "";
+const TRUSTPILOT_FRAME = TRUSTPILOT_ON ? ` ${TP_HOSTS}` : "";
+const TRUSTPILOT_IMG = TRUSTPILOT_ON
+  ? " https://*.trustpilot.com https://images-static.trustpilot.com"
+  : "";
+const TRUSTPILOT_CONNECT = TRUSTPILOT_ON ? ` ${TP_HOSTS}` : "";
+
 // In production we drop 'unsafe-eval' — the built Next bundle doesn't need it
 // (it's only used by the dev HMR/react-refresh runtime). 'unsafe-inline' for
 // scripts stays because Next injects unnonced inline bootstrap scripts.
@@ -55,7 +67,9 @@ const isProd = process.env.NODE_ENV === "production";
 const scriptSrc =
   (isProd
     ? "script-src 'self' 'unsafe-inline'"
-    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'") + RECAPTCHA_SCRIPT;
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'") +
+  RECAPTCHA_SCRIPT +
+  TRUSTPILOT_SCRIPT;
 
 // A reasonable Content-Security-Policy:
 // - next/font (Google) is self-hosted at build time, so no font CDN is needed.
@@ -68,14 +82,14 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  `frame-src 'self'${RECAPTCHA_FRAME}`,
+  `frame-src 'self'${RECAPTCHA_FRAME}${TRUSTPILOT_FRAME}`,
   "object-src 'none'",
-  `img-src 'self' data: blob: https://images.unsplash.com ${mediaSources}`,
+  `img-src 'self' data: blob: https://images.unsplash.com ${mediaSources}${TRUSTPILOT_IMG}`,
   `media-src 'self' blob: ${VIDEO_HOSTS.join(" ")} ${mediaSources}`,
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
   scriptSrc,
-  `connect-src 'self' ${apiOrigin} ${mediaSources}${RECAPTCHA_CONNECT}`,
+  `connect-src 'self' ${apiOrigin} ${mediaSources}${RECAPTCHA_CONNECT}${TRUSTPILOT_CONNECT}`,
 ].join("; ");
 
 const securityHeaders = [
