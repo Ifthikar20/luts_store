@@ -13,4 +13,8 @@ urlpatterns = [
         views.create_review,
         name="reviews-create",
     ),
+    # Per-review actions (signed-in users).
+    path("reviews/<int:pk>/helpful", views.vote_helpful, name="reviews-helpful"),
+    path("reviews/<int:pk>/report", views.report_review, name="reviews-report"),
+    path("reviews/<int:pk>/delete", views.delete_review, name="reviews-delete"),
 ]

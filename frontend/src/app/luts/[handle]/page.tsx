@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getProduct, getProducts, getRelatedProducts } from "@/lib/api";
+import {
+  getProduct,
+  getProducts,
+  getRelatedProducts,
+  getReviews,
+} from "@/lib/api";
 import { ProductDetail } from "@/components/ProductDetail";
 import { SectionHeading } from "@/components/SectionHeading";
 import { ProductGrid } from "@/components/ProductGrid";
@@ -40,10 +45,13 @@ export default async function ProductPage({
   const product = await getProduct(handle);
   if (!product) notFound();
 
-  const related = await getRelatedProducts(product);
+  const [related, reviews] = await Promise.all([
+    getRelatedProducts(product),
+    getReviews(handle),
+  ]);
 
   const anyAvailable = product.variants.some((v) => v.availableForSale);
-  const productJsonLd = {
+  const productJsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.title,
@@ -61,6 +69,32 @@ export default async function ProductPage({
         : "https://schema.org/OutOfStock",
     },
   };
+
+  // AggregateRating + individual reviews drive Google's star-rating rich
+  // snippets. Only emitted when real reviews exist (Google requires the stars
+  // to reflect genuine on-page reviews).
+  if (reviews.count > 0) {
+    productJsonLd.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: reviews.average,
+      reviewCount: reviews.count,
+      bestRating: 5,
+      worstRating: 1,
+    };
+    productJsonLd.review = reviews.reviews.slice(0, 8).map((r) => ({
+      "@type": "Review",
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: r.rating,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      author: { "@type": "Person", name: r.name },
+      datePublished: r.date,
+      ...(r.title ? { name: r.title } : {}),
+      reviewBody: r.body,
+    }));
+  }
 
   return (
     <div className="pb-28">

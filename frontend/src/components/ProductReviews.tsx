@@ -1,9 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Star } from "lucide-react";
-import { createReview, getReviews } from "@/lib/api";
-import type { Review, ReviewsResponse } from "@/lib/types";
+import { Star, ThumbsUp, Flag, Trash2 } from "lucide-react";
+import {
+  createReview,
+  deleteReview,
+  getReviews,
+  reportReview,
+  voteReviewHelpful,
+} from "@/lib/api";
+import type { Review, ReviewSort, ReviewsResponse } from "@/lib/types";
 
 function Stars({
   rating,
@@ -43,7 +49,6 @@ function relativeDate(iso: string): string {
   return `${years} year${years === 1 ? "" : "s"} ago`;
 }
 
-// Interactive 1–5 picker for the write form.
 function RatingPicker({
   value,
   onChange,
@@ -74,7 +79,18 @@ function RatingPicker({
   );
 }
 
-function ReviewRow({ r }: { r: Review }) {
+function ReviewRow({
+  r,
+  onHelpful,
+  onReport,
+  onDelete,
+}: {
+  r: Review;
+  onHelpful: (id: string) => void;
+  onReport: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [reported, setReported] = useState(false);
   return (
     <li className="border-t border-hairline py-4 first:border-t-0">
       <div className="flex items-center gap-2 text-sm">
@@ -90,18 +106,62 @@ function ReviewRow({ r }: { r: Review }) {
         <Stars rating={r.rating} className="ml-1" />
         <span className="ml-auto text-xs text-slate2">{relativeDate(r.date)}</span>
       </div>
-      {r.title && <p className="mt-1.5 text-sm font-semibold text-graphite">{r.title}</p>}
+      {r.title && (
+        <p className="mt-1.5 text-sm font-semibold text-graphite">{r.title}</p>
+      )}
       <p className="mt-1 text-sm leading-relaxed text-slate2">{r.body}</p>
+
+      {/* Actions */}
+      <div className="mt-2 flex items-center gap-4 text-xs text-slate2">
+        <button
+          type="button"
+          onClick={() => onHelpful(r.id)}
+          className={`inline-flex items-center gap-1.5 transition-colors hover:text-graphite ${
+            r.youVoted ? "font-semibold text-sky" : ""
+          }`}
+        >
+          <ThumbsUp className="h-3.5 w-3.5" />
+          Helpful{r.helpfulCount > 0 ? ` (${r.helpfulCount})` : ""}
+        </button>
+        {r.yours ? (
+          <button
+            type="button"
+            onClick={() => onDelete(r.id)}
+            className="inline-flex items-center gap-1.5 transition-colors hover:text-red-600"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Delete
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={reported}
+            onClick={() => {
+              onReport(r.id);
+              setReported(true);
+            }}
+            className="inline-flex items-center gap-1.5 transition-colors hover:text-graphite disabled:opacity-60"
+          >
+            <Flag className="h-3.5 w-3.5" /> {reported ? "Reported" : "Report"}
+          </button>
+        )}
+      </div>
     </li>
   );
 }
+
+const SORTS: { value: ReviewSort; label: string }[] = [
+  { value: "recent", label: "Most recent" },
+  { value: "helpful", label: "Most helpful" },
+  { value: "highest", label: "Highest rated" },
+  { value: "lowest", label: "Lowest rated" },
+];
 
 export function ProductReviews({ handle }: { handle: string }) {
   const [data, setData] = useState<ReviewsResponse | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  // UI filter: 0 = all, 1–5 = only that star rating.
-  const [filterRating, setFilterRating] = useState(0);
+  const [filterRating, setFilterRating] = useState(0); // 0 = all
+  const [sort, setSort] = useState<ReviewSort>("recent");
 
   // write-form state
   const [rating, setRating] = useState(5);
@@ -112,11 +172,11 @@ export function ProductReviews({ handle }: { handle: string }) {
 
   useEffect(() => {
     let alive = true;
-    getReviews(handle).then((r) => alive && setData(r));
+    getReviews(handle, sort).then((r) => alive && setData(r));
     return () => {
       alive = false;
     };
-  }, [handle]);
+  }, [handle, sort]);
 
   const filtered = useMemo(() => {
     const list = data?.reviews ?? [];
@@ -128,6 +188,44 @@ export function ProductReviews({ handle }: { handle: string }) {
   if (!data) return null;
   const { average, count, canReview } = data;
 
+  function patchReview(id: string, patch: Partial<Review>) {
+    setData((d) =>
+      d
+        ? { ...d, reviews: d.reviews.map((r) => (r.id === id ? { ...r, ...patch } : r)) }
+        : d,
+    );
+  }
+
+  async function refresh() {
+    setData(await getReviews(handle, sort));
+  }
+
+  async function onHelpful(id: string) {
+    try {
+      const res = await voteReviewHelpful(id);
+      patchReview(id, { youVoted: res.youVoted, helpfulCount: res.helpfulCount });
+    } catch {
+      /* likely not signed in — silently ignore */
+    }
+  }
+
+  async function onReport(id: string) {
+    try {
+      await reportReview(id);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function onDelete(id: string) {
+    try {
+      await deleteReview(id);
+      await refresh();
+    } catch {
+      /* ignore */
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -138,8 +236,7 @@ export function ProductReviews({ handle }: { handle: string }) {
     setSaving(true);
     try {
       await createReview(handle, { rating, title: title.trim(), body: body.trim() });
-      const fresh = await getReviews(handle);
-      setData(fresh);
+      await refresh();
       setShowForm(false);
       setTitle("");
       setBody("");
@@ -152,8 +249,8 @@ export function ProductReviews({ handle }: { handle: string }) {
   }
 
   return (
-    <section className="mt-16 border-t border-hairline pt-8">
-      {/* Compact header: title + inline aggregate, all on one row. */}
+    <section id="reviews" className="mt-16 border-t border-hairline pt-8">
+      {/* Header: title + inline aggregate. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <h2 className="font-display text-xl font-bold tracking-tight text-graphite">
           Reviews
@@ -177,7 +274,7 @@ export function ProductReviews({ handle }: { handle: string }) {
         )}
       </div>
 
-      {/* Write form — only rendered for a verified buyer. */}
+      {/* Write form — only for a verified buyer. */}
       {showForm && (
         <form onSubmit={submit} className="mt-4 rounded-2xl border border-hairline bg-cloud/50 p-4">
           <RatingPicker value={rating} onChange={setRating} />
@@ -216,7 +313,7 @@ export function ProductReviews({ handle }: { handle: string }) {
         </form>
       )}
 
-      {/* UI filter — narrow the list by star rating. */}
+      {/* Controls: rating filter + sort. */}
       {count > 0 && (
         <div className="mt-5 flex flex-wrap items-center gap-2">
           {[0, 5, 4, 3, 2, 1].map((n) => (
@@ -237,10 +334,25 @@ export function ProductReviews({ handle }: { handle: string }) {
               {n === 0 ? "All" : `${n} ★`}
             </button>
           ))}
+          <select
+            value={sort}
+            onChange={(e) => {
+              setSort(e.target.value as ReviewSort);
+              setExpanded(false);
+            }}
+            aria-label="Sort reviews"
+            className="ml-auto rounded-full border border-hairline bg-white px-3 py-1 text-xs text-graphite focus:outline-none focus:ring-2 focus:ring-sky/40"
+          >
+            {SORTS.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 
-      {/* Compact list — first 3 of the (filtered) set, with a show-all toggle. */}
+      {/* List. */}
       {count > 0 && (
         <>
           {filtered.length === 0 ? (
@@ -250,7 +362,13 @@ export function ProductReviews({ handle }: { handle: string }) {
           ) : (
             <ul className="mt-4">
               {visible.map((r) => (
-                <ReviewRow key={r.id} r={r} />
+                <ReviewRow
+                  key={r.id}
+                  r={r}
+                  onHelpful={onHelpful}
+                  onReport={onReport}
+                  onDelete={onDelete}
+                />
               ))}
             </ul>
           )}

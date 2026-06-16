@@ -32,6 +32,7 @@ import type {
   ProductsResponse,
   ResendDownloadsResponse,
   Review,
+  ReviewSort,
   ReviewsResponse,
   ShopifyLoginResponse,
   SocialProvider,
@@ -411,17 +412,46 @@ export async function shopifyLogin(
 /* Reviews — real, per-product. Creation is gated server-side on a verified    */
 /* purchase, so these surface REAL errors (401 not signed in, 403 not a buyer).*/
 
-// Public list + aggregate. session:true so `canReview` reflects the logged-in
-// buyer (sends the session cookie); falls back to an empty set on error.
-export async function getReviews(handle: string): Promise<ReviewsResponse> {
+// Public list + aggregate. session:true so per-viewer flags (canReview/youVoted/
+// yours) reflect the logged-in buyer; falls back to an empty set on error.
+export async function getReviews(
+  handle: string,
+  sort: ReviewSort = "recent",
+): Promise<ReviewsResponse> {
   try {
     return await request<ReviewsResponse>(
-      `/products/${encodeURIComponent(handle)}/reviews`,
+      `/products/${encodeURIComponent(handle)}/reviews?sort=${sort}`,
       { method: "GET", session: true },
     );
   } catch {
     return { average: 0, count: 0, reviews: [], canReview: false };
   }
+}
+
+// Toggle a "helpful" vote on a review.
+export async function voteReviewHelpful(
+  id: string,
+): Promise<{ youVoted: boolean; helpfulCount: number }> {
+  return request(`/reviews/${encodeURIComponent(id)}/helpful`, {
+    method: "POST",
+    session: true,
+  });
+}
+
+// Report a review for abuse (generic success).
+export async function reportReview(id: string): Promise<{ status: string }> {
+  return request(`/reviews/${encodeURIComponent(id)}/report`, {
+    method: "POST",
+    session: true,
+  });
+}
+
+// Delete your own review.
+export async function deleteReview(id: string): Promise<{ status: string }> {
+  return request(`/reviews/${encodeURIComponent(id)}/delete`, {
+    method: "POST",
+    session: true,
+  });
 }
 
 // Create/update the signed-in buyer's review. Errors (401/403/400) propagate.

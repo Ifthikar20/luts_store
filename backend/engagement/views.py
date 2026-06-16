@@ -173,22 +173,131 @@ def _display_name(user, supplied: str) -> str:
     return local.split(".")[0].capitalize() or "Customer"
 
 
+_SORTS = {
+    "recent": "-created_at",
+    "highest": "-rating",
+    "lowest": "rating",
+    "helpful": "-helpful_count",
+}
+
+
 @api_view(["GET"])
 @permission_classes([])
 @throttle_classes([AnonRateThrottle])
 def list_reviews(request, handle: str):
-    """Public: real reviews for one product + aggregate rating."""
-    qs = Review.objects.filter(product_handle=handle)
-    reviews = [r.to_public() for r in qs]
+    """Public: PUBLISHED reviews for one product + aggregate rating.
+
+    ``?sort=recent|highest|lowest|helpful`` (default recent). Per-viewer flags
+    (youVoted/yours) are included for the signed-in user so the UI can render
+    vote/delete affordances.
+    """
+    user = request.user
+    sort = _SORTS.get(request.GET.get("sort", "recent"), "-created_at")
+    qs = Review.objects.filter(
+        product_handle=handle, status=Review.PUBLISHED
+    ).order_by(sort, "-created_at")
+    reviews = [r.to_public(user=user) for r in qs]
     count = len(reviews)
     average = round(sum(r["rating"] for r in reviews) / count, 1) if count else 0.0
-    # Tell a signed-in buyer whether they're eligible to write/edit a review, so
-    # the storefront can show the form only when it will actually be accepted.
-    user = request.user
     can_review = bool(
         user and user.is_authenticated and _has_purchased(user, handle)
     )
-    return Response({"average": average, "count": count, "reviews": reviews, "canReview": can_review})
+    return Response(
+        {
+            "average": average,
+            "count": count,
+            "reviews": reviews,
+            "canReview": can_review,
+        }
+    )
+
+
+def _require_login(request):
+    user = request.user
+    if not (user and user.is_authenticated):
+        return None, Response({"detail": "Sign in first."}, status=401)
+    return user, None
+
+
+@api_view(["POST"])
+@authentication_classes([CsrfExemptSessionAuthentication])
+@permission_classes([])
+@throttle_classes([AnonRateThrottle, AuthScopedThrottle])
+def vote_helpful(request, pk: int):
+    """Toggle the signed-in user's 'helpful' vote on a review."""
+    from .models import ReviewVote
+
+    user, err = _require_login(request)
+    if err:
+        return err
+    review = Review.objects.filter(pk=pk, status=Review.PUBLISHED).first()
+    if review is None:
+        return Response({"detail": "Not found."}, status=404)
+
+    vote = ReviewVote.objects.filter(review=review, user=user).first()
+    if vote:
+        vote.delete()
+        voted = False
+    else:
+        ReviewVote.objects.create(review=review, user=user)
+        voted = True
+    review.helpful_count = review.votes.count()
+    review.save(update_fields=["helpful_count"])
+    return Response({"youVoted": voted, "helpfulCount": review.helpful_count})
+
+
+# Auto-hide a review once this many distinct users report it (pending admin review).
+_REPORT_HIDE_THRESHOLD = 4
+
+
+@api_view(["POST"])
+@authentication_classes([CsrfExemptSessionAuthentication])
+@permission_classes([])
+@throttle_classes([AnonRateThrottle, AuthScopedThrottle])
+def report_review(request, pk: int):
+    """Report a review for abuse (one per user). Generic success either way."""
+    from .models import ReviewReport
+
+    user, err = _require_login(request)
+    if err:
+        return err
+    review = Review.objects.filter(pk=pk).first()
+    if review is None:
+        return Response({"detail": "Not found."}, status=404)
+
+    data = request.data if isinstance(request.data, dict) else {}
+    _report, created = ReviewReport.objects.get_or_create(
+        review=review,
+        user=user,
+        defaults={"reason": (data.get("reason") or "").strip()[:300]},
+    )
+    if created:
+        review.report_count = review.reports.count()
+        # Auto-hide pending moderation once enough distinct users flag it.
+        if review.report_count >= _REPORT_HIDE_THRESHOLD:
+            review.status = Review.HIDDEN
+            review.save(update_fields=["report_count", "status"])
+        else:
+            review.save(update_fields=["report_count"])
+    return Response({"status": "ok", "detail": "Thanks — we'll take a look."})
+
+
+@api_view(["POST"])
+@authentication_classes([CsrfExemptSessionAuthentication])
+@permission_classes([])
+@throttle_classes([AnonRateThrottle, AuthScopedThrottle])
+def delete_review(request, pk: int):
+    """Delete the signed-in user's OWN review (only the author can)."""
+    user, err = _require_login(request)
+    if err:
+        return err
+    review = Review.objects.filter(pk=pk).first()
+    if review is None:
+        return Response({"detail": "Not found."}, status=404)
+    if review.user_id != user.id:
+        return Response({"detail": "You can only delete your own review."}, status=403)
+    review.delete()
+    return Response({"status": "ok"})
 
 
 @api_view(["POST"])

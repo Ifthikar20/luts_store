@@ -115,3 +115,50 @@ def send_order_confirmation(order) -> bool:
     message.attach_alternative(html_body, "text/html")
     message.send()
     return True
+
+
+def _review_request_context(order) -> dict[str, Any]:
+    """Products to invite a review for: each non-revoked grant -> product page."""
+    from delivery.services import serialize_grant
+
+    site = settings.FRONTEND_URL.rstrip("/")
+    products = []
+    seen = set()
+    for grant in order.download_grants.filter(revoked_at__isnull=True):
+        if grant.product_handle in seen:
+            continue
+        seen.add(grant.product_handle)
+        item = serialize_grant(grant)
+        products.append(
+            {
+                "title": item["title"],
+                # Link straight to the product page's reviews section.
+                "url": f"{site}/luts/{grant.product_handle}#reviews",
+            }
+        )
+    return {"email": order.email, "products": products, "site_url": site}
+
+
+def send_review_request(order) -> bool:
+    """Email the buyer inviting a review for each product they purchased.
+
+    Returns True if a message was sent. Idempotency (one invite per order) is
+    enforced by the caller via ``Order.review_request_sent_at``.
+    """
+    if not order.email:
+        return False
+    context = _review_request_context(order)
+    if not context["products"]:
+        return False
+    subject = "How are your new looks? Leave a review — The Looks Lab"
+    text_body = render_to_string("email/review_request.txt", context)
+    html_body = render_to_string("email/review_request.html", context)
+    message = EmailMultiAlternatives(
+        subject=subject,
+        body=text_body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[order.email],
+    )
+    message.attach_alternative(html_body, "text/html")
+    message.send()
+    return True

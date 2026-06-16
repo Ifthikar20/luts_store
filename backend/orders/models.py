@@ -21,6 +21,9 @@ class Order(models.Model):
     # `refund_order` management command). Refunding revokes the order's
     # download grants; the timestamp makes refunds idempotent.
     refunded_at = models.DateTimeField(null=True, blank=True)
+    # Set after the "leave a review" invitation email is sent. Makes the
+    # send_review_requests command idempotent (one invite per order).
+    review_request_sent_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self) -> str:  # pragma: no cover - repr only
         return f"Order({self.shopify_order_id}, {self.email})"

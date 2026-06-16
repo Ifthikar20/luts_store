@@ -70,6 +70,20 @@ class Review(models.Model):
     # Always true today (creation is gated on a verified purchase); kept explicit
     # so the gate is auditable and the column can carry future review sources.
     verified = models.BooleanField(default=True)
+
+    PUBLISHED = "published"
+    HIDDEN = "hidden"
+    STATUS_CHOICES = [(PUBLISHED, "Published"), (HIDDEN, "Hidden")]
+    # Moderation state. Only PUBLISHED reviews are shown publicly; an admin (or
+    # the auto-hide threshold on reports) can HIDE abusive content.
+    status = models.CharField(
+        max_length=12, choices=STATUS_CHOICES, default=PUBLISHED, db_index=True
+    )
+    # Denormalised counters kept in sync by the vote/report endpoints, so the
+    # list view never has to aggregate per row.
+    helpful_count = models.PositiveIntegerField(default=0)
+    report_count = models.PositiveIntegerField(default=0)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -85,8 +99,17 @@ class Review(models.Model):
     def __str__(self) -> str:  # pragma: no cover - repr only
         return f"Review({self.product_handle}, {self.author_name}, {self.rating} stars)"
 
-    def to_public(self) -> dict:
-        """The shape the storefront renders (date label is computed client-side)."""
+    def to_public(self, *, user=None) -> dict:
+        """The shape the storefront renders (date label is computed client-side).
+
+        ``user`` (the requester) toggles per-viewer flags: whether they've voted
+        a review helpful, and whether it's their own (so the UI can offer delete).
+        """
+        you_voted = False
+        yours = False
+        if user is not None and user.is_authenticated:
+            yours = self.user_id == user.id
+            you_voted = self.votes.filter(user=user).exists()
         return {
             "id": str(self.pk),
             "name": self.author_name or "Customer",
@@ -95,5 +118,43 @@ class Review(models.Model):
             "title": self.title,
             "body": self.body,
             "verified": self.verified,
+            "helpfulCount": self.helpful_count,
+            "youVoted": you_voted,
+            "yours": yours,
         }
+
+
+class ReviewVote(models.Model):
+    """One 'helpful' vote per user per review."""
+
+    review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name="votes")
+    user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["review", "user"], name="one_helpful_vote_per_user"
+            )
+        ]
+
+
+class ReviewReport(models.Model):
+    """A user-submitted abuse report for a review (one per user per review)."""
+
+    review = models.ForeignKey(
+        Review, on_delete=models.CASCADE, related_name="reports"
+    )
+    user = models.ForeignKey(
+        "auth.User", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    reason = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["review", "user"], name="one_report_per_user_per_review"
+            )
+        ]
 

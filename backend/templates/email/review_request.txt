@@ -1,0 +1,12 @@
+Hi,
+
+Thanks again for your purchase from The Looks Lab. We'd love to hear how your
+new looks are working out — your review helps other creators choose with
+confidence (and takes about a minute).
+
+Leave a review:
+{% for p in products %}- {{ p.title }}: {{ p.url }}
+{% endfor %}
+Thank you,
+The Looks Lab
+{{ site_url }}

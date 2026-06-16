@@ -217,7 +217,12 @@ export interface Review {
   title: string;
   body: string;
   verified: boolean;
+  helpfulCount: number;
+  youVoted: boolean; // did the current viewer mark it helpful
+  yours: boolean; // is it the current viewer's own review
 }
+
+export type ReviewSort = "recent" | "highest" | "lowest" | "helpful";
 
 // Response from GET /api/products/<handle>/reviews.
 export interface ReviewsResponse {
