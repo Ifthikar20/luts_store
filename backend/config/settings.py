@@ -110,6 +110,15 @@ RECAPTCHA_MIN_SCORE = config("RECAPTCHA_MIN_SCORE", default=0.5, cast=float)
 RECAPTCHA_ENABLED = bool(RECAPTCHA_SECRET_KEY)
 
 # ---------------------------------------------------------------------------
+# Field-level encryption at rest (e.g. review free-text)
+# ---------------------------------------------------------------------------
+# A urlsafe-base64 32-byte Fernet key. Leave blank to derive one from SECRET_KEY
+# (works out of the box). Set a dedicated key in production so rotating
+# SECRET_KEY doesn't make existing ciphertext undecryptable. Generate with:
+#   python -c "from cryptography.fernet import Fernet;print(Fernet.generate_key().decode())"
+FIELD_ENCRYPTION_KEY = config("FIELD_ENCRYPTION_KEY", default="").strip()
+
+# ---------------------------------------------------------------------------
 # Shopify Customer Accounts (OAuth 2.0 / OpenID Connect, PKCE) — OPTIONAL login
 # ---------------------------------------------------------------------------
 # Powers the hosted-login account/library portal at account.<domain>, exactly

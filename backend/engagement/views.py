@@ -226,17 +226,22 @@ def create_review(request, handle: str):
     if not 1 <= rating <= 5:
         return Response({"detail": "Rating must be between 1 and 5."}, status=400)
 
-    body = (data.get("body") or "").strip()
+    # Content filtering: strip any markup (anti-injection) and mask profanity
+    # BEFORE persisting. The cleaned text is what gets encrypted + stored.
+    from common.moderation import clean_review_text
+
+    body = clean_review_text(data.get("body"))[:5000]
     if not body:
         return Response({"detail": "Please write a short review."}, status=400)
+    title = clean_review_text(data.get("title"))[:140]
 
     review, _created = Review.objects.update_or_create(
         product_handle=handle,
         user=user,
         defaults={
             "rating": rating,
-            "title": (data.get("title") or "").strip()[:140],
-            "body": body[:5000],
+            "title": title,
+            "body": body,
             "author_name": _display_name(user, data.get("name", "")),
             "verified": True,
         },

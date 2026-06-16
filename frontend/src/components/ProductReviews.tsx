@@ -100,6 +100,8 @@ export function ProductReviews({ handle }: { handle: string }) {
   const [data, setData] = useState<ReviewsResponse | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  // UI filter: 0 = all, 1–5 = only that star rating.
+  const [filterRating, setFilterRating] = useState(0);
 
   // write-form state
   const [rating, setRating] = useState(5);
@@ -116,13 +118,15 @@ export function ProductReviews({ handle }: { handle: string }) {
     };
   }, [handle]);
 
-  const visible = useMemo(() => {
+  const filtered = useMemo(() => {
     const list = data?.reviews ?? [];
-    return expanded ? list : list.slice(0, 3);
-  }, [data, expanded]);
+    return filterRating ? list.filter((r) => r.rating === filterRating) : list;
+  }, [data, filterRating]);
+
+  const visible = expanded ? filtered : filtered.slice(0, 3);
 
   if (!data) return null;
-  const { average, count, reviews, canReview } = data;
+  const { average, count, canReview } = data;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -189,6 +193,7 @@ export function ProductReviews({ handle }: { handle: string }) {
             onChange={(e) => setBody(e.target.value)}
             placeholder="How did these LUTs work for you?"
             rows={3}
+            maxLength={5000}
             className="mt-2 w-full rounded-lg border border-hairline bg-white px-3 py-2 text-sm text-graphite focus:outline-none focus:ring-2 focus:ring-sky/40"
           />
           {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
@@ -211,21 +216,51 @@ export function ProductReviews({ handle }: { handle: string }) {
         </form>
       )}
 
-      {/* Compact list — first 3, with a show-all toggle. */}
+      {/* UI filter — narrow the list by star rating. */}
+      {count > 0 && (
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          {[0, 5, 4, 3, 2, 1].map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => {
+                setFilterRating(n);
+                setExpanded(false);
+              }}
+              aria-pressed={filterRating === n}
+              className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                filterRating === n
+                  ? "border-transparent bg-graphite text-white"
+                  : "border-hairline text-slate2 hover:bg-cloud"
+              }`}
+            >
+              {n === 0 ? "All" : `${n} ★`}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Compact list — first 3 of the (filtered) set, with a show-all toggle. */}
       {count > 0 && (
         <>
-          <ul className="mt-4">
-            {visible.map((r) => (
-              <ReviewRow key={r.id} r={r} />
-            ))}
-          </ul>
-          {reviews.length > 3 && (
+          {filtered.length === 0 ? (
+            <p className="mt-4 text-sm text-slate2">
+              No {filterRating}-star reviews yet.
+            </p>
+          ) : (
+            <ul className="mt-4">
+              {visible.map((r) => (
+                <ReviewRow key={r.id} r={r} />
+              ))}
+            </ul>
+          )}
+          {filtered.length > 3 && (
             <button
               type="button"
               onClick={() => setExpanded((v) => !v)}
               className="mt-2 text-sm font-medium text-sky hover:underline"
             >
-              {expanded ? "Show fewer" : `Show all ${count} reviews`}
+              {expanded ? "Show fewer" : `Show all ${filtered.length} reviews`}
             </button>
           )}
         </>

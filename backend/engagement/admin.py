@@ -21,5 +21,7 @@ class ContactMessageAdmin(admin.ModelAdmin):
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ("product_handle", "author_name", "rating", "verified", "created_at")
     list_filter = ("rating", "verified", "created_at")
-    search_fields = ("product_handle", "author_name", "title", "body", "user__email")
+    # title/body are encrypted at rest, so they can't be searched at the DB
+    # level (ciphertext). Admins still SEE them decrypted on the detail page.
+    search_fields = ("product_handle", "author_name", "user__email")
     readonly_fields = ("user", "created_at", "updated_at")

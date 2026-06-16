@@ -8,6 +8,8 @@ from __future__ import annotations
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from common.fields import EncryptedCharField, EncryptedTextField
+
 
 class NewsletterSubscriber(models.Model):
     """A single email opted in to the newsletter.
@@ -60,8 +62,11 @@ class Review(models.Model):
     rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
-    title = models.CharField(max_length=140, blank=True)
-    body = models.TextField()
+    # title + body hold the user's free text — encrypted at rest (see
+    # common.fields.EncryptedTextField). They decrypt transparently on read, so
+    # serialization/admin see plaintext; the DB only ever stores ciphertext.
+    title = EncryptedCharField(blank=True)
+    body = EncryptedTextField()
     # Always true today (creation is gated on a verified purchase); kept explicit
     # so the gate is auditable and the column can carry future review sources.
     verified = models.BooleanField(default=True)
