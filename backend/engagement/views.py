@@ -163,10 +163,16 @@ def _has_purchased(user, handle: str) -> bool:
 
 
 def _display_name(user, supplied: str) -> str:
-    """A friendly first-name label, never the full email (privacy)."""
-    name = (supplied or "").strip()
+    """A friendly first-name label, never the full email (privacy).
+
+    The user-supplied name is sanitized + profanity-masked (it is shown publicly
+    and would otherwise bypass the body/title filter).
+    """
+    from common.moderation import clean_display_name
+
+    name = clean_display_name(supplied)
     if name:
-        return name[:120]
+        return name
     if user.first_name:
         return user.first_name
     local = (user.email or "").split("@", 1)[0]

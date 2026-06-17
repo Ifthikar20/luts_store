@@ -36,6 +36,33 @@ def test_profanity_masked_including_inflections():
     assert out.startswith("this is f")  # first letter kept, rest masked
 
 
+def test_profanity_obfuscation_is_caught():
+    # spacing, punctuation, leetspeak, repeated letters
+    for evasion in ["f u c k", "f.u.c.k", "sh1t", "shiiit", "@sshole", "b1tch"]:
+        out = moderation.clean_review_text(evasion)
+        assert "*" in out, evasion
+        # the leftover letters must not spell the slur back
+        assert out.lower().replace("*", "") != evasion.lower()
+
+
+def test_innocent_words_are_not_masked():
+    for ok in ["classic look", "assistant grade", "grass green", "basic", "shoot 4k"]:
+        assert moderation.clean_review_text(ok) == ok
+
+
+def test_filter_is_not_redos_slow():
+    import time
+
+    t0 = time.time()
+    moderation.clean_review_text("f" * 5000 + "x")
+    assert time.time() - t0 < 0.5  # was ~1.3s before bounding the quantifiers
+
+
+def test_profanity_in_author_name_is_masked():
+    assert "*" in moderation.clean_display_name("fuckface")
+    assert moderation.clean_display_name("<b>Sam</b>") == "Sam"
+
+
 # --- integration: create endpoint cleans content ---------------------------
 def test_posted_review_is_sanitized_and_masked(client):
     _buyer(client)
