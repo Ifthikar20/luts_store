@@ -89,3 +89,26 @@ def test_sort_highest_lowest():
     assert [r["rating"] for r in hi["reviews"]] == [5, 2]
     lo = APIClient().get("/api/products/midnight-noir/reviews?sort=lowest").json()
     assert [r["rating"] for r in lo["reviews"]] == [2, 5]
+
+
+def test_list_reviews_is_bounded_and_no_n_plus_1(django_assert_max_num_queries):
+    """Many reviews + a logged-in viewer must NOT trigger a per-review query."""
+    from django.contrib.auth.models import User
+    from engagement.models import Review
+
+    for i in range(25):
+        u = User.objects.create(username=f"u{i}@e.com", email=f"u{i}@e.com")
+        Review.objects.create(
+            product_handle="midnight-noir", user=u, author_name=f"U{i}",
+            rating=(i % 5) + 1, body="nice pack",
+        )
+    viewer = APIClient()
+    _buyer(viewer, "viewer-q@example.com")  # logged in -> exercises youVoted path
+
+    # A constant, small number of queries regardless of review count (aggregate
+    # + page + one votes prefetch + session/auth), NOT one-per-review.
+    with django_assert_max_num_queries(12):
+        resp = viewer.get("/api/products/midnight-noir/reviews")
+    body = resp.json()
+    assert body["count"] == 25
+    assert len(body["reviews"]) == 25  # under the 200 cap

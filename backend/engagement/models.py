@@ -99,17 +99,23 @@ class Review(models.Model):
     def __str__(self) -> str:  # pragma: no cover - repr only
         return f"Review({self.product_handle}, {self.author_name}, {self.rating} stars)"
 
-    def to_public(self, *, user=None) -> dict:
+    def to_public(self, *, user=None, voted_ids=None) -> dict:
         """The shape the storefront renders (date label is computed client-side).
 
         ``user`` (the requester) toggles per-viewer flags: whether they've voted
         a review helpful, and whether it's their own (so the UI can offer delete).
+        ``voted_ids`` (a set of review ids the user voted on) lets the list view
+        resolve ``youVoted`` for the whole page in ONE query instead of N — pass
+        it to avoid an N+1. When omitted we fall back to a per-row query.
         """
         you_voted = False
         yours = False
         if user is not None and user.is_authenticated:
             yours = self.user_id == user.id
-            you_voted = self.votes.filter(user=user).exists()
+            if voted_ids is not None:
+                you_voted = self.pk in voted_ids
+            else:
+                you_voted = self.votes.filter(user=user).exists()
         return {
             "id": str(self.pk),
             "name": self.author_name or "Customer",

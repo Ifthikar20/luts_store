@@ -186,6 +186,10 @@ _SORTS = {
     "helpful": "-helpful_count",
 }
 
+# Hard cap on reviews serialized per request (the aggregate count/average still
+# reflect ALL reviews). Bounds memory/CPU/query work no matter how many exist.
+_MAX_REVIEWS = 200
+
 
 @api_view(["GET"])
 @permission_classes([])
@@ -197,14 +201,32 @@ def list_reviews(request, handle: str):
     (youVoted/yours) are included for the signed-in user so the UI can render
     vote/delete affordances.
     """
+    from django.db.models import Avg, Count
+
+    from .models import ReviewVote
+
     user = request.user
     sort = _SORTS.get(request.GET.get("sort", "recent"), "-created_at")
-    qs = Review.objects.filter(
-        product_handle=handle, status=Review.PUBLISHED
-    ).order_by(sort, "-created_at")
-    reviews = [r.to_public(user=user) for r in qs]
-    count = len(reviews)
-    average = round(sum(r["rating"] for r in reviews) / count, 1) if count else 0.0
+    base = Review.objects.filter(product_handle=handle, status=Review.PUBLISHED)
+
+    # Count/average via a single DB aggregate — never load every row to count.
+    agg = base.aggregate(avg=Avg("rating"), n=Count("id"))
+    count = agg["n"] or 0
+    average = round(agg["avg"], 1) if count else 0.0
+
+    # Cap the rows we serialize so a product with thousands of reviews can't
+    # exhaust memory/CPU on a single request (the aggregate above stays exact).
+    page = list(base.order_by(sort, "-created_at")[:_MAX_REVIEWS])
+
+    # Resolve "youVoted" for the whole page in ONE query (no per-row N+1).
+    voted_ids = None
+    if user and user.is_authenticated:
+        voted_ids = set(
+            ReviewVote.objects.filter(
+                user=user, review__in=page
+            ).values_list("review_id", flat=True)
+        )
+    reviews = [r.to_public(user=user, voted_ids=voted_ids) for r in page]
     can_review = bool(
         user and user.is_authenticated and _has_purchased(user, handle)
     )
